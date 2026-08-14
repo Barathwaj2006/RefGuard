@@ -9,7 +9,7 @@
     "classification": { "type": "string", "enum": ["SAFE", "SUSPICIOUS", "MALICIOUS", "UNKNOWN"] },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1.0 },
     "source": { "type": "string" },
-    "source_type": { "type": "string", "enum": ["CURATED", "CROWDSOURCED", "HEURISTIC"] },
+    "source_type": { "type": "string", "enum": ["PUBLIC", "CURATED", "COMMUNITY", "LOCAL_RULE", "THIRD_PARTY"] },
     "freshness_timestamp": { "type": "string", "format": "date-time" },
     "provenance": { "type": "string" }
   },
