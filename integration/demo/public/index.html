@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\">
+  <meta name=\"viewport\" content=\"width=\"device-width, initial-scale=1.0\">
+  <title>RefGuard — Universal UPI & Referral Scam Shield</title>
+  <link rel=\"stylesheet\" href=\"style.css\">
+  <link href=\"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">
+</head>
+<body>
+  <header class=\"top-bar\">
+    <div class=\"brand\">
+      <div class=\"shield-icon\">🛡️</div>
+      <div class=\"brand-text\">
+        <h1>RefGuard</h1>
+        <span class=\"badge\">Universal Protection MVP</span>
+      </div>
+    </div>
+    <div class=\"header-meta\">
+      <span class=\"status-indicator live\">● Live Engine</span>
+      <span class=\"version\">API v1.0 (FROZEN)</span>
+    </div>
+  </header>
+
+  <main class=\"container\">
+    <!-- Quick Presets -->
+    <section class=\"presets-section\">
+      <h2>🎯 Quick Test Scenarios (E2E Verified)</h2>
+      <div class=\"preset-buttons\">
+        <button class=\"preset-btn danger\" onclick=\"loadPreset('fake_referral')\">🚨 Fake Referral</button>
+        <button class=\"preset-btn danger\" onclick=\"loadPreset('qr_scam')\">📱 Tampered QR Code</button>
+        <button class=\"preset-btn danger\" onclick=\"loadPreset('intent_mismatch')\">⚠️ Payment-Intent Mismatch</button>
+        <button class=\"preset-btn warning\" onclick=\"loadPreset('high_risk_vpa')\">🚩 High-Risk VPA</button>
+        <button class=\"preset-btn danger\" onclick=\"loadPreset('screenshot_ocr')\">🖼️ Screenshot OCR</button>
+        <button class=\"preset-btn success\" onclick=\"loadPreset('legit_merchant')\">✅ Legitimate Merchant</button>
+      </div>
+    </section>
+
+    <div class=\"workspace-grid\">
+      <!-- Input Panel -->
+      <section class=\"panel input-panel\">
+        <div class=\"panel-header\">
+          <h3>Universal Ingress Input</h3>
+          <span class=\"channel-badge\" id=\"channelLabel\">MANUAL</span>
+        </div>
+
+        <div class=\"form-group\">
+          <label for=\"contentTypeSelect\">Content Type:</label>
+          <select id=\"contentTypeSelect\" onchange=\"updateChannelLabel()\">
+            <option value=\"TEXT\">TEXT (Message / SMS)</option>
+            <option value=\"URL\">URL (Web link)</option>
+            <option value=\"QR\">QR (UPI QR Data)</option>
+            <option value=\"UPI_VPA\">UPI_VPA (Virtual Payment Address)</option>
+            <option value=\"IMAGE\">IMAGE (Screenshot / OCR)</option>
+            <option value=\"SHARE_INTENT\">SHARE_INTENT (Android Share)</option>
+            <option value=\"CLIPBOARD\">CLIPBOARD (Pasted Text)</option>
+            <option value=\"MANUAL\">MANUAL (Direct input)</option>
+          </select>
+        </div>
+
+        <div class=\"form-group\">
+          <label for=\"sourceContextInput\">Source Context (App Package):</label>
+          <input type=\"text\" id=\"sourceContextInput\" value=\"com.whatsapp\" placeholder=\"e.g. com.whatsapp, com.google.android.apps.nbu.paisa.user\">
+        </div>
+
+        <div class=\"form-group\">
+          <label for=\"contentValueArea\">Content / Payload:</label>
+          <textarea id=\"contentValueArea\" rows=\"6\" placeholder=\"Paste suspicious referral message, UPI URL, or text here...\"></textarea>
+        </div>
+
+        <div class=\"action-row\">
+          <button id=\"scanBtn\" class=\"primary-btn\" onclick=\"executeScan()\">
+            <span class=\"btn-icon\">⚡</span> Scan & Analyze Risk
+          </button>
+          <button class=\"secondary-btn\" onclick=\"reportScam()\">
+            <span class=\"btn-icon\">📢</span> Report to Community
+          </button>
+        </div>
+      </section>
+
+      <!-- Analysis Results Panel -->
+      <section class=\"panel output-panel\" id=\"resultsPanel\">
+        <div class=\"panel-header\">
+          <h3>Security Assessment & Protection</h3>
+          <span id=\"scanIdBadge\" class=\"scan-id\">Awaiting scan...</span>
+        </div>
+
+        <div id=\"emptyState\" class=\"empty-state\">
+          <div class=\"empty-icon\">🔍</div>
+          <h4>Ready for Content Ingress</h4>
+          <p>Select a test scenario above or paste any referral link, QR payload, or payment message to trigger real-time multi-engine threat analysis.</p>
+        </div>
+
+        <div id=\"loadingState\" class=\"loading-state\" style=\"display: none;\">
+          <div class=\"spinner\"></div>
+          <p>Running Extraction, Threat Intelligence, Intent Mismatch, and Graph Engines...</p>
+        </div>
+
+        <div id=\"resultContent\" style=\"display: none;\">
+          <!-- Risk Severity Banner -->
+          <div id=\"riskBanner\" class=\"risk-banner\">
+            <div class=\"risk-main\">
+              <div class=\"risk-score-circle\" id=\"riskScoreVal\">95</div>
+              <div class=\"risk-meta\">
+                <span class=\"severity-tag\" id=\"severityTag\">CRITICAL RISK</span>
+                <h4 id=\"decisionTitle\">DISCOURAGE PROCEED</h4>
+                <p id=\"detectedSummary\"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Protection Advisory -->
+          <div class=\"card advisory-card\">
+            <h4>🛡️ Protective Action Advisory</h4>
+            <div class=\"advisory-content\">
+              <p><strong>Direct User Guidance:</strong> <span id=\"userInstruction\" class=\"highlight-instruction\"></span></p>
+              <p><strong>Why it matters:</strong> <span id=\"whyItMatters\"></span></p>
+              <p><strong>Recommended Action:</strong> <span id=\"recommendedAction\"></span></p>
+            </div>
+          </div>
+
+          <!-- Payment Intent Mismatch Card -->
+          <div id=\"mismatchCard\" class=\"card mismatch-card\">
+            <h4>⚖️ Payment Intent Mismatch Analyzer</h4>
+            <div class=\"mismatch-grid\">
+              <div class=\"mismatch-box stated\">
+                <span class=\"box-label\">User Stated Intent</span>
+                <p id=\"statedIntent\">-</p>
+              </div>
+              <div class=\"mismatch-arrow\">➡️ vs ⬅️</div>
+              <div class=\"mismatch-box actual\">
+                <span class=\"box-label\">Actual Payment Action</span>
+                <p id=\"actualPayment\">-</p>
+              </div>
+            </div>
+            <div class=\"mismatch-status-bar\">
+              <span>Status: <strong id=\"mismatchStatus\">DETECTED</strong></span>
+              <span>Direction: <strong id=\"paymentDirection\">OUTBOUND_DEBIT</strong></span>
+            </div>
+          </div>
+
+          <!-- Scam Chain Graph -->
+          <div class=\"card chain-card\">
+            <h4>🔗 Reconstructed Scam Chain Graph</h4>
+            <div class=\"chain-nodes\" id=\"chainNodesContainer\"></div>
+          </div>
+
+          <!-- Signal Evidence -->
+          <div class=\"card signals-card\">
+            <h4>📋 Detected Threat Signals & Evidence</h4>
+            <ul id=\"signalsList\" class=\"signals-list\"></ul>
+          </div>
+
+          <!-- Raw Contract JSON -->
+          <details class=\"card json-card\">
+            <summary>📦 View Raw ScanResponse (Contract JSON)</summary>
+            <pre><code id=\"jsonViewer\"></code></pre>
+          </details>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class=\"footer\">
+    <p>RefGuard — India UPI Referral & Payment Scam Protection. Privacy-first: Zero UPI PINs, passwords, or credentials collected.</p>
+  </footer>
+
+  <script src=\"app.js\"></script>
+</body>
+</html>
