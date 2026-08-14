@@ -1,11 +1,11 @@
 ﻿{
   "nodes": [
-    { "node_id": "n1", "node_type": "MESSAGE", "entity_reference": "whatsapp-msg-1" },
-    { "node_id": "n2", "node_type": "REFERRAL", "entity_reference": "ref-code-X9A2" },
-    { "node_id": "n3", "node_type": "PAYMENT_ACTION", "entity_reference": "upi-req-9" }
+    { "node_id": "n1", "node_type": "MESSAGE", "entity_reference": "whatsapp-msg-1", "evidence_references": ["evid-msg-1"] },
+    { "node_id": "n2", "node_type": "REFERRAL", "entity_reference": "ref-code-X9A2", "evidence_references": ["evid-ref-2"] },
+    { "node_id": "n3", "node_type": "PAYMENT_ACTION", "entity_reference": "upi-req-9", "evidence_references": ["evid-upi-3"] }
   ],
   "edges": [
-    { "from_node": "n1", "to_node": "n2", "relationship": "CONTAINS", "confidence": 0.95, "provenance": "REGEX", "evidence_references": [] },
-    { "from_node": "n2", "to_node": "n3", "relationship": "LEADS_TO", "confidence": 0.8, "provenance": "HEURISTIC", "evidence_references": [] }
+    { "from_node": "n1", "to_node": "n2", "relationship": "CONTAINS", "confidence": 0.95, "provenance": "REGEX", "evidence_references": ["evid-msg-1"] },
+    { "from_node": "n2", "to_node": "n3", "relationship": "LEADS_TO", "confidence": 0.8, "provenance": "HEURISTIC", "evidence_references": ["evid-ref-2", "evid-upi-3"] }
   ]
 }

@@ -1,17 +1,24 @@
 ﻿{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "EvidencePack",
-  "description": "Incident documentation without retaining sensitive credentials",
+  "description": "Incident documentation containing structured evidence items",
   "type": "object",
   "properties": {
     "incident_id": { "type": "string" },
     "timestamp": { "type": "string", "format": "date-time" },
-    "original_content_hash": { "type": "string" },
-    "extracted_entities": { "type": "array", "items": { "type": "string" } },
-    "urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
-    "upi_identifiers": { "type": "array", "items": { "type": "string" } },
-    "risk_signals": { "type": "array", "items": { "type": "string" } }
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": { "type": "string", "description": "Unique identifier for this piece of evidence. MUST be the target of all evidence_references." },
+          "evidence_type": { "type": "string", "enum": ["ORIGINAL_CONTENT", "EXTRACTED_ENTITY", "URL", "UPI_IDENTIFIER", "RISK_SIGNAL"] },
+          "data": { "type": "string", "description": "The evidence data itself or a hash" }
+        },
+        "required": ["evidence_id", "evidence_type", "data"]
+      }
+    }
   },
-  "required": ["incident_id", "timestamp"],
+  "required": ["incident_id", "timestamp", "items"],
   "additionalProperties": false
 }

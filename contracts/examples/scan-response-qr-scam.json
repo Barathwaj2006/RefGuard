@@ -15,5 +15,16 @@
     "detected_summary": "Malicious QR Code",
     "why_it_matters": "Scanning this will initiate a payment transfer from your account.",
     "user_instruction": "Do not proceed with the payment."
+  },
+  "evidence_pack": {
+    "incident_id": "inc-886",
+    "timestamp": "2026-08-14T10:10:00Z",
+    "items": [
+      {
+        "evidence_id": "evid-qr-4",
+        "evidence_type": "ORIGINAL_CONTENT",
+        "data": "hash:qrcode123"
+      }
+    ]
   }
 }

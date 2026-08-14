@@ -8,11 +8,11 @@
     "stated_intent": { "type": "string" },
     "actual_payment_action": { "type": "string" },
     "payment_direction": { "type": "string", "enum": ["OUTBOUND_DEBIT", "INBOUND_CREDIT", "NONE", "UNKNOWN"] },
-    "amount": { "type": "number" },
+    "amount": { "type": "number", "description": "Parsed monetary amount involved" },
     "recipient_vpa": { "type": "string" },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1.0 },
     "provenance": { "type": "string" },
-    "evidence": { "type": "array", "items": { "type": "string" } }
+    "evidence": { "type": "array", "items": { "type": "string" }, "description": "References resolving to EvidencePack.items[].evidence_id" }
   },
   "required": ["status", "payment_direction", "confidence", "provenance"],
   "additionalProperties": false

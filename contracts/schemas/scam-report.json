@@ -8,7 +8,7 @@
     "reported_indicator": { "type": "string" },
     "report_category": { "type": "string" },
     "description": { "type": "string" },
-    "evidence_references": { "type": "array", "items": { "type": "string" } },
+    "evidence_references": { "type": "array", "items": { "type": "string" }, "description": "References resolving to EvidencePack.items[].evidence_id" },
     "submission_timestamp": { "type": "string", "format": "date-time" },
     "moderation_status": { "type": "string", "enum": ["PENDING", "VERIFIED", "REJECTED"] },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1.0 },

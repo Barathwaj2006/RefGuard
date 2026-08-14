@@ -15,5 +15,16 @@
     "detected_summary": "Fake Referral Link",
     "why_it_matters": "Opening this link may expose your personal information to scammers.",
     "user_instruction": "Delete the message and do not click the link."
+  },
+  "evidence_pack": {
+    "incident_id": "inc-885",
+    "timestamp": "2026-08-14T10:09:00Z",
+    "items": [
+      {
+        "evidence_id": "evid-10",
+        "evidence_type": "URL",
+        "data": "http://fake-brand-login.com"
+      }
+    ]
   }
 }
