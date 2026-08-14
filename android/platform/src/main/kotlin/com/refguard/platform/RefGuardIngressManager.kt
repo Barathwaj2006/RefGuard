@@ -1,7 +1,6 @@
 ﻿package com.refguard.platform
 
 import com.refguard.platform.ingress.IngressChannel
-import com.refguard.platform.models.IngressError
 import com.refguard.platform.models.IngressResult
 
 /**
@@ -12,13 +11,15 @@ class RefGuardIngressManager(
 ) {
     /**
      * Dispatches an ingress channel action.
-     * Prevents analysis dispatch if device is offline.
+     * Allows capture when offline, returning SuccessOffline to allow queuing.
      */
     suspend fun processIngress(channel: IngressChannel): IngressResult {
-        if (!isNetworkAvailable()) {
-            return IngressResult.Failure(IngressError.Offline)
+        val result = channel.capture()
+        
+        if (result is IngressResult.Success && !isNetworkAvailable()) {
+            return IngressResult.SuccessOffline(result.request)
         }
-
-        return channel.capture()
+        
+        return result
     }
 }

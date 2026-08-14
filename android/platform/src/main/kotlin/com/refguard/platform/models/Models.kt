@@ -22,10 +22,9 @@ enum class ContentType {
 }
 
 /**
- * Explicit error states, including offline tracking.
+ * Explicit error states.
  */
 sealed class IngressError {
-    object Offline : IngressError()
     object PermissionDenied : IngressError()
     object EmptyContent : IngressError()
     object UnsupportedContent : IngressError()
@@ -35,5 +34,6 @@ sealed class IngressError {
 
 sealed class IngressResult {
     data class Success(val request: ScanRequest) : IngressResult()
+    data class SuccessOffline(val request: ScanRequest) : IngressResult()
     data class Failure(val error: IngressError) : IngressResult()
 }
