@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
@@ -17,7 +17,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Integration server URL â€” can be overridden per build variant
+        // Integration server URL Ã¢â‚¬â€ can be overridden per build variant
         buildConfigField("String", "SCAN_API_BASE_URL", "\"http://10.0.2.2:3000/\"")
     }
 
@@ -28,6 +28,7 @@ android {
 
     buildTypes {
         release {
+            isCrunchPngs = false
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -104,4 +105,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.espresso.core)
 }
+
 
