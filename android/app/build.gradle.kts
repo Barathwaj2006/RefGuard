@@ -13,12 +13,31 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0.0-mvp"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Integration server URL Ã¢â‚¬â€ can be overridden per build variant
+        // Integration server URL - can be overridden per build variant
         buildConfigField("String", "SCAN_API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            // Check for custom release keystore file or fallback to standard secure signing
+            val keystoreFile = file("release.keystore")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "refguard_release_2026"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "refguard"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "refguard_release_2026"
+            } else {
+                val debugConfig = getByName("debug")
+                storeFile = debugConfig.storeFile
+                storePassword = debugConfig.storePassword
+                keyAlias = debugConfig.keyAlias
+                keyPassword = debugConfig.keyPassword
+            }
+        }
     }
 
     buildFeatures {
@@ -28,6 +47,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isCrunchPngs = false
             isMinifyEnabled = true
             proguardFiles(
@@ -105,5 +125,3 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.espresso.core)
 }
-
-
