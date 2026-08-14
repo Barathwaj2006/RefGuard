@@ -1,0 +1,28 @@
+﻿{
+  "scan_id": "scan-884",
+  "timestamp": "2026-08-14T10:08:00Z",
+  "risk_assessment": {
+    "risk_score": 90,
+    "risk_severity": "HIGH",
+    "confidence": 0.95,
+    "signals": ["PAYMENT_INTENT_MISMATCH", "DECEPTIVE_MESSAGE"],
+    "evidence_references": ["evid-5"],
+    "human_explanation": "The message claims you will receive money, but the QR code actually requests a payment from you.",
+    "recommended_action": "DO NOT PAY"
+  },
+  "protection_decision": {
+    "action": "WARN_CAUTION",
+    "detected_summary": "Payment Intent Mismatch",
+    "why_it_matters": "You are about to send money, not receive it.",
+    "user_instruction": "Decline the payment request in your UPI app."
+  },
+  "payment_intent_mismatch": {
+    "status": "DETECTED",
+    "stated_intent": "Receive 500 cashback",
+    "actual_payment_action": "Pay 500 to scammer",
+    "payment_direction": "OUTBOUND_DEBIT",
+    "amount": 500,
+    "confidence": 0.95,
+    "provenance": "CROSS_MODAL_ANALYSIS"
+  }
+}
