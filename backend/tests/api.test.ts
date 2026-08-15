@@ -1,9 +1,57 @@
 import request from 'supertest';
 import app from '../src/app';
 
+// We need to inject a test route to test the error handler and validation edges
+import { Router } from 'express';
+import { validateRequest, validateResponse } from '../src/middleware/validator';
+import { errorHandler } from '../src/middleware/errorHandler';
+import * as scanController from '../src/controllers/scanController';
+import * as reportController from '../src/controllers/reportController';
+
+const testRouter = Router();
+
+// Test route to trigger missing schema
+testRouter.post('/missing-schema-req', validateRequest('non-existent-schema.json'), (req, res) => {
+  res.status(200).send();
+});
+testRouter.post('/missing-schema-res', validateResponse('non-existent-schema.json'), (req, res) => {
+  res.status(200).send();
+});
+
+// Test route to trigger invalid response validation
+testRouter.post('/invalid-response-schema', validateResponse('scan-response.json'), (req, res) => {
+  // send an invalid response that doesn't match scan-response.json
+  res.status(200).json({ invalid_field: "This is wrong" });
+});
+
+// Create a route that throws an error explicitly triggering global error handler
+testRouter.post('/trigger-error', (req, res, next) => {
+  next(new Error('Test Error'));
+});
+
+// Create routes to trigger catch blocks in controllers directly
+testRouter.post('/trigger-scan-error', (req, res, next) => {
+  // Mock req.body.content_value.match to throw an error
+  const badReq = { ...req, body: { content_value: { match: () => { throw new Error('Mocked error'); } } } } as any;
+  scanController.scanContent(badReq, res, next);
+});
+
+testRouter.post('/trigger-report-error', (req, res, next) => {
+  // Mock req.body so that report.report_id throws an error or just pass a bad res object
+  const badRes = { status: () => { throw new Error('Mocked error'); } } as any;
+  reportController.submitReport(req, badRes, next);
+});
+
+
+// Add the test router to app
+app.use('/test', testRouter);
+
+// Need to ensure the error handler is attached AFTER the test routes so it handles errors from them
+app.use(errorHandler);
+
 describe('RefGuard API v1 Foundation', () => {
   describe('POST /api/v1/scan', () => {
-    it('should successfully process a valid scan request', async () => {
+    it('should successfully process a valid scan request with HIGH risk', async () => {
       const payload = {
         content_type: 'TEXT',
         content_value: 'Hello, is this a scam?',
@@ -23,6 +71,23 @@ describe('RefGuard API v1 Foundation', () => {
 
       expect(res.body.risk_assessment.risk_severity).toBe('HIGH');
       expect(res.body.protection_decision.action).toBe('DISCOURAGE_PROCEED');
+    });
+
+    it('should successfully process a valid scan request with LOW risk', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Hello, how are you?',
+        source_context: 'com.whatsapp',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('LOW');
+      expect(res.body.protection_decision.action).toBe('ALLOW');
     });
 
     it('should return a structured 400 error for an invalid payload (missing timestamp)', async () => {
@@ -82,6 +147,15 @@ describe('RefGuard API v1 Foundation', () => {
 
       expect(res.body).toHaveProperty('error_code', 'MALFORMED_REQUEST');
     });
+
+    it('should handle internal errors gracefully in scanController', async () => {
+      const res = await request(app)
+        .post('/test/trigger-scan-error')
+        .send({})
+        .expect(500);
+
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_SERVER_ERROR');
+    });
   });
 
   describe('POST /api/v1/report', () => {
@@ -117,6 +191,58 @@ describe('RefGuard API v1 Foundation', () => {
         .expect(400);
 
       expect(res.body).toHaveProperty('error_code', 'INVALID_REQUEST');
+    });
+
+    it('should handle internal errors gracefully in reportController', async () => {
+      const res = await request(app)
+        .post('/test/trigger-report-error')
+        .send({})
+        .expect(500);
+
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_SERVER_ERROR');
+    });
+  });
+
+  describe('Global Error Handling and Validation Edge Cases', () => {
+    it('should return 500 INTERNAL_SERVER_ERROR for unhandled exceptions', async () => {
+      const res = await request(app)
+        .post('/test/trigger-error')
+        .send({})
+        .expect(500);
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_SERVER_ERROR');
+    });
+
+    it('should return 500 when request schema is not found', async () => {
+      const res = await request(app)
+        .post('/test/missing-schema-req')
+        .send({})
+        .expect(500);
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_ERROR');
+      expect(res.body.error_message).toContain('Schema not found');
+    });
+
+    it('should return 500 when response schema is not found', async () => {
+      const res = await request(app)
+        .post('/test/missing-schema-res')
+        .send({})
+        .expect(500);
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_ERROR');
+      expect(res.body.error_message).toContain('Schema not found');
+    });
+
+    it('should return 500 when response violates schema contract', async () => {
+      // Suppress console.error for this expected error test
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+
+      const res = await request(app)
+        .post('/test/invalid-response-schema')
+        .send({})
+        .expect(500);
+      expect(res.body).toHaveProperty('error_code', 'INTERNAL_SERVER_ERROR');
+      expect(res.body.error_message).toContain('Response validation failed against schema contract');
+
+      console.error = originalConsoleError;
     });
   });
 });
