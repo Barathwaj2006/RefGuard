@@ -1,13 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
+﻿import { Request, Response, NextFunction } from 'express';
 import { ErrorResponse } from '../models/types';
 
 export const errorHandler = (
-  err: any,
-  req: Request,
+  err: unknown,
+  _req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) => {
-  if (err instanceof SyntaxError && 'body' in err) {
+  if (err instanceof SyntaxError && typeof err === 'object' && err !== null && 'body' in err) {
     const errorResponse: ErrorResponse = {
       error_code: 'MALFORMED_REQUEST',
       error_message: 'Invalid JSON payload',
