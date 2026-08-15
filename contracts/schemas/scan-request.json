@@ -1,0 +1,28 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScanRequest",
+  "description": "Input payload for universal scam scanning",
+  "type": "object",
+  "properties": {
+    "content_type": {
+      "type": "string",
+      "enum": ["TEXT", "URL", "UPI_VPA", "IMAGE", "QR", "SHARE_INTENT", "CLIPBOARD", "MANUAL"],
+      "description": "The type of content being submitted for analysis"
+    },
+    "content_value": {
+      "type": "string",
+      "description": "The actual text, URL, VPA, or base64-encoded image data"
+    },
+    "source_context": {
+      "type": "string",
+      "description": "The source application package or context where the content was observed (e.g., com.whatsapp). Collected for contextual AI where applicable."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the content was observed"
+    }
+  },
+  "required": ["content_type", "content_value", "timestamp"],
+  "additionalProperties": false
+}

@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScanResponse",
+  "description": "Aggregate analysis response provided to Android UI",
+  "type": "object",
+  "properties": {
+    "scan_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "risk_assessment": { "$ref": "risk-assessment.json" },
+    "protection_decision": { "$ref": "protection-decision.json" },
+    "payment_intent_mismatch": { "$ref": "payment-intent-mismatch.json" },
+    "scam_chain": { "$ref": "scam-chain.json" },
+    "evidence_pack": { "$ref": "evidence-pack.json" }
+  },
+  "required": ["scan_id", "timestamp", "risk_assessment", "protection_decision"],
+  "additionalProperties": false
+}
