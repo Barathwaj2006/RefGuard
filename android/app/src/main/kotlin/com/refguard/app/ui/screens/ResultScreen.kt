@@ -1,5 +1,6 @@
-package com.refguard.app.ui.screens
+﻿package com.refguard.app.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.refguard.app.domain.*
@@ -32,6 +34,7 @@ fun ResultScreen(
 ) {
     val palette = riskPalette(result.riskLevel)
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
     var showReportDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -58,7 +61,7 @@ fun ResultScreen(
                     color = palette.primary
                 )
                 Text(
-                    "Risk Score: ${result.riskScore}/100",
+                    "Risk Score: /100",
                     style = MaterialTheme.typography.bodyLarge,
                     color = palette.primary.copy(alpha = 0.8f)
                 )
@@ -98,6 +101,7 @@ fun ResultScreen(
                 Text(
                     result.userInstruction,
                     style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(8.dp))
@@ -112,7 +116,7 @@ fun ResultScreen(
         Spacer(Modifier.height(16.dp))
 
         // ── AI Explanation ───────────────────────────────
-        SectionCard(title = "What We Found") {
+        SectionCard(title = "Detection Analysis") {
             Text(
                 result.humanExplanation,
                 style = MaterialTheme.typography.bodyMedium,
@@ -121,7 +125,7 @@ fun ResultScreen(
             if (result.signals.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Signals:",
+                    "Identified Signals:",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -139,16 +143,16 @@ fun ResultScreen(
             Spacer(Modifier.height(12.dp))
             SectionCard(title = "Payment Intent Mismatch Detected", tint = ColorWarning) {
                 result.statedIntent?.let {
-                    Text("Stated intent: $it", style = MaterialTheme.typography.bodySmall)
+                    Text("Stated intent: ", style = MaterialTheme.typography.bodySmall)
                 }
                 result.actualPaymentAction?.let {
-                    Text("Actual action: $it", style = MaterialTheme.typography.bodySmall, color = ColorHigh)
+                    Text("Actual action: ", style = MaterialTheme.typography.bodySmall, color = ColorHigh)
                 }
                 result.recipientVpa?.let {
-                    Text("Recipient VPA: $it", style = MaterialTheme.typography.bodySmall)
+                    Text("Recipient VPA: ", style = MaterialTheme.typography.bodySmall)
                 }
                 result.mismatchAmount?.let {
-                    Text("Amount: ₹$it", style = MaterialTheme.typography.bodySmall)
+                    Text("Amount: ₹", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -156,22 +160,39 @@ fun ResultScreen(
         // ── Scam Chain (if present) ───────────────────────
         if (result.scamChainNodes.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            SectionCard(title = "Scam Network (${result.scamChainNodes.size} nodes)", tint = ColorHigh) {
+            SectionCard(title = "Scam Network Progression ( stages)", tint = ColorHigh) {
                 Text(
-                    "This entity is connected to a known scam network.",
+                    "This entity is part of an orchestrated threat progression:",
                     style = MaterialTheme.typography.bodySmall,
                     color = ColorHigh
                 )
-                result.scamChainNodes.take(3).forEach { node ->
-                    Text("• ${node.node_type}: ${node.entity_reference ?: node.node_id}",
+                Spacer(Modifier.height(4.dp))
+                result.scamChainNodes.take(4).forEach { node ->
+                    Text("• []: ",
                         style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        // ── Evidence Pack ─────────────────────────────────
+        if (result.evidenceItems.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            SectionCard(title = "Traceable Evidence Pack ( items)") {
+                result.evidenceItems.take(3).forEach { item ->
+                    Column(Modifier.padding(vertical = 2.dp)) {
+                        Text(
+                            ": ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
 
         // ── Recommended Action ───────────────────────────
         Spacer(Modifier.height(12.dp))
-        SectionCard(title = "Recommended Action") {
+        SectionCard(title = "RefGuard Action Advisory") {
             Text(
                 result.recommendedAction,
                 style = MaterialTheme.typography.bodyMedium,
@@ -193,7 +214,7 @@ fun ResultScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                "${(result.riskConfidence * 100).toInt()}%",
+                "%",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = palette.primary
@@ -217,6 +238,36 @@ fun ResultScreen(
             Icon(Icons.Default.RestartAlt, null)
             Spacer(Modifier.width(8.dp))
             Text("Scan Another")
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = {
+                val shareText = buildString {
+                    append("🛡️ RefGuard Security Advisory\n")
+                    append("Risk Level:  (/100)\n")
+                    append("Summary: \n")
+                    append("Instruction: \n\n")
+                    if (result.signals.isNotEmpty()) {
+                        append("Signals: \n")
+                    }
+                    append("Why it matters: \n")
+                    append("\nVerified by RefGuard Defense Engine.")
+                }
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                    type = "text/plain"
+                }
+                val shareIntent = Intent.createChooser(sendIntent, "Share RefGuard Warning")
+                context.startActivity(shareIntent)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Share, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Share Warning Advisory")
         }
 
         Spacer(Modifier.height(8.dp))
@@ -296,12 +347,12 @@ private fun ReportDialog(
                     }
                     is ReportUiState.Success -> {
                         Text(
-                            "✓ Report submitted (ID: ${reportState.reportId}). Thank you for helping protect the community.",
+                            "✓ Report submitted (ID: ). Thank you for helping protect the community.",
                             color = ColorSafe
                         )
                     }
                     is ReportUiState.Error -> {
-                        Text("Failed: ${reportState.message}", color = MaterialTheme.colorScheme.error)
+                        Text("Failed: ", color = MaterialTheme.colorScheme.error)
                     }
                     else -> {
                         Text(

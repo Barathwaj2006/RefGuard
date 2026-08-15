@@ -1,4 +1,4 @@
-package com.refguard.app.ui.screens
+﻿package com.refguard.app.ui.screens
 
 import android.content.ClipboardManager
 import android.content.Context
@@ -29,7 +29,7 @@ import java.time.Instant
 fun HomeScreen(
     viewModel: ScanViewModel,
     offlineQueueSize: Int,
-    onNavigateToScan: () -> Unit,       // trigger QR scanner activity-level flow
+    onNavigateToScan: () -> Unit,       // trigger QR scanner
     onNavigateToImagePicker: () -> Unit // trigger image picker
 ) {
     val context = LocalContext.current
@@ -46,7 +46,11 @@ fun HomeScreen(
     ) {
         // ── Header ────────────────────────────────────────
         Spacer(Modifier.height(24.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "RefGuard",
@@ -55,18 +59,66 @@ fun HomeScreen(
                     color = ColorBrand
                 )
                 Text(
-                    "Scam detection, before you pay.",
+                    "Real-time payment scam protection.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            if (offlineQueueSize > 0) {
-                Badge(containerColor = ColorWarning) {
-                    Text("$offlineQueueSize queued", color = MaterialTheme.colorScheme.onError)
+            Surface(
+                color = ColorSafeContainer,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.VerifiedUser,
+                        contentDescription = null,
+                        tint = ColorSafe,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Protected",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorSafe
+                    )
                 }
             }
         }
-        Spacer(Modifier.height(24.dp))
+
+        if (offlineQueueSize > 0) {
+            Spacer(Modifier.height(12.dp))
+            Surface(
+                color = ColorWarningContainer,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CloudQueue, null, tint = ColorWarning, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            " scans queued offline",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = ColorWarning
+                        )
+                    }
+                    TextButton(onClick = { viewModel.flushOfflineQueue() }) {
+                        Text("Sync Now", fontWeight = FontWeight.Bold, color = ColorBrand)
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
 
         // ── Manual Input Card ────────────────────────────
         ElevatedCard(
@@ -75,7 +127,7 @@ fun HomeScreen(
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text(
-                    "Enter UPI ID or URL",
+                    "Enter UPI ID, Payment Link, or Text",
                     style = MaterialTheme.typography.labelLarge,
                     color = ColorBrand
                 )
@@ -83,7 +135,7 @@ fun HomeScreen(
                 OutlinedTextField(
                     value = manualInput,
                     onValueChange = { manualInput = it },
-                    placeholder = { Text("e.g. user@bank or https://...") },
+                    placeholder = { Text("e.g. merchant@upi or upi://pay?...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     trailingIcon = {
@@ -97,7 +149,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = isUpiInput, onCheckedChange = { isUpiInput = it })
-                    Text("This is a UPI VPA", style = MaterialTheme.typography.bodySmall)
+                    Text("Treat strictly as UPI VPA", style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -120,7 +172,7 @@ fun HomeScreen(
                 ) {
                     Icon(Icons.Default.Search, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Scan")
+                    Text("Analyze Threat Risk")
                 }
             }
         }
@@ -129,7 +181,7 @@ fun HomeScreen(
 
         // ── Quick Actions ────────────────────────────────
         Text(
-            "Quick Actions",
+            "Instant Ingress Channels",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -148,7 +200,7 @@ fun HomeScreen(
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.ContentPaste,
-                label = "Paste",
+                label = "Paste Clip",
                 tint = ColorBrandLight
             ) {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -196,7 +248,7 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "RefGuard never collects your UPI PIN, OTP, or bank credentials.",
+                    "Zero-Credential Guarantee: RefGuard never collects or reads UPI PINs, passwords, or bank OTPs.",
                     style = MaterialTheme.typography.bodySmall,
                     color = ColorBrand
                 )

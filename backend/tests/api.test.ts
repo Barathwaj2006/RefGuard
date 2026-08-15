@@ -1,12 +1,26 @@
-import request from 'supertest';
+﻿import request from 'supertest';
 import app from '../src/app';
 
 describe('RefGuard API v1 Foundation', () => {
+  describe('Health Endpoints', () => {
+    it('should return 200 for root GET /health', async () => {
+      const res = await request(app).get('/health').expect(200);
+      expect(res.body).toEqual({ status: 'UP', service: 'RefGuard' });
+    });
+
+    it('should return 200 and diagnostics for GET /api/v1/health', async () => {
+      const res = await request(app).get('/api/v1/health').expect(200);
+      expect(res.body).toHaveProperty('status', 'HEALTHY');
+      expect(res.body).toHaveProperty('version', '1.0.0');
+      expect(res.body).toHaveProperty('community_indicators_loaded');
+    });
+  });
+
   describe('POST /api/v1/scan', () => {
-    it('should successfully process a valid scan request', async () => {
+    it('should successfully process a valid scan request and return complete contract models', async () => {
       const payload = {
         content_type: 'TEXT',
-        content_value: 'Hello, is this a scam?',
+        content_value: 'Congratulations! You won lottery reward. Pay collect request now upi://pay?pa=fake-cashback-reward@paytm&am=500',
         source_context: 'com.whatsapp',
         timestamp: new Date().toISOString()
       };
@@ -20,9 +34,14 @@ describe('RefGuard API v1 Foundation', () => {
       expect(res.body).toHaveProperty('timestamp');
       expect(res.body).toHaveProperty('risk_assessment');
       expect(res.body).toHaveProperty('protection_decision');
+      expect(res.body).toHaveProperty('payment_intent_mismatch');
+      expect(res.body).toHaveProperty('scam_chain');
+      expect(res.body).toHaveProperty('evidence_pack');
 
-      expect(res.body.risk_assessment.risk_severity).toBe('HIGH');
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
       expect(res.body.protection_decision.action).toBe('DISCOURAGE_PROCEED');
+      expect(res.body.payment_intent_mismatch.status).toBe('DETECTED');
+      expect(res.body.evidence_pack.items.length).toBeGreaterThan(0);
     });
 
     it('should return a structured 400 error for an invalid payload (missing timestamp)', async () => {
@@ -84,11 +103,11 @@ describe('RefGuard API v1 Foundation', () => {
     });
   });
 
-  describe('POST /api/v1/report', () => {
+  describe('POST /api/v1/report & Dynamic Threat Memory', () => {
     it('should successfully accept a valid community report', async () => {
       const reportPayload = {
         report_id: 'rep-001',
-        reported_indicator: 'bad-upi@upi',
+        reported_indicator: 'new-fraud-seller@okaxis',
         report_category: 'UPI_FRAUD',
         submission_timestamp: new Date().toISOString(),
         moderation_status: 'PENDING',
@@ -105,10 +124,25 @@ describe('RefGuard API v1 Foundation', () => {
       expect(res.body).toHaveProperty('status', 'RECEIVED');
     });
 
+    it('should detect previously reported indicator in subsequent scan', async () => {
+      const scanReq = {
+        content_type: 'UPI_VPA',
+        content_value: 'new-fraud-seller@okaxis',
+        timestamp: new Date().toISOString()
+      };
+
+      const scanRes = await request(app)
+        .post('/api/v1/scan')
+        .send(scanReq)
+        .expect(200);
+
+      expect(scanRes.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(scanRes.body.risk_assessment.signals).toContain('community_blacklist_match');
+    });
+
     it('should reject an invalid report missing required fields', async () => {
       const invalidReport = {
         report_id: 'rep-002',
-        // missing reported_indicator
       };
 
       const res = await request(app)
