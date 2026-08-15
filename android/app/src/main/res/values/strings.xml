@@ -7,4 +7,7 @@
     <string name="report_scam">Report to Community</string>
     <string name="retry">Retry</string>
     <string name="scan_another">Scan Another</string>
+    <string name="stop_transaction">DO NOT PROCEED — STOP TRANSACTION</string>
+    <string name="helpline_guide">National Cybercrime Helpline: Call 1930</string>
+    <string name="pin_warning">Entering your UPI PIN always sends money, never receives money.</string>
 </resources>
