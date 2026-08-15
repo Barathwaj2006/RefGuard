@@ -1,10 +1,11 @@
-package com.refguard.app.ui.screens
+﻿package com.refguard.app.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -15,7 +16,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -46,13 +51,16 @@ fun QRScannerScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    var cameraInstance by remember { mutableStateOf<Camera?>(null) }
+    var isTorchEnabled by remember { mutableStateOf(false) }
+    var scanConsumed by remember { mutableStateOf(false) }
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED
         )
     }
-    var scanConsumed by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -67,13 +75,33 @@ fun QRScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scan QR Code") },
+                title = { Text("Scan Payment QR") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ColorBrand, titleContentColor = Color.White, navigationIconContentColor = Color.White)
+                actions = {
+                    if (hasCameraPermission) {
+                        IconButton(
+                            onClick = {
+                                isTorchEnabled = !isTorchEnabled
+                                cameraInstance?.cameraControl?.enableTorch(isTorchEnabled)
+                            }
+                        ) {
+                            Icon(
+                                if (isTorchEnabled) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                                contentDescription = "Toggle Torch",
+                                tint = if (isTorchEnabled) Color.Yellow else Color.White
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ColorBrand,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         }
     ) { innerPadding ->
@@ -82,7 +110,6 @@ fun QRScannerScreen(
             contentAlignment = Alignment.Center
         ) {
             if (hasCameraPermission) {
-                // Camera Preview
                 AndroidView(
                     factory = { ctx ->
                         PreviewView(ctx).also { previewView ->
@@ -113,7 +140,7 @@ fun QRScannerScreen(
                                                         val request = ScanRequest(
                                                             contentType = if (barcode.valueType == Barcode.TYPE_URL) ContentType.URL else ContentType.QR,
                                                             contentValue = raw,
-                                                            sourceContext = "com.android.camera",
+                                                            sourceContext = "com.refguard.camera.qr",
                                                             timestamp = Instant.now().toString()
                                                         )
                                                         onQRScanned(IngressResult.Success(request))
@@ -128,9 +155,10 @@ fun QRScannerScreen(
 
                                 try {
                                     cameraProvider.unbindAll()
-                                    cameraProvider.bindToLifecycle(
+                                    val cam = cameraProvider.bindToLifecycle(
                                         lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analyzer
                                     )
+                                    cameraInstance = cam
                                 } catch (e: Exception) {
                                     onQRScanned(IngressResult.Failure(com.refguard.platform.models.IngressError.HardwareUnavailable))
                                 }
@@ -140,35 +168,60 @@ fun QRScannerScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Viewfinder overlay
+                // Viewfinder frame
                 Box(
                     modifier = Modifier
-                        .size(240.dp)
-                        .border(3.dp, Color.White, RoundedCornerShape(16.dp))
+                        .size(260.dp)
+                        .border(3.dp, if (scanConsumed) Color.Green else Color.White, RoundedCornerShape(20.dp))
                 )
+
+                // Bottom Status & Guidance
                 Column(
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 36.dp, start = 24.dp, end = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(28.dp))
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Point at a QR code or payment barcode",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.75f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    if (scanConsumed) "QR Code Captured! Analyzing..." else "Align UPI QR code within frame",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            if (scanConsumed) {
+                                Spacer(Modifier.height(8.dp))
+                                TextButton(
+                                    onClick = { scanConsumed = false }
+                                ) {
+                                    Icon(Icons.Default.Refresh, null, tint = Color.Yellow, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Rescan QR", color = Color.Yellow)
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
-                // Permission denied
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-                    Text("Camera permission required to scan QR codes.", textAlign = TextAlign.Center)
+                    Text("Camera permission is required to scan payment QR codes.", textAlign = TextAlign.Center)
                     Spacer(Modifier.height(16.dp))
                     Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                        Text("Grant Permission")
+                        Text("Grant Camera Permission")
                     }
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = onBack) { Text("Go Back") }
+                    OutlinedButton(onClick = onBack) { Text("Cancel") }
                 }
             }
         }

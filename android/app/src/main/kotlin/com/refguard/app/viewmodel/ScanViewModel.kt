@@ -1,4 +1,4 @@
-package com.refguard.app.viewmodel
+﻿package com.refguard.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,6 +8,9 @@ import com.refguard.app.api.ScamReportDto
 import com.refguard.app.domain.ScanResult
 import com.refguard.app.domain.toDomain
 import com.refguard.app.domain.toDto
+import com.refguard.app.edge.LocalEdgeClassifier
+import com.refguard.app.history.HistoryItem
+import com.refguard.app.history.InvestigationHistoryManager
 import com.refguard.app.queue.OfflineScanQueue
 import com.refguard.platform.models.IngressResult
 import com.refguard.platform.models.ScanRequest
@@ -26,7 +29,7 @@ sealed class ScanUiState {
     object Idle : ScanUiState()
     object Loading : ScanUiState()
     data class Success(val result: ScanResult) : ScanUiState()
-    object Queued : ScanUiState()   // Offline — queued for later
+    object Queued : ScanUiState()   // Offline fallback
     data class Error(
         val message: String,
         val isNetwork: Boolean = false,
@@ -42,11 +45,22 @@ sealed class ReportUiState {
     data class Error(val message: String) : ReportUiState()
 }
 
+enum class SyncStatus {
+    IDLE, SYNCING, SYNCED, FAILED
+}
+
 class ScanViewModel(
     private val apiService: RefGuardApiService,
     private val offlineQueue: OfflineScanQueue,
-    private val isNetworkAvailable: () -> Boolean
+    private val historyManager: InvestigationHistoryManager? = null,
+    private val isNetworkAvailable: () -> Boolean = { true }
 ) : ViewModel() {
+
+    constructor(
+        apiService: RefGuardApiService,
+        offlineQueue: OfflineScanQueue,
+        isNetworkAvailable: () -> Boolean
+    ) : this(apiService, offlineQueue, null, isNetworkAvailable)
 
     private val _scanState = MutableStateFlow<ScanUiState>(ScanUiState.Idle)
     val scanState: StateFlow<ScanUiState> = _scanState.asStateFlow()
@@ -54,12 +68,28 @@ class ScanViewModel(
     private val _reportState = MutableStateFlow<ReportUiState>(ReportUiState.Idle)
     val reportState: StateFlow<ReportUiState> = _reportState.asStateFlow()
 
-    private val _offlineQueueSize = MutableStateFlow(0)
+    private val _offlineQueueSize = MutableStateFlow(offlineQueue.size())
     val offlineQueueSize: StateFlow<Int> = _offlineQueueSize.asStateFlow()
+
+    private val _syncStatus = MutableStateFlow(SyncStatus.IDLE)
+    val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
+
+    private val _history = MutableStateFlow<List<HistoryItem>>(emptyList())
+    val history: StateFlow<List<HistoryItem>> = _history.asStateFlow()
+
+    init {
+        refreshHistory()
+    }
+
+    fun refreshHistory() {
+        historyManager?.let {
+            _history.value = it.getHistory()
+        }
+    }
 
     /**
      * Process an ingress result from the platform layer.
-     * Maps IngressResult → API call → ScanUiState.
+     * Maps IngressResult → API call or Offline Queue → ScanUiState.
      */
     fun handleIngressResult(ingressResult: IngressResult) {
         when (ingressResult) {
@@ -80,7 +110,7 @@ class ScanViewModel(
                     is com.refguard.platform.models.IngressError.UnsupportedContent ->
                         "Image is too large or unsupported. Try a different image."
                     is com.refguard.platform.models.IngressError.MalformedContent ->
-                        "Content could not be read: ${(ingressResult.error as com.refguard.platform.models.IngressError.MalformedContent).reason}"
+                        "Content could not be read: "
                 }
                 _scanState.value = ScanUiState.Error(msg, isMalformed = true)
             }
@@ -106,35 +136,54 @@ class ScanViewModel(
                 when {
                     response.isSuccessful && response.body() != null -> {
                         val result = response.body()!!.toDomain()
+                        historyManager?.saveInvestigation(result)
+                        refreshHistory()
                         _scanState.value = ScanUiState.Success(result)
                     }
                     response.code() == 400 -> {
                         _scanState.value = ScanUiState.Error(
-                            message = "Invalid content (${response.code()}). Please check what you're scanning.",
+                            message = "Invalid content (). Please check what you're scanning.",
                             isMalformed = true
                         )
                     }
                     else -> {
                         _scanState.value = ScanUiState.Error(
-                            message = "Server error (${response.code()}). Please try again.",
-                            isNetwork = false,
+                            message = "Scan service returned an error ().",
                             pendingRequest = request
                         )
                     }
                 }
             } catch (e: IOException) {
                 _scanState.value = ScanUiState.Error(
-                    message = "Cannot reach RefGuard server. Check your connection.",
+                    message = "Network error. Check connection and try again.",
                     isNetwork = true,
                     pendingRequest = request
                 )
             } catch (e: Exception) {
                 _scanState.value = ScanUiState.Error(
-                    message = "Unexpected error: ${e.message}",
+                    message = "Unexpected error: ",
                     pendingRequest = request
                 )
             }
         }
+    }
+
+    fun scanLocally(request: ScanRequest): ScanResult {
+        val result = LocalEdgeClassifier.classify(request)
+        historyManager?.saveInvestigation(result)
+        refreshHistory()
+        return result
+    }
+
+    fun openHistoryInvestigation(scanId: String) {
+        historyManager?.getResult(scanId)?.let {
+            _scanState.value = ScanUiState.Success(it)
+        }
+    }
+
+    fun saveInvestigationManually(result: ScanResult) {
+        historyManager?.saveInvestigation(result)
+        refreshHistory()
     }
 
     /**
@@ -149,17 +198,28 @@ class ScanViewModel(
      */
     fun flushOfflineQueue() {
         viewModelScope.launch {
-            if (!isNetworkAvailable()) return@launch
+            if (!isNetworkAvailable() || offlineQueue.size() == 0) return@launch
+            _syncStatus.value = SyncStatus.SYNCING
             val queued = offlineQueue.dequeueAll()
             _offlineQueueSize.value = 0
+            var allSucceeded = true
             for (request in queued) {
                 try {
-                    apiService.scan(request.toDto())
+                    val res = apiService.scan(request.toDto())
+                    if (res.isSuccessful && res.body() != null) {
+                        historyManager?.saveInvestigation(res.body()!!.toDomain())
+                    } else {
+                        offlineQueue.enqueue(request)
+                        allSucceeded = false
+                    }
                 } catch (e: Exception) {
                     offlineQueue.enqueue(request)
+                    allSucceeded = false
                 }
             }
             _offlineQueueSize.value = offlineQueue.size()
+            _syncStatus.value = if (allSucceeded) SyncStatus.SYNCED else SyncStatus.FAILED
+            refreshHistory()
         }
     }
 
@@ -176,10 +236,10 @@ class ScanViewModel(
             _reportState.value = ReportUiState.Submitting
             try {
                 val report = ScamReportDto(
-                    report_id = "rep_${UUID.randomUUID().toString().replace("-", "").take(12)}",
+                    report_id = "rep_",
                     reported_indicator = reportedIndicator,
                     report_category = category,
-                    description = description.take(500),   // bounded
+                    description = description.take(500),
                     evidence_references = null,
                     submission_timestamp = Instant.now().toString(),
                     moderation_status = "PENDING",
@@ -190,10 +250,10 @@ class ScanViewModel(
                 if (response.isSuccessful && response.body() != null) {
                     _reportState.value = ReportUiState.Success(response.body()!!.report_id)
                 } else {
-                    _reportState.value = ReportUiState.Error("Failed to submit report (${response.code()}).")
+                    _reportState.value = ReportUiState.Error("Failed to submit report ().")
                 }
             } catch (e: Exception) {
-                _reportState.value = ReportUiState.Error("Could not reach server: ${e.message}")
+                _reportState.value = ReportUiState.Error("Could not reach server: ")
             }
         }
     }
@@ -209,12 +269,13 @@ class ScanViewModel(
     class Factory(
         private val apiService: RefGuardApiService,
         private val offlineQueue: OfflineScanQueue,
-        private val isNetworkAvailable: () -> Boolean
+        private val isNetworkAvailable: () -> Boolean,
+        private val historyManager: InvestigationHistoryManager? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScanViewModel::class.java)) {
-                return ScanViewModel(apiService, offlineQueue, isNetworkAvailable) as T
+                return ScanViewModel(apiService, offlineQueue, historyManager, isNetworkAvailable) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

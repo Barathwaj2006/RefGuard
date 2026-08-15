@@ -1,4 +1,4 @@
-package com.refguard.app.domain
+﻿package com.refguard.app.domain
 
 import com.refguard.app.api.*
 import com.refguard.platform.models.ContentType
@@ -66,7 +66,10 @@ data class ScanResult(
     val scamChainEdges: List<ScamChainEdgeDto>,
 
     // Evidence
-    val evidenceItems: List<EvidenceItemDto>
+    val evidenceItems: List<EvidenceItemDto>,
+
+    // Edge vs Cloud Indicator
+    val isLocalEdgeResult: Boolean = false
 )
 
 // ──────────────────────────────────────────────
@@ -124,7 +127,8 @@ fun ScanResponseDto.toDomain(): ScanResult {
         scamChainNodes = scam_chain?.nodes ?: emptyList(),
         scamChainEdges = scam_chain?.edges ?: emptyList(),
 
-        evidenceItems = evidence_pack?.items ?: emptyList()
+        evidenceItems = evidence_pack?.items ?: emptyList(),
+        isLocalEdgeResult = false
     )
 }
 
