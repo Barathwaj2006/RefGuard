@@ -115,6 +115,22 @@ class IngressManagerTest {
     }
 
     @Test
+    fun testShareSheetMultipleImages() = runTest {
+        val provider = ScreenshotProvider { "base64_multishot_data" }
+        val res = onlineManager.processIngress(provider)
+        assertTrue(res is IngressResult.Success)
+        assertEquals(ContentType.IMAGE, (res as IngressResult.Success).request.contentType)
+    }
+
+    @Test
+    fun testShareSheetUpiPayUrl() = runTest {
+        val provider = ShareSheetProvider("upi://pay?pa=scammer@upi&am=5000&tn=Prize", "com.whatsapp")
+        val res = onlineManager.processIngress(provider)
+        assertTrue(res is IngressResult.Success)
+        assertEquals(ContentType.URL, (res as IngressResult.Success).request.contentType)
+    }
+
+    @Test
     fun testSourceChannelCorrectness() {
         val provider = ShareSheetProvider("t", "p")
         assertEquals("ANDROID_SHARE_SHEET", provider.sourceChannel)

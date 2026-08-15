@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Networking -->
@@ -25,7 +25,7 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false">
 
-        <!-- Main Entry Activity -->
+        <!-- Main Entry Activity & Sharesheet Target -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -36,16 +36,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Share Sheet: Text -->
+            <!-- Share Sheet: Text & Links -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
-            <!-- Share Sheet: Image (Screenshot) -->
+            <!-- Share Sheet: Single Screenshot / Image -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <!-- Share Sheet: Multiple Screenshots / Images -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>

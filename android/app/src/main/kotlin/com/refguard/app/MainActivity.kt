@@ -2,9 +2,11 @@ package com.refguard.app
 
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Bundle
+import android.net.NetworkRequest
 import android.net.Uri
+import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,42 +15,51 @@ import androidx.compose.animation.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import com.refguard.app.api.ApiClient
+import com.refguard.app.history.InvestigationHistoryManager
 import com.refguard.app.queue.OfflineScanQueue
 import com.refguard.app.ui.screens.*
 import com.refguard.app.ui.theme.RefGuardTheme
 import com.refguard.app.viewmodel.ScanUiState
 import com.refguard.app.viewmodel.ScanViewModel
 import com.refguard.platform.models.ContentType
+import com.refguard.platform.models.IngressError
 import com.refguard.platform.models.IngressResult
 import com.refguard.platform.models.ScanRequest
+import java.io.FileNotFoundException
 import java.time.Instant
 
 /**
- * Single-Activity host.
- *
- * Navigation is state-driven (no Fragment Manager, no NavController overhead
- * for this MVP). The ViewModel owns the state; Compose reacts.
+ * Single-Activity host and Android OS Sharesheet Target.
  *
  * Ingress paths:
- *  1. Launcher → HomeScreen manual input / paste / QR / image picker
- *  2. Share Sheet → text intent routed here → scan submitted automatically
+ *  1. Android Sharesheet (ACTION_SEND / ACTION_SEND_MULTIPLE):
+ *     - WhatsApp / SMS text chats, viral links
+ *     - Payment QR screenshots, gallery receipts
+ *     - Multiple shared images (with automatic QR detection)
+ *  2. Direct Launch:
+ *     - QR Camera scanner (Torch toggle, Live viewfinder)
+ *     - Explicit Clipboard Scan
+ *     - Manual input & Threat Lab scenarios
  */
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: ScanViewModel
     private lateinit var offlineQueue: OfflineScanQueue
+    private lateinit var historyManager: InvestigationHistoryManager
 
-    /** Nav destination (simple enum — keeps things straightforward) */
     private enum class Screen { HOME, QR_SCANNER }
     private val _currentScreen = mutableStateOf(Screen.HOME)
 
-    // Image picker launcher (user-initiated)
+    // User-initiated gallery picker
     private val imagePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            handleImageUri(uri)
+            handleImageUri(uri, "com.android.gallery.picker")
         }
     }
 
@@ -57,17 +68,22 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         offlineQueue = OfflineScanQueue(this)
+        historyManager = InvestigationHistoryManager(this)
 
         viewModel = ViewModelProvider(
             this,
             ScanViewModel.Factory(
                 apiService = ApiClient.service,
                 offlineQueue = offlineQueue,
-                isNetworkAvailable = { isNetworkAvailable() }
+                isNetworkAvailable = { isNetworkAvailable() },
+                historyManager = historyManager
             )
         )[ScanViewModel::class.java]
 
-        // Handle initial share intent
+        // Setup automatic background sync on network recovery
+        setupNetworkCallback()
+
+        // Handle initial share intent immediately (routes directly to Loading / Result screen)
         handleIntent(intent)
 
         setContent {
@@ -77,14 +93,13 @@ class MainActivity : ComponentActivity() {
                 val offlineQueueSize by viewModel.offlineQueueSize.collectAsStateWithLifecycle()
                 val currentScreen by _currentScreen
 
-                // Animate between states
+                // Animate smoothly between ingress, loading, result, and home states
                 AnimatedContent(
                     targetState = Triple(scanState, currentScreen, offlineQueueSize),
                     transitionSpec = { fadeIn() togetherWith fadeOut() }
                 ) { (state, screen, queueSize) ->
 
                     when {
-                        // QR scanner replaces home
                         screen == Screen.QR_SCANNER -> {
                             QRScannerScreen(
                                 onQRScanned = { ingressResult ->
@@ -129,7 +144,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Flush offline queue when app resumes with network
+        // Flush offline queue on start if network is available
         if (isNetworkAvailable() && offlineQueue.size() > 0) {
             viewModel.flushOfflineQueue()
         }
@@ -137,52 +152,199 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleIntent(intent)
     }
 
+    private fun setupNetworkCallback() {
+        try {
+            val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+
+            cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    runOnUiThread {
+                        if (offlineQueue.size() > 0) {
+                            viewModel.flushOfflineQueue()
+                        }
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            // Non-critical fallback
+        }
+    }
+
     /**
-     * Route incoming intents (launcher or share sheet) to the appropriate ingress path.
+     * Route incoming intents (Launcher, Single Share, Multiple Shares)
      */
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
-        when (intent.action) {
+        val action = intent.action ?: return
+
+        when (action) {
             Intent.ACTION_SEND -> {
-                val mimeType = intent.type ?: return
+                val mimeType = intent.type ?: ""
+                val sourcePkg = intent.getStringExtra(Intent.EXTRA_PACKAGE_NAME) ?: callingPackage ?: "android_sharesheet"
+
                 when {
-                    mimeType == "text/plain" -> {
-                        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
-                        val pkg = intent.getStringExtra(Intent.EXTRA_PACKAGE_NAME)
-                            ?: callingPackage
-                        val request = ScanRequest(
-                            contentType = if (text.startsWith("http")) ContentType.URL else ContentType.TEXT,
-                            contentValue = text,
-                            sourceContext = pkg ?: "unknown_share",
-                            timestamp = Instant.now().toString()
-                        )
-                        viewModel.handleIngressResult(IngressResult.Success(request))
+                    mimeType == "text/plain" || intent.hasExtra(Intent.EXTRA_TEXT) -> {
+                        val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                        if (!text.isNullOrBlank()) {
+                            val request = ScanRequest(
+                                contentType = if (text.startsWith("http://", ignoreCase = true) || text.startsWith("https://", ignoreCase = true)) {
+                                    ContentType.URL
+                                } else {
+                                    ContentType.SHARE_INTENT
+                                },
+                                contentValue = text.trim(),
+                                sourceContext = sourcePkg,
+                                timestamp = Instant.now().toString()
+                            )
+                            viewModel.handleIngressResult(IngressResult.Success(request))
+                        } else {
+                            viewModel.handleIngressResult(IngressResult.Failure(IngressError.EmptyContent))
+                        }
                     }
-                    mimeType.startsWith("image/") -> {
-                        val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return
-                        handleImageUri(uri)
+                    mimeType.startsWith("image/") || intent.hasExtra(Intent.EXTRA_STREAM) -> {
+                        @Suppress("DEPRECATION")
+                        val uri: Uri? = intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                        if (uri != null) {
+                            handleImageUri(uri, sourcePkg)
+                        } else {
+                            viewModel.handleIngressResult(
+                                IngressResult.Failure(IngressError.MalformedContent("No image URI attached in share"))
+                            )
+                        }
                     }
+                }
+            }
+
+            Intent.ACTION_SEND_MULTIPLE -> {
+                val sourcePkg = intent.getStringExtra(Intent.EXTRA_PACKAGE_NAME) ?: callingPackage ?: "android_sharesheet_multiple"
+                @Suppress("DEPRECATION")
+                val uris: java.util.ArrayList<Uri>? = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                val validUris = uris?.filterNotNull() ?: emptyList()
+
+                if (validUris.isNotEmpty()) {
+                    handleMultipleImages(validUris, sourcePkg)
+                } else {
+                    viewModel.handleIngressResult(
+                        IngressResult.Failure(IngressError.EmptyContent)
+                    )
                 }
             }
         }
     }
 
     /**
-     * Encode a user-selected image URI as Base64 and submit as a scan.
-     * Max 2 MB to prevent out-of-memory on low-end devices.
+     * Process multiple images: Scans images in sequence to detect payment QR codes first;
+     * falls back to the primary screenshot for deep text OCR / image inspection.
      */
-    private fun handleImageUri(uri: Uri) {
+    private fun handleMultipleImages(uris: List<Uri>, sourcePkg: String) {
+        findQrCodeInUris(uris, 0) { qrPayload ->
+            if (qrPayload != null) {
+                val request = ScanRequest(
+                    contentType = if (qrPayload.startsWith("http://") || qrPayload.startsWith("https://")) ContentType.URL else ContentType.QR,
+                    contentValue = qrPayload,
+                    sourceContext = sourcePkg,
+                    timestamp = Instant.now().toString()
+                )
+                viewModel.handleIngressResult(IngressResult.Success(request))
+            } else {
+                handleImageUri(uris.first(), sourcePkg)
+            }
+        }
+    }
+
+    private fun findQrCodeInUris(uris: List<Uri>, index: Int, onComplete: (String?) -> Unit) {
+        if (index >= uris.size) {
+            onComplete(null)
+            return
+        }
+        val uri = uris[index]
         try {
-            val inputStream = contentResolver.openInputStream(uri) ?: return
-            val bytes = inputStream.readBytes()
-            inputStream.close()
+            val image = InputImage.fromFilePath(this, uri)
+            val scanner = BarcodeScanning.getClient()
+            scanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    val qrCode = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }
+                    if (qrCode != null) {
+                        onComplete(qrCode.rawValue)
+                    } else {
+                        findQrCodeInUris(uris, index + 1, onComplete)
+                    }
+                }
+                .addOnFailureListener {
+                    findQrCodeInUris(uris, index + 1, onComplete)
+                }
+        } catch (e: Exception) {
+            findQrCodeInUris(uris, index + 1, onComplete)
+        }
+    }
+
+    /**
+     * Safely reads and processes an image URI with ML Kit QR extraction and base64 fallback.
+     */
+    private fun handleImageUri(uri: Uri, sourcePkg: String = "com.android.gallery") {
+        try {
+            val image = InputImage.fromFilePath(this, uri)
+            val scanner = BarcodeScanning.getClient()
+
+            scanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    val qrCode = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }
+                    if (qrCode != null) {
+                        val raw = qrCode.rawValue!!
+                        val request = ScanRequest(
+                            contentType = if (raw.startsWith("http://") || raw.startsWith("https://")) ContentType.URL else ContentType.QR,
+                            contentValue = raw,
+                            sourceContext = sourcePkg,
+                            timestamp = Instant.now().toString()
+                        )
+                        viewModel.handleIngressResult(IngressResult.Success(request))
+                    } else {
+                        submitBase64Image(uri, sourcePkg)
+                    }
+                }
+                .addOnFailureListener {
+                    submitBase64Image(uri, sourcePkg)
+                }
+        } catch (e: SecurityException) {
+            viewModel.handleIngressResult(
+                IngressResult.Failure(IngressError.MalformedContent("Permission to read shared image was denied or revoked."))
+            )
+        } catch (e: FileNotFoundException) {
+            viewModel.handleIngressResult(
+                IngressResult.Failure(IngressError.MalformedContent("Shared image file was not found."))
+            )
+        } catch (e: Exception) {
+            submitBase64Image(uri, sourcePkg)
+        }
+    }
+
+    private fun submitBase64Image(uri: Uri, sourcePkg: String) {
+        try {
+            val inputStream = contentResolver.openInputStream(uri) ?: run {
+                viewModel.handleIngressResult(
+                    IngressResult.Failure(IngressError.MalformedContent("Could not open image stream."))
+                )
+                return
+            }
+            val bytes = inputStream.use { it.readBytes() }
 
             if (bytes.size > 2 * 1024 * 1024) {
                 viewModel.handleIngressResult(
-                    IngressResult.Failure(com.refguard.platform.models.IngressError.UnsupportedContent)
+                    IngressResult.Failure(IngressError.UnsupportedContent)
+                )
+                return
+            }
+
+            if (bytes.isEmpty()) {
+                viewModel.handleIngressResult(
+                    IngressResult.Failure(IngressError.EmptyContent)
                 )
                 return
             }
@@ -191,14 +353,22 @@ class MainActivity : ComponentActivity() {
             val request = ScanRequest(
                 contentType = ContentType.IMAGE,
                 contentValue = base64,
-                sourceContext = "com.android.gallery",
+                sourceContext = sourcePkg,
                 timestamp = Instant.now().toString()
             )
             viewModel.handleIngressResult(IngressResult.Success(request))
+        } catch (e: SecurityException) {
+            viewModel.handleIngressResult(
+                IngressResult.Failure(IngressError.MalformedContent("Permission to read shared image was denied or revoked."))
+            )
+        } catch (e: OutOfMemoryError) {
+            viewModel.handleIngressResult(
+                IngressResult.Failure(IngressError.UnsupportedContent)
+            )
         } catch (e: Exception) {
             viewModel.handleIngressResult(
                 IngressResult.Failure(
-                    com.refguard.platform.models.IngressError.MalformedContent("Could not read image: ${e.message}")
+                    IngressError.MalformedContent("Could not read image: " + e.message)
                 )
             )
         }

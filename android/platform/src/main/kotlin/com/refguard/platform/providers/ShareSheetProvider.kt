@@ -17,7 +17,7 @@ class ShareSheetProvider(
             return IngressResult.Failure(IngressError.EmptyContent)
         }
         
-        val type = if (sharedText.startsWith("http")) ContentType.URL else ContentType.TEXT
+        val type = if (sharedText.startsWith("http", ignoreCase = true) || sharedText.startsWith("upi://", ignoreCase = true)) ContentType.URL else ContentType.TEXT
         val context = sharedPackage ?: "unknown_package"
 
         val request = ScanRequest(
