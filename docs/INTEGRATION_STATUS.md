@@ -36,7 +36,7 @@ ode integration/tests/runner.js
 - **Known Risks**: Mocks certain AI responses.
 
 ### 5. Web UI (Demo)
-- **Status**: MISSING
+- **Status**: PRESENT
 - **Target Branch**: efguard/web-demo
 
 ### 6. AI Evaluation
