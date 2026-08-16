@@ -118,3 +118,17 @@ data class ErrorResponseDto(
     val details: List<String>?,
     val timestamp: String
 )
+
+data class FeedbackRequestDto(
+    val scan_id: String,
+    val indicator: String?,
+    val verdict: String, // CONFIRMED_FRAUD | FALSE_ALARM
+    val user_notes: String?
+)
+
+data class FeedbackResponseDto(
+    val status: String,
+    val scan_id: String,
+    val verdict: String,
+    val message: String
+)

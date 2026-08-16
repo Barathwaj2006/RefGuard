@@ -57,5 +57,16 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <!-- Quick Settings Tile for 1-tap scam defense during calls & chats -->
+        <service
+            android:name=".service.RefGuardTileService"
+            android:label="@string/tile_label"
+            android:icon="@mipmap/ic_launcher"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -10,4 +10,5 @@
     <string name="stop_transaction">DO NOT PROCEED — STOP TRANSACTION</string>
     <string name="helpline_guide">National Cybercrime Helpline: Call 1930</string>
     <string name="pin_warning">Entering your UPI PIN always sends money, never receives money.</string>
+    <string name="tile_label">RefGuard Scam Check</string>
 </resources>

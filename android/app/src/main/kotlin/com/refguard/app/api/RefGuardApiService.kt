@@ -16,4 +16,8 @@ interface RefGuardApiService {
     /** POST /api/v1/report */
     @POST("api/v1/report")
     suspend fun report(@Body report: ScamReportDto): Response<ReportResponseDto>
+
+    /** POST /api/v1/feedback */
+    @POST("api/v1/feedback")
+    suspend fun submitFeedback(@Body feedback: FeedbackRequestDto): Response<FeedbackResponseDto>
 }

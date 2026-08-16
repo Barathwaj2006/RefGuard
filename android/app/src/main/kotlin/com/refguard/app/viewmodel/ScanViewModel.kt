@@ -224,6 +224,30 @@ class ScanViewModel(
     }
 
     /**
+     * Submit user feedback on verdict accuracy (Confirmed Scam vs False Alarm).
+     */
+    fun submitFeedback(
+        scanId: String,
+        indicator: String?,
+        isConfirmedFraud: Boolean,
+        userNotes: String? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                val dto = com.refguard.app.api.FeedbackRequestDto(
+                    scan_id = scanId,
+                    indicator = indicator,
+                    verdict = if (isConfirmedFraud) "CONFIRMED_FRAUD" else "FALSE_ALARM",
+                    user_notes = userNotes
+                )
+                apiService.submitFeedback(dto)
+            } catch (e: Exception) {
+                // Non-critical background telemetry
+            }
+        }
+    }
+
+    /**
      * Submit a community scam report for the current scan result.
      * Security: caller MUST NOT pass PINs, OTPs, CVVs, or bank passwords.
      */

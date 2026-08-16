@@ -43,6 +43,22 @@ fun ResultScreen(
     var showStoppedDialog by remember { mutableStateOf(false) }
     var isSimpleMode by remember { mutableStateOf(false) }
     var evidenceExpanded by remember { mutableStateOf(false) }
+    var feedbackRecorded by remember { mutableStateOf(false) }
+    var ttsInstance: android.speech.tts.TextToSpeech? by remember { mutableStateOf(null) }
+    var isTtsActive by remember { mutableStateOf(false) }
+
+    DisposableEffect(context) {
+        val tts = android.speech.tts.TextToSpeech(context) { status ->
+            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                // Initialized successfully
+            }
+        }
+        ttsInstance = tts
+        onDispose {
+            tts.stop()
+            tts.shutdown()
+        }
+    }
 
     val hasPaymentData = result.recipientVpa != null || result.mismatchAmount != null || result.mismatchStatus == MismatchStatus.DETECTED
 
@@ -438,6 +454,70 @@ fun ResultScreen(
 
             Spacer(Modifier.height(8.dp))
         }
+
+        // ── VERDICT CALIBRATION FEEDBACK ────────────────
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (!feedbackRecorded) {
+                    Text(
+                        "Help Calibrate Protection",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Was this safety verdict accurate?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.submitFeedback(result.scanId, result.recipientVpa, isConfirmedFraud = true)
+                                feedbackRecorded = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("🛡️ Saved Me", style = MaterialTheme.typography.labelMedium)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.submitFeedback(result.scanId, result.recipientVpa, isConfirmedFraud = false)
+                                feedbackRecorded = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("⚠️ False Alarm", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, null, tint = ColorSafe, modifier = Modifier.size(20.dp))
+                        Text(
+                            "Thank you for calibrating RefGuard!",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ColorSafe,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         // ── Action Buttons ───────────────────────────────
         Button(
