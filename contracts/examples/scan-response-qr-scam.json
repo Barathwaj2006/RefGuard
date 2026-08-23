@@ -1,0 +1,30 @@
+﻿{
+  "scan_id": "scan-886",
+  "timestamp": "2026-08-14T10:10:00Z",
+  "risk_assessment": {
+    "risk_score": 99,
+    "risk_severity": "CRITICAL",
+    "confidence": 0.99,
+    "signals": ["TAMPERED_QR_CODE", "KNOWN_SCAM_VPA"],
+    "evidence_references": ["evid-qr-4"],
+    "human_explanation": "This QR code contains a hidden payment request to a known scammer account.",
+    "recommended_action": "DO NOT SCAN"
+  },
+  "protection_decision": {
+    "action": "WARN_CAUTION",
+    "detected_summary": "Malicious QR Code",
+    "why_it_matters": "Scanning this will initiate a payment transfer from your account.",
+    "user_instruction": "Do not proceed with the payment."
+  },
+  "evidence_pack": {
+    "incident_id": "inc-886",
+    "timestamp": "2026-08-14T10:10:00Z",
+    "items": [
+      {
+        "evidence_id": "evid-qr-4",
+        "evidence_type": "ORIGINAL_CONTENT",
+        "data": "hash:qrcode123"
+      }
+    ]
+  }
+}

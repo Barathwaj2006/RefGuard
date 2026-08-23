@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-15T16:47:45.583Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-16T02:36:56.306Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    }
+  ]
+}

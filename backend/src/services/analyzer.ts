@@ -1,0 +1,233 @@
+﻿import { v4 as uuidv4 } from 'uuid';
+import {
+  ScanRequest,
+  ScanResponse,
+  RiskAssessment,
+  ProtectionDecision,
+  PaymentIntentMismatch,
+  ScamChain,
+  EvidencePack
+} from '../models/types';
+import { communityStore } from './communityStore';
+
+interface ParsedEntities {
+  vpa?: string;
+  url?: string;
+  amount?: number;
+  referralCode?: string;
+  urgencyWords: string[];
+  isCollectRequest: boolean;
+  hasOtpSolicitation: boolean;
+}
+
+export class AnalyzerService {
+  private extractEntities(request: ScanRequest): ParsedEntities {
+    const text = request.content_value;
+    const entities: ParsedEntities = {
+      urgencyWords: [],
+      isCollectRequest: false,
+      hasOtpSolicitation: false,
+    };
+
+    // UPI pay URI parser
+    const upiMatch = text.match(/upi:\/\/pay\?([^ \n\r\t]+)/i);
+    if (upiMatch) {
+      const params = new URLSearchParams(upiMatch[1]);
+      entities.vpa = params.get('pa') || undefined;
+      const am = params.get('am');
+      if (am) entities.amount = parseFloat(am);
+    } else {
+      // General VPA pattern
+      const vpaMatch = text.match(/[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}/);
+      if (vpaMatch) {
+        entities.vpa = vpaMatch[0];
+      }
+    }
+
+    // URL pattern
+    const urlMatch = text.match(/https?:\/\/[^\s]+/i);
+    if (urlMatch) {
+      entities.url = urlMatch[0];
+    }
+
+    // Amount extraction
+    if (!entities.amount) {
+      const amtMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{2})?)/i);
+      if (amtMatch) {
+        entities.amount = parseFloat(amtMatch[1].replace(/,/g, ''));
+      }
+    }
+
+    // Urgency & Phishing keywords
+    const urgencyKeywords = ['urgent', 'immediately', 'expires', 'suspended', 'blocked', 'lottery', 'prize', 'winner', 'cashback', 'bonus'];
+    urgencyKeywords.forEach(kw => {
+      if (new RegExp('\\b' + kw + '\\b', 'i').test(text)) {
+        entities.urgencyWords.push(kw);
+      }
+    });
+
+    if (/\b(?:otp|one time password|pin)\b/i.test(text) && /\b(?:share|send|enter|verify)\b/i.test(text)) {
+      entities.hasOtpSolicitation = true;
+    }
+
+    if (/\b(?:collect|request money|pay now|debit)\b/i.test(text) || upiMatch) {
+      entities.isCollectRequest = true;
+    }
+
+    return entities;
+  }
+
+  public analyze(request: ScanRequest): ScanResponse {
+    const scanId = uuidv4();
+    const timestamp = new Date().toISOString();
+    const entities = this.extractEntities(request);
+    const text = request.content_value.toLowerCase();
+
+    // Threat Detection
+    const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
+    const hasSuspiciousTLD = entities.url ? /\.(tk|xyz|top|work|click|gq|ml|cf)\b/i.test(entities.url) : false;
+    const isLegitimateMerchant = entities.vpa ? /(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
+    const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund)\b/i.test(text);
+
+    // Mismatch Detection
+    const isMismatch = hasRewardClaims && entities.isCollectRequest;
+
+    let riskScore = 10;
+    let riskSeverity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
+    const signals: string[] = [];
+
+    if (isCommunityReported) {
+      riskScore = 95;
+      riskSeverity = 'CRITICAL';
+      signals.push('community_blacklist_match');
+    } else if (isMismatch) {
+      riskScore = 90;
+      riskSeverity = 'CRITICAL';
+      signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
+    } else if (entities.hasOtpSolicitation) {
+      riskScore = 85;
+      riskSeverity = 'HIGH';
+      signals.push('credential_otp_solicitation');
+    } else if (hasSuspiciousTLD) {
+      riskScore = 80;
+      riskSeverity = 'HIGH';
+      signals.push('suspicious_tld_domain');
+    } else if (entities.urgencyWords.length > 0) {
+      riskScore = 55;
+      riskSeverity = 'MEDIUM';
+      signals.push('urgency_manipulation');
+    } else if (isLegitimateMerchant) {
+      riskScore = 5;
+      riskSeverity = 'LOW';
+      signals.push('verified_merchant_whitelist');
+    }
+
+    // Protection Decision
+    let decision: ProtectionDecision;
+    if (riskSeverity === 'CRITICAL') {
+      decision = {
+        action: 'DISCOURAGE_PROCEED',
+        detected_summary: isMismatch ? 'Critical Payment-Intent Mismatch Detected' : 'Known Scam Signature Identified',
+        why_it_matters: isMismatch 
+          ? 'You were told you are receiving money/prize, but this transaction will DEBIT money from your bank account.'
+          : 'This identifier matches confirmed fraud signatures reported by the community.',
+        user_instruction: 'DO NOT enter your UPI PIN. Cancel this transaction immediately.'
+      };
+    } else if (riskSeverity === 'HIGH') {
+      decision = {
+        action: 'REQUIRE_CONFIRMATION',
+        detected_summary: 'High Risk Phishing Pattern Detected',
+        why_it_matters: 'Suspicious elements were found that resemble credential-harvesting or scam links.',
+        user_instruction: 'Do not share OTPs, click unknown links, or send funds.'
+      };
+    } else if (riskSeverity === 'MEDIUM') {
+      decision = {
+        action: 'WARN_CAUTION',
+        detected_summary: 'Suspicious Indicators Found',
+        why_it_matters: 'The message contains psychological urgency or unverified claims.',
+        user_instruction: 'Verify the identity of the sender through official channels before proceeding.'
+      };
+    } else {
+      decision = {
+        action: 'ALLOW',
+        detected_summary: 'No Threat Detected',
+        why_it_matters: 'Content matches standard legitimate interaction patterns.',
+        user_instruction: 'Proceed with normal caution.'
+      };
+    }
+
+    const riskAssessment: RiskAssessment = {
+      risk_score: riskScore,
+      risk_severity: riskSeverity,
+      confidence: 0.92,
+      signals,
+      human_explanation: decision.why_it_matters,
+      recommended_action: decision.user_instruction
+    };
+
+    // Mismatch Object
+    const paymentIntentMismatch: PaymentIntentMismatch = {
+      status: isMismatch ? 'DETECTED' : 'NOT_DETECTED',
+      stated_intent: hasRewardClaims ? 'RECEIVE_FUNDS_OR_PRIZE' : 'STANDARD_PAYMENT',
+      actual_payment_action: entities.isCollectRequest ? 'OUTBOUND_DEBIT_COLLECT' : 'NONE',
+      payment_direction: entities.isCollectRequest ? 'OUTBOUND_DEBIT' : 'NONE',
+      amount: entities.amount,
+      recipient_vpa: entities.vpa,
+      confidence: isMismatch ? 0.95 : 0.8,
+      provenance: 'rule_engine'
+    };
+
+    // Scam Chain DAG
+    const scamChain: ScamChain = {
+      nodes: [
+        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: 'User Ingress' },
+        ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url }] : []),
+        ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa }] : []),
+        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : [])
+      ],
+      edges: [
+        ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction' }] : []),
+        ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction' }] : []),
+        ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis' }] : [])
+      ]
+    };
+
+    // Evidence Pack
+    const evidencePack: EvidencePack = {
+      incident_id: 'inc_' + scanId.slice(0, 8),
+      timestamp,
+      items: [
+        {
+          evidence_id: 'ev_orig',
+          evidence_type: 'ORIGINAL_CONTENT',
+          data: request.content_value.slice(0, 120)
+        },
+        ...(entities.vpa ? [{
+          evidence_id: 'ev_vpa',
+          evidence_type: 'UPI_IDENTIFIER' as const,
+          data: entities.vpa
+        }] : []),
+        ...(entities.url ? [{
+          evidence_id: 'ev_url',
+          evidence_type: 'URL' as const,
+          data: entities.url
+        }] : []),
+        ...(signals.length > 0 ? [{
+          evidence_id: 'ev_sig',
+          evidence_type: 'RISK_SIGNAL' as const,
+          data: signals.join(', ')
+        }] : [])
+      ]
+    };
+
+    return {
+      scan_id: scanId,
+      timestamp,
+      risk_assessment: riskAssessment,
+      protection_decision: decision,
+      payment_intent_mismatch: paymentIntentMismatch,
+      scam_chain: scamChain,
+      evidence_pack: evidencePack
+    };
+  }
+}

@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">RefGuard</string>
+    <string name="scan_button">மோசடி சோதனை செய்</string>
+    <string name="paste_from_clipboard">நகல் ஒட்டுக</string>
+    <string name="scan_qr">QR குறியீட்டை ஸ்கேன் செய்</string>
+    <string name="import_image">ஸ்கிரீன்ஷாட்டை தேர்வு செய்</string>
+    <string name="report_scam">புகார் அளிக்கவும்</string>
+    <string name="retry">மீண்டும் முயற்சி செய்க</string>
+    <string name="scan_another">மற்றொன்றை ஸ்கேன் செய்</string>
+    <string name="stop_transaction">தொடர வேண்டாம் — பரிவர்த்தனையை நிறுத்துங்கள்</string>
+    <string name="helpline_guide">தேசிய சைபர் கிரைம் உதவி எண்: 1930</string>
+    <string name="pin_warning">UPI பின் உள்ளிடுவது எப்போதும் பணத்தை அனுப்பும், பெறாது.</string>
+</resources>
