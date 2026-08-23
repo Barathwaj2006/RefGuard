@@ -1,4 +1,4 @@
-﻿const presets = {
+const presets = {
   fake_referral: {
     type: 'URL',
     context: 'com.whatsapp',
@@ -67,25 +67,42 @@ async function executeScan() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('resultContent').style.display = 'none';
 
+  document.getElementById('errorState').style.display = 'none';
+
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
+
     const res = await fetch('/api/v1/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
     const data = await res.json();
     document.getElementById('loadingState').style.display = 'none';
 
     if (!res.ok) {
-      alert('Scan Error: ' + (data.message || 'Request failed'));
+      document.getElementById('errorState').style.display = 'block';
+      document.getElementById('errorMessage').innerText = data.error_message || data.message || 'Scan failed to process (API Error)';
       return;
+    }
+
+    if (!data || !data.risk_assessment || !data.protection_decision) {
+      throw new Error('Malformed response received from backend.');
     }
 
     renderScanResponse(data);
   } catch (err) {
     document.getElementById('loadingState').style.display = 'none';
-    alert('Failed to connect to RefGuard backend: ' + err.message);
+    document.getElementById('errorState').style.display = 'block';
+    if (err.name === 'AbortError') {
+      document.getElementById('errorMessage').innerText = 'Request Timed Out: The analysis took too long.';
+    } else {
+      document.getElementById('errorMessage').innerText = 'Network Error: Failed to connect to RefGuard backend. ' + err.message;
+    }
   }
 }
 
@@ -101,13 +118,33 @@ function renderScanResponse(data) {
   // Banner & Score
   const banner = document.getElementById('riskBanner');
   banner.className = 'risk-banner ' + risk.risk_severity;
-  document.getElementById('riskScoreVal').innerText = risk.risk_score;
-  document.getElementById('severityTag').innerText = risk.risk_severity + ' RISK (' + risk.risk_score + '/100)';
-  document.getElementById('decisionTitle').innerText = decision.action.replace(/_/g, ' ');
+  
+  const scoreVal = document.getElementById('riskScoreVal');
+  scoreVal.innerText = risk.risk_score;
+  scoreVal.className = 'risk-score-circle ' + risk.risk_severity;
+
+  const severityTag = document.getElementById('severityTag');
+  severityTag.innerText = risk.risk_severity + ' RISK (' + risk.risk_score + '/100)';
+  severityTag.className = 'severity-tag ' + risk.risk_severity;
+
+  const aiBadge = document.getElementById('aiBadge');
+  if (risk.signals && risk.signals.includes('gemini_reasoning_applied')) {
+    aiBadge.style.display = 'inline-block';
+  } else {
+    aiBadge.style.display = 'none';
+  }
+
+  const decisionTitle = document.getElementById('decisionTitle');
+  decisionTitle.innerText = decision.action.replace(/_/g, ' ');
+  decisionTitle.className = 'decision-title ' + risk.risk_severity;
+
   document.getElementById('detectedSummary').innerText = decision.detected_summary;
 
   // Advisory
-  document.getElementById('userInstruction').innerText = decision.user_instruction;
+  const userInstruction = document.getElementById('userInstruction');
+  userInstruction.innerText = decision.user_instruction;
+  userInstruction.className = 'highlight-instruction ' + risk.risk_severity;
+
   document.getElementById('whyItMatters').innerText = decision.why_it_matters;
   document.getElementById('recommendedAction').innerText = risk.recommended_action;
 
