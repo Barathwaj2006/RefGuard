@@ -91,6 +91,16 @@ export class AnalyzerService {
     const entities = this.extractEntities(request);
     const text = request.content_value.toLowerCase();
 
+    // Normalize Source Context
+    const sourceRaw = request.source_context || 'unknown';
+    let normalizedSource = 'Unknown';
+    if (/whatsapp/i.test(sourceRaw)) normalizedSource = 'WhatsApp';
+    else if (/telegram/i.test(sourceRaw)) normalizedSource = 'Telegram';
+    else if (/mms|sms|message/i.test(sourceRaw)) normalizedSource = 'SMS';
+    else if (/mail/i.test(sourceRaw)) normalizedSource = 'Email';
+    else if (/browser|web|chrome|safari/i.test(sourceRaw)) normalizedSource = 'Web Browser';
+
+
     // --- Trading Fraud Extraction ---
     const tradingSignals = extractTradingFraudSignals(request.content_value);
 
@@ -211,6 +221,25 @@ export class AnalyzerService {
       }
     }
 
+    // --- Source-Aware Weighting ---
+    if (normalizedSource === 'Telegram' && tradingSignals.hasTradingFraudSignals) {
+      riskScore = Math.max(riskScore, 85);
+      if (riskSeverity !== 'CRITICAL') riskSeverity = 'HIGH';
+      signals.push('telegram_trading_scam');
+    }
+
+    if (normalizedSource === 'WhatsApp' && upiSignals.familyEmergencyScam) {
+      riskScore = Math.max(riskScore, 90);
+      riskSeverity = 'CRITICAL';
+      signals.push('whatsapp_imposter_emergency');
+    }
+
+    if (normalizedSource === 'SMS' && (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.electricityBillScam)) {
+      riskScore = Math.max(riskScore, 90);
+      riskSeverity = 'CRITICAL';
+      signals.push('sms_authority_impersonation');
+    }
+
     // --- Gemini Reasoning Escalation ---
     let geminiVerdict: GeminiVerdict | null = null;
     if (shouldEscalateToGemini(riskScore)) {
@@ -325,7 +354,7 @@ export class AnalyzerService {
     // Scam Chain DAG
     const scamChain: ScamChain = {
       nodes: [
-        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: 'User Ingress' },
+        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: `${normalizedSource} Message` },
         ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url }] : []),
         ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa }] : []),
         ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : []),

@@ -60,8 +60,8 @@ const REFUND_CASHBACK_PATTERNS = [
 
 // Emergency Scam
 const EMERGENCY_PATTERNS = [
-  /\b(?:accident|hospital|emergency|police\s*station|admit)\s*(?:send\s*money|transfer\s*fast|urgent\s*help)\b/i,
-  /\b(?:dost|bhai|friend)\s*(?:accident|hospital)\s*(?:paise|money|gpay|phonepe)\b/i
+  /\b(?:accident|hospital|emergency|police\s*station|admit)\b.*?\b(?:send\s*money|transfer\s*fast|urgent\s*help)\b/i,
+  /\b(?:dost|bhai|friend)\b.*?\b(?:accident|hospital|emergency)\b.*?\b(?:paise|money|gpay|phonepe)\b/i
 ];
 
 export function extractUpiFraudSignals(text: string): UpiFraudSignals {
