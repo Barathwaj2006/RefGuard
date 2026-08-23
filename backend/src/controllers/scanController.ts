@@ -4,7 +4,7 @@ import { ScanRequest } from '../models/types';
 
 const analyzer = new AnalyzerService();
 
-export const scanContent = (req: Request, res: Response, next: NextFunction) => {
+export const scanContent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const scanReq: ScanRequest = req.body;
 
@@ -16,7 +16,7 @@ export const scanContent = (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
-    const response = analyzer.analyze(scanReq);
+    const response = await analyzer.analyze(scanReq);
     res.status(200).json(response);
   } catch (error) {
     next(error);
