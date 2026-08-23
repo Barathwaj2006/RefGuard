@@ -10,7 +10,7 @@ This repository follows the **Universal Multi-Agent Engineering Workflow (v3)** 
 ## How This System Works
 
 1. **This file (`AGENTS.md`)** — the permanent contract. Defines principles that never change between projects.
-2. **[`agent-system/AGENT_TEAM.md`](agent-system/AGENT_TEAM.md)** — the universal operating model. Defines the priority model, responsibility matrix, handoff protocol, quality gates, duration modes, escalation rules, Git safety, rollback, and all operational procedures. Identical across all repositories using this workflow.
+2. **[`agent-system/AGENT_TEAM.md`](agent-system/AGENT_TEAM.md)** — the universal operating model. Defines the execution modes, domain specialization, handoff protocol, quality gates, duration modes, escalation rules, Git safety, rollback, and all operational procedures. Identical across all repositories using this workflow.
 3. **[`agent-system/PROJECT_CONTEXT.md`](agent-system/PROJECT_CONTEXT.md)** — the project-specific context. Defines *this* project's name, repo, tech stack, stage, hackathon mode, active agent roster, domain backlogs, authorized paths, and contract locations. **This is the only file that changes between projects.**
 4. **[`agent-system/PROJECT_PROFILE.md`](agent-system/PROJECT_PROFILE.md)** — the project profile. Describes the repository's purpose, architecture, domains, and quality requirements.
 5. **[`agent-system/agents/`](agent-system/agents/)** — per-agent configuration files with authorized/restricted paths and completion criteria.
@@ -33,12 +33,11 @@ An agent may modify **only** the files/directories explicitly assigned to it for
 - Do not cross domain boundaries (e.g., alter UI while assigned to backend).
 - If you discover a problem outside your ownership, **report it** — do not fix it.
 
-### 3. Primary / Secondary / Tertiary Priority Model
+### 3. Execution Mode Model
 See [AGENT_TEAM.md §3](agent-system/AGENT_TEAM.md) for full rules. Summary:
-- Primary has highest priority. Never abandon unfinished primary work.
-- Secondary requires primary completion or explicit assignment.
-- Tertiary requires explicit instruction.
-- Escalation requires a completed or blocked Handoff Report — never mid-task self-judgment.
+- **RAPID BUILD (Default)**: Optimize for build speed, implementation, and minimal blocking analysis. Every active agent must have a build task.
+- **ANALYSIS / DEBUGGING**: Understand the project state, find issues, or debug specific bugs with minimal refactoring.
+- **PROTOTYPE TESTING**: Test the actual running product as a user, observing and reporting real-world UX and functional behavior.
 
 ### 4. Contract-First Development
 Once shared contracts/interfaces are locked, they are owned by the human/integrator. No agent may modify a locked contract. If a change is needed: STOP work → report mismatch → wait for human review. See [AGENT_TEAM.md §13](agent-system/AGENT_TEAM.md).
@@ -86,7 +85,7 @@ RECOMMENDED NEXT ACTION:
 The next task is generated from the actual result — never pre-generated as a chain.
 
 ### 10. Human Escalation
-Escalate when: blocked, contract mismatch, stage completes, architecture changes, security-sensitive decisions, or explicit approval required. Successful in-scope primary completion proceeds to next backlog item without human round-trip.
+Escalate when: blocked, contract mismatch, stage completes, architecture changes, security-sensitive decisions, or explicit approval required. Successful in-scope build task completion proceeds to next backlog item without human round-trip.
 
 ### 11. No Cross-Domain Takeover
 If blocked, perform bounded in-domain work (analysis, tests, docs) — never take another agent's domain. Cross-domain work requires explicit authorization.
@@ -102,9 +101,9 @@ Do not implement features not explicitly requested. This repository is a coordin
 ## For the Full Operating Model
 
 Read **[agent-system/AGENT_TEAM.md](agent-system/AGENT_TEAM.md)** for:
-- Complete priority rules and escalation procedures
+- Execution Modes (RAPID BUILD, ANALYSIS/DEBUGGING, PROTOTYPE TESTING)
 - Agent responsibility matrix and per-agent detail
-- Overlapping secondary domain resolution
+- Overlapping domain resolution
 - Duration modes and mode transition rules
 - Stage awareness
 - Domain backlogs

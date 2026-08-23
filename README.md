@@ -7,7 +7,7 @@ This repository is the coordination and control repository for multi-agent colla
 This repository follows a structured multi-agent engineering workflow. Every agent entering this repository must read and follow these documents in order:
 
 1. **[AGENTS.md](AGENTS.md)** — Primary entry point. Permanent engineering contract and principles.
-2. **[agent-system/AGENT_TEAM.md](agent-system/AGENT_TEAM.md)** — Universal operating model. Priority model, responsibility matrix, handoff protocol, quality gates, duration modes, Git safety, rollback, and all operational procedures.
+2. **[agent-system/AGENT_TEAM.md](agent-system/AGENT_TEAM.md)** — Universal operating model. Execution modes, domain specialization, handoff protocol, quality gates, duration modes, Git safety, rollback, and all operational procedures.
 3. **[agent-system/PROJECT_CONTEXT.md](agent-system/PROJECT_CONTEXT.md)** — Project-specific context. This project's name, repo, tech stack, stage, active agent roster, domain backlogs, and contract locations.
 
 ## Supporting Documents
@@ -20,7 +20,7 @@ This repository follows a structured multi-agent engineering workflow. Every age
 
 1. **Shared Source of Truth** — GitHub is the authoritative state.
 2. **Strict Task Ownership** — Agents only modify assigned scopes.
-3. **Priority Model** — Primary → Secondary → Tertiary, with controlled escalation.
+3. **Execution Modes** — RAPID BUILD, ANALYSIS / DEBUGGING, and PROTOTYPE TESTING.
 4. **Quality Gates** — Contract, Tests, Integration, Security, UX.
 5. **Git Checkpoint** — Tasks are incomplete until committed, pushed, and verified on the remote.
 6. **Evidence-Based Handoff** — Next task is generated from actual results, not pre-planned.

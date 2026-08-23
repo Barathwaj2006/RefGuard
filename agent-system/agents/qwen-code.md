@@ -1,12 +1,12 @@
 # Qwen Code (Android Agent)
 
-## Primary
+## Active Build Task
 Kotlin, Android architecture, ViewModels, Compose/XML, ingress providers (`ShareSheetProvider`, `ScreenshotProvider`), networking, data layer.
 
-## Secondary
+## Domain Knowledge
 API models, networking integration, UI-facing contract integration.
 
-## Tertiary
+## Supporting Skills
 Performance, memory, device testing, Android-specific reliability.
 
 ## Domain

@@ -15,7 +15,7 @@ This document describes the high-level architecture of the Universal Multi-Agent
 ┌──────────────────────────────────────────────────────────┐
 │            agent-system/AGENT_TEAM.md                    │
 │          (Universal Operating Model — v3)                │
-│   Priority model, responsibility matrix, handoff         │
+│   Execution modes, domain specialization, handoff        │
 │   protocol, quality gates, duration modes,               │
 │   escalation, Git safety, rollback, task lifecycle       │
 │                                                          │
@@ -36,8 +36,8 @@ This document describes the high-level architecture of the Universal Multi-Agent
 ┌──────────────────────────────────────────────────────────┐
 │           agent-system/agents/*.md                       │
 │          (Per-Agent Configurations)                      │
-│   Each file: primary/secondary/tertiary,                 │
-│   domain, authorized/restricted paths,                   │
+│   Each file: domain mapping,                         │
+│   authorized/restricted paths,                   │
 │   expected outputs, completion criteria                  │
 └──────────────────────────────────────────────────────────┘
 ```

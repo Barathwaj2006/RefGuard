@@ -1,4 +1,4 @@
-# Agent Team Operating Model (Universal — v3)
+# Agent Team Operating Model (Universal — v4)
 
 > This file is identical across all repositories in this workflow. Project-specific details (name, repo, duration mode, current stage, authorized paths) live in `PROJECT_CONTEXT.md` in the same repo — never edit those into this file.
 
@@ -8,103 +8,98 @@ Defines how AI agents collaborate on any project in this workflow while preservi
 
 Four principles govern the team:
 
-1. **Specialization** — each agent has a defined primary responsibility.
-2. **Controlled escalation** — secondary/tertiary responsibilities activate only on evidence, never self-judgment.
+1. **Active Build Task** — each agent executes a specific assigned build task.
+2. **Execution Modes** — agents operate in one of three modes: RAPID BUILD, ANALYSIS/DEBUGGING, or PROTOTYPE TESTING.
 3. **Evidence-based handoff** — the next task is generated from the actual result of the previous task.
 4. **Minimum necessary context** — agents receive only what they need for their current task.
 
 ---
 
-## 2. Agent Priority Model
+## 2. Execution Mode Model
 
-```text
-PRIMARY   → main responsibility
-SECONDARY → backup responsibility
-TERTIARY  → last-resort responsibility
-```
+The universal workflow revolves around three modes.
 
----
-
-## 3. Priority Rules
-
-1. Primary work has the highest priority.
-2. An agent must not abandon unfinished primary work merely because secondary work is available.
-3. Secondary work requires either primary completion or explicit assignment.
-4. Tertiary work requires explicit instruction.
-5. An agent must not silently take ownership of another agent's primary domain.
-6. If blocked, the agent performs bounded analysis/review within its own domain rather than inventing functionality elsewhere.
-7. Agents must report blockers instead of pretending a dependency is complete.
-8. Agents must not modify shared contracts without authorization.
-9. Agents must not declare another agent's work complete without evidence.
-10. The human remains the final authority for major architectural decisions.
-11. An agent may escalate to secondary/tertiary responsibility only after submitting a Handoff Report (Section 16) with STATUS: COMPLETED or STATUS: BLOCKED for its current primary task.
+                    PROJECT
+                       │
+                       ▼
+                EXECUTION MODE
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+ RAPID BUILD      ANALYSIS       PROTOTYPE
+                  / DEBUGGING      TESTING
+        │              │              │
+        ▼              ▼              ▼
+   BUILD FAST      UNDERSTAND     USE PRODUCT
+   MIN ANALYSIS    FIND ISSUES    MANUAL TEST
+        │              │              │
+        └──────────────┼──────────────┘
+                       ▼
+                  NEXT DECISION
 
 ---
 
-## 3A. Overlapping Secondary Domains
+## 3. Mode Rules
 
-Where two agents' secondary domains overlap (most commonly backend/frontend integration surfaces):
+### MODE 1 — RAPID BUILD (DEFAULT)
+Purpose: BUILD THE PRODUCT AS FAST AS REASONABLY POSSIBLE.
+- **Rule 1**: Every active agent must have a build task. (No dedicated non-building agents).
+- **Rule 2**: Prioritize implementation, integration, and working functionality.
+- **Rule 3**: Do NOT turn tasks into research projects. Avoid unnecessary deep analysis before implementation.
+- **Rule 4**: If blocked, DO NOT spend excessive time on unrelated work. Report the blocker and wait for the orchestrator.
 
-> **The Primary owner of that layer retains authority over the shared surface.**
+### MODE 2 — ANALYSIS / DEBUGGING
+Purpose: Understand the current state of the project, or debug a specific problem.
+- **Analysis**: Identify what is working, broken, blocked, and the distance to MVP.
+- **Debugging Submode**: Reproduce the problem, identify root cause, implement a minimal fix, verify, and report. Do not refactor unrestricted.
+
+### MODE 3 — PROTOTYPE TESTING
+Purpose: TEST THE ACTUAL RUNNING PRODUCT AS A USER.
+- Start the application (web, mobile, or desktop).
+- Perform realistic user flows.
+- Observe and report bugs, UX issues, and performance issues.
+
+---
+
+## 3A. Overlapping Domains
+
+Where two agents' domains overlap (most commonly backend/frontend integration surfaces):
+
+> **The owner of that layer retains authority over the shared surface.**
 
 The exact split must be stated explicitly in `PROJECT_CONTEXT.md` for the current task — never assumed by the agent. If ownership is ambiguous, the task is **BLOCKED** until the human/integrator resolves it.
 
 ---
 
-## 4. Agent Responsibility Matrix (Default Roster)
+## 4. Agent Domain Specialization (Default Roster)
 
-Adjust this table in `PROJECT_CONTEXT.md` if a given project uses a different tool roster — the roles/rules below still apply to whatever agents are actually in use.
+Adjust this table in `PROJECT_CONTEXT.md` if a given project uses a different tool roster.
 
-| Agent              | Primary                           | Secondary                              | Tertiary                          |
-| ------------------ | ---------------------------------- | --------------------------------------- | ----------------------------------- |
-| Antigravity IDE    | Backend engineering & integration | Frontend implementation                | Full-stack debugging/performance   |
-| Antigravity 2.0    | Frontend engineering              | Backend/API implementation             | Integration/performance            |
-| Google AI Studio   | Gemini / AI / ML intelligence     | ML experimentation/evaluation          | AI architecture / domain taxonomy  |
-| Google Jules       | Testing & QA                      | Code review/security review            | Debugging/integration fixes        |
-| Qwen Code          | Platform-specific engineering (project-dependent) | Backend/data integration | Performance/device testing         |
-| Stitch             | UI/UX design                      | Design system/component specification  | Frontend implementation guidance   |
-| GitHub Copilot     | Documentation                     | Architecture/research documentation    | Pitch/demo/presentation            |
+| Agent              | Domain / Build Specialization                      |
+| ------------------ | -------------------------------------------------- |
+| Antigravity IDE    | Backend engineering, APIs, architecture            |
+| Antigravity 2.0    | Frontend engineering, UI/UX implementation         |
+| Google AI Studio   | AI / ML intelligence, reasoning models             |
+| Google Jules       | Testing, QA, security review                       |
+| Qwen Code          | Platform-specific (Android/CLI) engineering        |
+| Stitch             | UI/UX design deliverables                          |
+| GitHub Copilot     | Documentation, developer guides                    |
+
+During RAPID BUILD, available agents should be assigned productive build tasks matching their domain.
 
 ---
 
-## 5. Agent Responsibilities
+## 5. Agent Responsibilities (Task Focus)
 
-### Antigravity IDE
-**Primary** — backend services, APIs, AI/model integration, backend business logic, server-side architecture, database integration, backend orchestration.
-**Secondary** — API integration, state integration, connecting backend functionality to existing frontend components (UI-facing portion of shared surfaces only).
-**Tertiary** — integration failures, cross-layer bugs, performance optimization.
+Rather than maintaining rigid tiers, agents focus on their assigned **ACTIVE BUILD TASK** within their domain:
 
-### Antigravity 2.0
-**Primary** — production UI, screens, components, interactions, state management, responsive behavior.
-**Secondary** — frontend-facing API requirements, API integration support, UI-required backend adjustments. Backend/contract-facing implementation remains owned by Antigravity IDE unless explicitly reassigned.
-**Tertiary** — cross-system integration, frontend performance, end-to-end debugging.
-
-### Google AI Studio
-**Primary** — model system prompts, structured outputs, reasoning design, few-shot examples, AI evaluation, model behavior, AI safety.
-**Secondary** — dataset analysis, baseline models, model evaluation, metric comparison, ML feasibility.
-**Tertiary** — domain taxonomy, reasoning architecture, future ML architecture, intelligence pipeline design.
-
-### Google Jules
-**Primary** — unit/integration/E2E/regression/contract/failure-path testing.
-**Secondary** — code review, security review, contract review, quality assessment.
-**Tertiary** — reproducing failures, diagnosing issues, applying targeted fixes when explicitly assigned.
-
-### Qwen Code
-**Primary** — platform-specific engineering (Android/CLI/backend as defined per project in PROJECT_CONTEXT.md).
-**Secondary** — API models, networking integration, backend contract integration. Contract ownership remains with the contract owner.
-**Tertiary** — performance, memory, device/environment testing.
-
-### Stitch
-**Primary** — user flows, wireframes, screen designs, interaction design, visual hierarchy, loading/error/state variants.
-**Secondary** — component specifications, typography, spacing, visual states, reusable design patterns.
-**Tertiary** — implementation specifications, interaction specifications, frontend design review.
-
-**Note:** Stitch's deliverables are not code and do not live on a feature branch — they live in a `design/` folder or an external design-link registry. Branch rollback (Section 21) does not apply to Stitch's output; a bad iteration is discarded by replacing the file/link.
-
-### GitHub Copilot
-**Primary** — README, technical documentation, developer guides, implementation notes.
-**Secondary** — architecture diagrams, architecture decisions, technical explanations, research documentation.
-**Tertiary** — pitch, demo script, presentation material, judge/stakeholder-facing explanations.
+- **Antigravity IDE**: Builds backend services, APIs, AI/model integration, business logic, server-side architecture.
+- **Antigravity 2.0**: Builds production UI, screens, components, interactions, state management.
+- **Google AI Studio**: Builds model prompts, structured outputs, evaluation pipelines.
+- **Google Jules**: Builds test suites, runs QA gates, verifies features.
+- **Qwen Code**: Builds platform-specific engineering (Android/CLI as defined per project).
+- **Stitch**: Builds UI/UX design deliverables.
+- **GitHub Copilot**: Builds documentation and guides.
 
 ---
 
@@ -115,314 +110,207 @@ Every agent prompt must begin with the header defined in this repo's `PROJECT_CO
 ```text
 PROJECT: <name>
 REPO: <path/url>
-HACKATHON MODE: <duration, or "N/A — ongoing development">
+MODE: RAPID BUILD (or ANALYSIS / PROTOTYPE TESTING)
 STAGE: <stage>
-YOUR ROLE (per responsibility matrix): <Primary/Secondary/Tertiary>
+YOUR ROLE: <Specialization>
 SHARED SURFACE OWNER: <if applicable>
 YOUR AUTHORIZED PATHS: <paths>
+CURRENT BUILD TASK: <task>
 ```
 
-Treat this header as authoritative for the current task. If `PROJECT_CONTEXT.md` is missing or stale, stop and report a blocker rather than guessing project specifics.
+Treat this header as authoritative for the current task.
 
 ---
 
 ## 7. Context Hygiene
 
-Agent prompts should contain only: the Project Context Header, the relevant slice of the locked contract, the specific task, relevant repository files/context, and completion criteria. Do not paste unrelated prior handoff reports, other agents' full outputs, complete project history, unrelated files, or unnecessary logs.
+Rapid Build prompts should contain only: Project Context, Current mode, Current task, Relevant architecture, Relevant contracts, Known dependencies, Expected output. Do not paste entire project histories.
 
 ---
 
 ## 7A. Credential Hygiene in Agent Prompts
 
-**Never paste live credentials, API keys, tokens, or secrets into any agent prompt** — reference them by environment-variable name only, even when explaining how auth works. Applies to every cloud-based agent in the roster; a key pasted for "context" is a leak the moment it leaves the machine.
+**Never paste live credentials, API keys, tokens, or secrets into any agent prompt** — reference them by environment-variable name only.
 
 ---
 
 ## 8. Domain Backlog
 
-At Contract Lock time, each implementation agent receives ~2–4 pre-approved tasks within its own domain, so it isn't idle waiting on a human between steps. The human/integrator may reorder, block, add, remove, or reprioritize — a Domain Backlog never authorizes cross-domain work.
+Agents receive tasks within their domain backlog. The human/integrator may reorder, block, add, remove, or reprioritize. A Domain Backlog never authorizes cross-domain work.
 
 ---
 
-## 9. Duration Modes
+## 9. Hackathon Duration Modes
 
-Duration is set per-project in `PROJECT_CONTEXT.md`. Default matrix:
+Duration is set per-project in `PROJECT_CONTEXT.md`. It dictates BUILD SPEED and verification depth, not an enforced intelligence phase:
 
-| Duration        | Intelligence Phase             | ML Feasibility                                 | Contract Lock | QA Depth                                            |
-| ---------------- | ------------------------------- | ------------------------------------------------ | -------------- | ------------------------------------------------------ |
-| **12h — Blitz**  | ~10 min skim, no documentation  | Skipped — deterministic + reasoning-model hybrid assumed | ~15 min        | Smoke test only                                        |
-| **24h**          | ~20–30 min                      | Skipped                                          | ~30 min        | Core paths only                                        |
-| **36h**          | ~45 min                         | Skipped unless labeled dataset already exists    | ~45 min        | Fuller unit suite                                      |
-| **48h**          | ~1 hr                           | Quick sanity check only if trivial               | ~1 hr          | Full QA gates + light security                         |
-| **7-day**        | Full intelligence phase         | Only if fixtures provide enough labeled data     | Full           | All quality gates                                      |
-| **14-day**       | Everything in 7-day mode        | Real ML bake-off with proper evaluation          | Full           | Full QA + orchestrator prototype becomes realistic     |
-| **Ongoing (no deadline)** | Full, revisited per milestone | Evaluated per feature, not compressed  | Full, versioned | All gates, every release |
-
-### 12-Hour Blitz
-Ship the minimum reliable working system. No exploratory ML — assume deterministic rules + a reasoning-model layer as baseline. Focus: core functionality, integration, smoke testing, demo reliability.
-**Git granularity:** a "task" is a feature slice, not a file — one coherent commit per slice.
-
-### 24-Hour Mode
-Short repository/architecture inspection. Skip ML experimentation unless a validated model already exists. Focus: core implementation, integration, essential tests, demo stability.
-
-### 36-Hour Mode
-Deeper intelligence review. ML experimentation only if a suitable labeled dataset already exists.
-
-### 48-Hour Mode
-~1hr intelligence work. Lightweight ML sanity check only if it won't threaten the main timeline. Full QA gates.
-
-### 7-Day Mode
-Full intelligence phase: repository architecture, domain-specific taxonomy/pattern investigation, dataset quality, ML feasibility, reasoning-model performance, hybrid architecture. Implement ML only with evidence it improves the system.
-
-### 14-Day Mode
-Full process. First duration where a real ML bake-off and an initial orchestration prototype become realistic — the orchestrator remains a separate concern and must not jeopardize the main product.
-
-### Ongoing / No Fixed Deadline
-Standard production discipline — no compression. Full gates on every meaningful release, not just at a sprint boundary.
+- **12h**: MAXIMUM BUILD SPEED, minimal verification.
+- **24h**: Rapid build, focused verification.
+- **36h**: Rapid build, moderate verification.
+- **48h**: Rapid build, integration verification, prototype testing before final submission.
+- **Ongoing**: Full gates on every meaningful release.
 
 ---
 
 ## 10. Input Trigger Syntax
 
 ```text
-HACKATHON MODE: <12h | 24h | 36h | 48h | 7-day | 14-day | ongoing> | Project: <name>
+HACKATHON MODE: <duration> | Project: <name> | MODE: <mode>
 ```
 
-Set once per project/sprint in `PROJECT_CONTEXT.md`; every subsequent agent task must respect it.
+---
+
+## 11. Contract Ownership
+
+Locked contracts remain human/integrator-owned. No agent may silently change a locked contract.
+A contract change: STOP → REPORT → HUMAN DECISION → RE-SYNC → RESUME BUILD.
 
 ---
 
-## 11. Mode Transition Rule
-
-When mode becomes deeper, previously completed work is not automatically sufficient: re-run **Gate 2 (Tests)** and **Gate 4 (Security)** at the new depth before further build work continues. Other gates are revisited where the deeper mode materially changes requirements. Work already done is preserved; its validation status is upgraded, not assumed.
-
----
-
-## 12. Stage Awareness
+## 12. Manual Handoff Protocol
 
 ```text
-Repository Intelligence → Machine Learning Intelligence → Architecture → Contract Lock →
-Parallel Build → Integration → QA → Security Review → Release
+Agent A → Mode Report → Human/Message Bus → Next Prompt → Agent B
 ```
-
-An agent must not assume a later stage merely because a task sounds like implementation work.
 
 ---
 
-## 13. Contract Ownership
+## 13. Human Escalation Rules
 
-Once locked, files under `contracts/` are owned exclusively by the human/integrator. No agent — including the Primary owner of that domain — may modify a locked contract file.
+Route to the human when: (1) contract changes are required, (2) architecture changes are required, (3) security-critical decisions arise, (4) an agent is genuinely blocked, (5) mode transition is required, (6) final integration/release decision is required. Do not interrupt the human for routine successful build progress.
+
+---
+
+## 14. Mode Reports
+
+### RAPID BUILD Report
 
 ```text
-Agent discovers required change → STOP affected work → report contract mismatch →
-human/integrator reviews → contract updated if approved → re-sync broadcast →
-active agents receive updated contract → affected tasks resume
+AGENT IDENTITY: "I am <agent>, the <role> for <project>."
+TASK: <what was assigned>
+STATUS: COMPLETED / IN PROGRESS / BLOCKED / FAILED
+WORK DONE: <actual implementation>
+FILES CREATED: <files>
+FILES MODIFIED: <files>
+TESTS / VERIFICATION: <what was actually checked>
+BLOCKERS: <actual blockers>
+RECOMMENDED CHANGES: <improvements discovered but not implemented>
+RECOMMENDED NEXT TASK: <what should happen next>
+KNOWN RISKS: <important risks discovered>
 ```
 
-A contract change also invalidates any Domain Backlog items referencing the changed contract — those are marked BLOCKED pending re-sync, never silently executed against stale assumptions.
-
----
-
-## 14. Manual Handoff Protocol
+### ANALYSIS Report
 
 ```text
-Agent A → Handoff Report → Human/Message Bus → Next Prompt → Agent B
+PROJECT STATUS: <overall>
+BUILD COMPLETION: <estimated percentage>
+COMPLETED: <list>
+IN PROGRESS: <list>
+NOT STARTED: <list>
+BLOCKED: <list>
+BUGS: <list>
+INTEGRATION GAPS: <list>
+SECURITY RISKS: <list>
+PERFORMANCE RISKS: <list>
+TECHNICAL DEBT: <list>
+DISTANCE TO MVP: <assessment>
+DISTANCE TO DEMO-READY: <assessment>
+RECOMMENDED NEXT TASKS: <ordered list>
+TIME RISK: <low / medium / high>
 ```
 
-The human is not required to manually route every successful task — only meaningful coordination points (Section 15).
-
----
-
-## 15. Human Escalation Rules
-
-Route to the human when: (1) an agent is BLOCKED, (2) a contract mismatch is discovered, (3) a stage completes, (4) explicit human escalation is required, (5) a security-sensitive or architectural decision needs approval. A successful, in-scope completion of primary-domain work does not require a round trip — the agent proceeds to its next Domain Backlog item.
-
----
-
-## 16. Handoff Report
+### DEBUGGING Report
 
 ```text
-TASK:
-STATUS:
-WORK COMPLETED:
-FILES CREATED:
-FILES MODIFIED:
-TESTS RUN:
-TEST RESULTS:
-BLOCKERS:
-DEPENDENCIES:
-ASSUMPTIONS:
-RECOMMENDED NEXT ACTION:
+BUG: <description>
+REPRODUCTION: <steps>
+ROOT CAUSE: <cause>
+AFFECTED FILES: <files>
+FIX: <what changed>
+VERIFICATION: <tests/manual verification>
+REGRESSION RISK: <assessment>
+REMAINING ISSUES: <if any>
 ```
 
-The next agent receives only the relevant slice.
-
----
-
-## 17. Dynamic Handoff Principle
+### PROTOTYPE TESTING Report
 
 ```text
-Agent A → actual result → analyze result → determine next task →
-generate next prompt → Agent B
+TEST ENVIRONMENT: <environment>
+BUILD VERSION: <version/commit>
+TESTED FLOW: <flow>
+RESULT: PASS / FAIL / PARTIAL
+STEPS PERFORMED: <steps>
+OBSERVED: <what happened>
+EXPECTED: <what should happen>
+BUGS FOUND: <bugs>
+UX ISSUES: <issues>
+PERFORMANCE ISSUES: <issues>
+REQUESTED CHANGES: <changes required>
+PRIORITY: CRITICAL / HIGH / MEDIUM / LOW
+RECOMMENDED FIX: <fix>
 ```
 
-Never pre-generate a fixed chain of future prompts — every next task is generated from the actual prior result.
-
 ---
 
-## 18. No-Idle Rule
-
-If an agent's primary task is blocked, it performs bounded, in-domain preparation work — never cross-domain work.
-
----
-
-## 19. No Cross-Domain Takeover
+## 15. Dynamic Handoff Principle
 
 ```text
-Agent blocked → report blocker → orchestrator/human evaluates dependency →
-dependency owner receives task
+Agent A → actual result → orchestrator evaluates → NEXT BUILD TASK
 ```
 
-Cross-domain takeover requires explicit instruction, never silent action.
+Never pre-generate a fixed chain of future prompts.
 
 ---
 
-## 20. Git and Branch Isolation
+## 16. Git and Branch Isolation
 
 ```text
 main → project sprint branch → agent feature branches
 ```
 
-Only the designated integrator merges agent branches. Agents do not merge each other's work unless explicitly authorized.
+Agents must: inspect status, preserve user work, use appropriate branches, avoid modifying unrelated domains, and produce recoverable changes.
 
 ### Git Checkpoint Protocol (Non-Negotiable)
 
-Any agent making project changes must:
-1. **Validate** all changes (lint, test, build).
-2. **Inspect** `git status` and relevant diffs.
-3. **Commit** with a concise, informative subject and a useful body explaining what changed and why.
-4. **Push** the commit to the configured GitHub remote.
-5. **Verify** the commit exists on the remote.
-6. **Only then** declare the task complete.
-
-**Incomplete tasks:** A task is NOT complete if changes remain uncommitted, the commit has not been pushed, or the remote state has not been verified.
-
-**Prohibited commit messages:** "update", "changes", "fix", "done".
-
-**Restrictions:** Do not create meaningless commits when no changes occurred. Do not force-push. Do not rewrite history. Do not create unsolicited Pull Requests.
-
-**Push failure handling:** If push fails, the task remains BLOCKED. Report the exact failure. Do not claim completion. Do not force-push. Retry safely when appropriate.
+1. **Validate** all changes.
+2. **Inspect** `git status` and diffs.
+3. **Commit** with informative subject/body.
+4. **Push** to the remote.
+5. **Verify** the commit exists.
+6. **Only then** declare task complete.
 
 ---
 
-## 21. Rollback and Branch Recovery
-
-A failed agent run is recoverable without affecting sibling work: discard, reset, or recreate a feature branch from the last known-good integration point. If two branches modify the same file despite Section 3A's ownership split, treat it as an ownership violation, not a routine merge conflict — trace which agent worked outside its authorized paths before resolving.
-
----
-
-## 22. Quality Gates
+## 17. Quality Gates
 
 **Gate 1 — Contract:** conforms to the shared contract?
 **Gate 2 — Tests:** relevant tests pass?
-**Gate 3 — Integration:** functions correctly with the rest of the system?
-**Gate 4 — Security:** PII leakage, exposed keys, insecure data handling, unsafe external requests, prompt injection risks, auth/authz problems?
-**Gate 5 — UX:** can the user understand the result and take the correct action?
+**Gate 3 — Integration:** functions correctly?
+**Gate 4 — Security:** PII leakage, exposed keys, prompt injection?
+**Gate 5 — UX:** understandable and usable?
 
 ---
 
-## 23. Short-Duration Rule
+## 18. Final Rules
 
-> **Compress the process; do not abandon the process.**
+1. Know the project context before acting.
+2. Follow the active Execution Mode.
+3. Rapid Build is the Default mode.
+4. Do not silently take another agent's domain.
+5. Respect locked contracts.
+6. Report actual results using the correct Mode Report format.
+7. Report blockers honestly.
+8. Do not invent missing functionality.
+9. Preserve existing work.
+10. Ask for human approval when required.
+11. Keep agent context limited to what is necessary.
+12. Never paste live credentials or secrets into any agent prompt.
+13. Treat cross-agent file collisions at merge time as ownership violations, not routine conflicts.
 
 ---
 
-## 24. Task Lifecycle
-
-Tasks transition through these states:
+## 19. One-Line Model
 
 ```text
-PENDING → ASSIGNED → RUNNING → COMPLETED
+MODE → ACTUAL RESULT → NEXT DECISION
 ```
-
-Alternative flows:
-
-```text
-RUNNING → FAILED → RETRY → RUNNING
-RUNNING → BLOCKED → (dependency resolved) → RUNNING
-RUNNING → NEEDS_REVIEW → RUNNING → COMPLETED
-ASSIGNED → CANCELLED
-RUNNING → SUPERSEDED
-```
-
----
-
-## 25. Autonomous Orchestrator — Phase 2
-
-Not part of any project's build unless its duration mode explicitly allows it. **Entry condition: do not begin building this until at least one project has shipped using the human-mediated handoff protocol.** Design it from observed coordination problems, not assumptions.
-
----
-
-## 26. Why Direct Agent Communication Is Not Assumed
-
-The current tool roster does not share a communication bus. Use the human-mediated message bus (Section 14) until real integration glue exists.
-
----
-
-## 27. Long-Term Architecture
-
-```text
-Multi-Agent Orchestrator
-        │
-        ├── Project A
-        ├── Project B
-        └── Project C
-```
-
-This operating model is identical across projects. Only `PROJECT_CONTEXT.md` changes.
-
----
-
-## 28. Core Operating Principle
-
-> Maximum useful parallelism + minimum coordination overhead + minimum integration conflict + recoverable failures.
-
----
-
-## 29. Final Rules
-
-1. Know the project context before acting — read `PROJECT_CONTEXT.md` first.
-2. Follow the selected hackathon/duration mode.
-3. Prioritize primary responsibility.
-4. Do not abandon primary work unnecessarily.
-5. Do not silently take another agent's domain.
-6. Respect locked contracts.
-7. Report actual results.
-8. Report blockers honestly.
-9. Do not invent missing functionality or missing project context.
-10. Use evidence to determine completion.
-11. Preserve existing work.
-12. Ask for human approval when required.
-13. Generate future work from actual results.
-14. Do not assume direct agent-to-agent communication exists.
-15. Do not begin autonomous orchestration before the human-mediated workflow has shipped a project.
-16. Resolve overlapping secondary ownership explicitly.
-17. Keep agent context limited to what is necessary.
-18. Never paste live credentials or secrets into any agent prompt.
-19. Re-run required quality/security gates after a duration-mode upgrade.
-20. Maintain isolated, recoverable branches.
-21. Treat locked contracts as human-owned.
-22. Escalate to secondary/tertiary only after a completed or blocked Handoff Report.
-23. Treat cross-agent file collisions at merge time as ownership violations, not routine conflicts.
-
----
-
-## 30. One-Line Model
-
-```text
-PROJECT CONTEXT → DURATION MODE → STAGE → DOMAIN BACKLOG → SPECIALIZED AGENT →
-PRIMARY → SECONDARY → TERTIARY → ACTUAL RESULT → VALIDATION →
-HANDOFF / NEXT BACKLOG ITEM → NEXT TASK
-```
-
-The human is involved at decision boundaries, not every successful micro-step.

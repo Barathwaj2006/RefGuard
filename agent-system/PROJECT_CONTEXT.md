@@ -3,30 +3,29 @@
 > This file supplies the project-specific values referenced by `AGENT_TEAM.md`. Every agent prompt should quote the header below verbatim before its task.
 
 ```text
-PROJECT: Multi-Agent Workspace
-REPO: github.com/Barathwaj2006/multi-agent-workspace
-HACKATHON MODE: N/A — ongoing development
-STAGE: Workflow Setup
-YOUR ROLE (per responsibility matrix): <Primary | Secondary | Tertiary>
+PROJECT: RefGuard
+REPO: C:\Users\barat\OneDrive\Desktop\RefGuard
+MODE: RAPID BUILD
+STAGE: Stage 1 — Actual Product Build
+YOUR ROLE: <Specialization>
 SHARED SURFACE OWNER: <agent name, or "None">
 YOUR AUTHORIZED PATHS: <paths this agent may touch>
+CURRENT BUILD TASK: <task>
 ```
 
 ---
 
 ## Active Agent Roster for This Project
 
-This is a coordination-only repository (no application code). The following agents are registered for use across projects managed by this workspace:
-
 | Agent | Status | Notes |
 |-------|--------|-------|
-| Antigravity IDE | Active | Primary: Workflow architecture & backend integration |
-| Antigravity 2.0 | Available | Primary: Frontend engineering |
-| Google AI Studio | Available | Primary: AI/ML intelligence |
-| Google Jules | Available | Primary: Testing & QA |
-| Qwen Code | Available | Primary: Platform-specific engineering |
-| Stitch | Available | Primary: UI/UX design |
-| GitHub Copilot | Available | Primary: Documentation |
+| Antigravity IDE | Active | Specialization: Backend engineering & APIs |
+| Antigravity 2.0 | Available | Specialization: Frontend engineering |
+| Google AI Studio | Available | Specialization: AI/ML intelligence |
+| Google Jules | Available | Specialization: Testing & QA |
+| Qwen Code | Available | Specialization: Platform-specific engineering |
+| Stitch | Available | Specialization: UI/UX design |
+| GitHub Copilot | Available | Specialization: Documentation |
 
 Active = currently performing tasks in this repo.
 Available = registered and can be assigned when a product project begins.

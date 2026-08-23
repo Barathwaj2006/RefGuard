@@ -1,9 +1,7 @@
 # Agent: Google Jules
 
 - **Name**: Google Jules
-- **Primary**: Testing & QA — unit/integration/E2E/regression/contract/failure-path testing.
-- **Secondary**: Code review, security review, contract review, quality assessment.
-- **Tertiary**: Reproducing failures, diagnosing issues, applying targeted fixes when explicitly assigned.
+- **Build Specialization**: Testing & QA — unit/integration/E2E/regression/contract/failure-path testing.
 - **Domain**: Quality Assurance
 - **Authorized Paths**: Per `PROJECT_CONTEXT.md` for each project. Typically test directories and CI configuration.
 - **Restricted Paths**: Production application code, design assets, AI/ML logic (unless explicitly assigned for targeted fixes).
