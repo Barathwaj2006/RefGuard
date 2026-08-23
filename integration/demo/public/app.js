@@ -1,190 +1,235 @@
-﻿const presets = {
-  fake_referral: {
+// RefGuard Interactive Demo — Client-Side Application
+
+const scenarios = {
+  'fake-referral': {
     type: 'URL',
-    context: 'com.whatsapp',
-    value: 'http://free-cashback-loot.xyz/claim?ref=998877'
+    value: 'https://free-cashback.tk/referral?code=abc123&utm_source=whatsapp'
   },
-  qr_scam: {
+  'tampered-qr': {
     type: 'QR',
-    context: 'com.google.android.apps.nbu.paisa.user',
-    value: 'upi://pay?pa=scammer@oksbi&pn=RewardClaim&am=2500&cu=INR'
+    value: 'upi://pay?pa=fraudster.collect@okhdfcbank&pn=Amazon%20Rewards&tn=Claim%20Prize&am=500&tr=12345'
   },
-  intent_mismatch: {
+  'payment-mismatch': {
     type: 'TEXT',
-    context: 'com.phonepe.app',
-    value: 'Congratulations! You won Rs. 5000 cashback scratch card. Enter UPI PIN to claim: upi://pay?pa=fake.refund@okhdfcbank&pn=CashbackRefund&am=5000'
+    value: 'You have won a prize of ₹10,000! Click here to claim. Send payment via UPI to verify account.'
   },
-  high_risk_vpa: {
+  'high-risk-vpa': {
     type: 'UPI_VPA',
-    context: 'com.refguard.manual',
-    value: 'lottery.winner@paytm'
+    value: 'secure.payment.verify@hdbank'
   },
-  screenshot_ocr: {
-    type: 'IMAGE',
-    context: 'com.android.gallery',
-    value: 'VGVsZWdyYW0gVGFzayBFYXJuaW5nIFZJUDogRWFybiA1MDAwIGRhaWx5IGJ5IGxpa2luZyB2aWRlb3MuIENvbnRhY3Qgd2EubWUvOTE5ODc2NTQzMjEwIHJlZj1UQVNLOTk='
+  'legitimate-merchant': {
+    type: 'UPI_VPA',
+    value: 'amazon.payments@okhdfcbank'
   },
-  legit_merchant: {
-    type: 'QR',
-    context: 'com.swiggy.consumer',
-    value: 'upi://pay?pa=swiggy@icici&pn=SwiggyOrders&am=450&cu=INR'
+  'advance-fee': {
+    type: 'TEXT',
+    value: 'Claim your lottery winnings! You have won $50,000 in the international lottery. Pay ₹5,000 processing fee now to receive payment.'
   }
 };
 
-function loadPreset(key) {
-  const p = presets[key];
-  if (!p) return;
-  document.getElementById('contentTypeSelect').value = p.type;
-  document.getElementById('sourceContextInput').value = p.context;
-  document.getElementById('contentValueArea').value = p.value;
-  updateChannelLabel();
-  executeScan();
-}
-
-function updateChannelLabel() {
-  const val = document.getElementById('contentTypeSelect').value;
-  document.getElementById('channelLabel').innerText = val;
-}
-
-async function executeScan() {
-  const contentType = document.getElementById('contentTypeSelect').value;
-  const sourceContext = document.getElementById('sourceContextInput').value;
-  const contentValue = document.getElementById('contentValueArea').value;
-
-  if (!contentValue.trim()) {
-    alert('Please enter content to scan.');
-    return;
+class RefGuardDemo {
+  constructor() {
+    this.apiUrl = 'http://localhost:3000/api/v1/scan';
+    this.initElements();
+    this.attachEventListeners();
   }
 
-  const payload = {
-    content_type: contentType,
-    content_value: contentValue.trim(),
-    source_context: sourceContext.trim() || undefined,
-    timestamp: new Date().toISOString()
-  };
+  initElements() {
+    this.contentTypeSelect = document.getElementById('content-type');
+    this.contentValueField = document.getElementById('content-value');
+    this.scanButton = document.getElementById('scan-button');
+    this.scanLoading = document.getElementById('scan-loading');
+    this.noResponseState = document.getElementById('no-response');
+    this.responseContainer = document.getElementById('response-container');
+    this.scenarioButtons = document.querySelectorAll('.scenario-btn');
+    this.toggleJsonBtn = document.getElementById('toggle-json');
+    this.rawJsonPre = document.getElementById('raw-json');
+  }
 
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('loadingState').style.display = 'block';
-  document.getElementById('resultContent').style.display = 'none';
-
-  try {
-    const res = await fetch('/api/v1/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+  attachEventListeners() {
+    this.scanButton.addEventListener('click', () => this.performScan());
+    this.toggleJsonBtn.addEventListener('click', () => this.toggleRawJson());
+    this.scenarioButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => this.loadScenario(e.target.closest('.scenario-btn').dataset.scenario));
     });
+  }
 
-    const data = await res.json();
-    document.getElementById('loadingState').style.display = 'none';
+  loadScenario(scenarioKey) {
+    const scenario = scenarios[scenarioKey];
+    if (scenario) {
+      this.contentTypeSelect.value = scenario.type;
+      this.contentValueField.value = scenario.value;
+      this.contentValueField.focus();
+      // Scroll to the scan button
+      this.scanButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 
-    if (!res.ok) {
-      alert('Scan Error: ' + (data.message || 'Request failed'));
+  async performScan() {
+    const contentType = this.contentTypeSelect.value;
+    const contentValue = this.contentValueField.value.trim();
+
+    if (!contentValue) {
+      alert('Please enter or select content to scan.');
       return;
     }
 
-    renderScanResponse(data);
-  } catch (err) {
-    document.getElementById('loadingState').style.display = 'none';
-    alert('Failed to connect to RefGuard backend: ' + err.message);
-  }
-}
+    const scanRequest = {
+      content_type: contentType,
+      content_value: contentValue,
+      timestamp: new Date().toISOString(),
+      source_context: 'refguard.demo.web'
+    };
 
-function renderScanResponse(data) {
-  document.getElementById('resultContent').style.display = 'block';
-  document.getElementById('scanIdBadge').innerText = data.scan_id;
+    this.scanButton.disabled = true;
+    this.scanLoading.style.display = 'flex';
+    this.noResponseState.style.display = 'none';
+    this.responseContainer.style.display = 'none';
 
-  const risk = data.risk_assessment;
-  const decision = data.protection_decision;
-  const mismatch = data.payment_intent_mismatch;
-  const chain = data.scam_chain;
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scanRequest)
+      });
 
-  // Banner & Score
-  const banner = document.getElementById('riskBanner');
-  banner.className = 'risk-banner ' + risk.risk_severity;
-  document.getElementById('riskScoreVal').innerText = risk.risk_score;
-  document.getElementById('severityTag').innerText = risk.risk_severity + ' RISK (' + risk.risk_score + '/100)';
-  document.getElementById('decisionTitle').innerText = decision.action.replace(/_/g, ' ');
-  document.getElementById('detectedSummary').innerText = decision.detected_summary;
+      const data = await response.json();
 
-  // Advisory
-  document.getElementById('userInstruction').innerText = decision.user_instruction;
-  document.getElementById('whyItMatters').innerText = decision.why_it_matters;
-  document.getElementById('recommendedAction').innerText = risk.recommended_action;
-
-  // Mismatch
-  if (mismatch && mismatch.status === 'DETECTED') {
-    document.getElementById('mismatchCard').style.display = 'block';
-    document.getElementById('statedIntent').innerText = mismatch.stated_intent || 'Receive funds';
-    document.getElementById('actualPayment').innerText = mismatch.actual_payment_action || 'Outbound debit';
-    document.getElementById('mismatchStatus').innerText = mismatch.status;
-    document.getElementById('paymentDirection').innerText = mismatch.payment_direction;
-  } else {
-    document.getElementById('mismatchCard').style.display = 'none';
-  }
-
-  // Chain Nodes
-  const chainContainer = document.getElementById('chainNodesContainer');
-  chainContainer.innerHTML = '';
-  if (chain && chain.nodes && chain.nodes.length > 0) {
-    chain.nodes.forEach((n, idx) => {
-      const pill = document.createElement('div');
-      pill.className = 'node-pill';
-      pill.innerHTML = '<span class="node-type">' + n.node_type + '</span>: ' + (n.entity_reference || 'Content');
-      chainContainer.appendChild(pill);
-      if (idx < chain.nodes.length - 1) {
-        const arrow = document.createElement('span');
-        arrow.innerText = ' ➔ ';
-        chainContainer.appendChild(arrow);
+      if (response.ok) {
+        this.displayResponse(data);
+      } else {
+        this.displayError(data);
       }
-    });
-  } else {
-    chainContainer.innerHTML = '<span style="color: #64748b;">No multi-step chain detected.</span>';
-  }
-
-  // Signals List
-  const signalsList = document.getElementById('signalsList');
-  signalsList.innerHTML = '';
-  if (risk.signals && risk.signals.length > 0) {
-    risk.signals.forEach(s => {
-      const li = document.createElement('li');
-      li.innerText = s;
-      signalsList.appendChild(li);
-    });
-  }
-
-  // Raw JSON
-  document.getElementById('jsonViewer').innerText = JSON.stringify(data, null, 2);
-}
-
-async function reportScam() {
-  const contentValue = document.getElementById('contentValueArea').value;
-  if (!contentValue.trim()) {
-    alert('Please enter content to report.');
-    return;
-  }
-
-  const reportPayload = {
-    report_id: 'rep_' + Math.random().toString(36).substring(2, 10),
-    timestamp: new Date().toISOString(),
-    reporter_type: 'USER',
-    content_value: contentValue.trim(),
-    scam_category: 'FAKE_REFERRAL',
-    description: 'Reported via RefGuard Web Demo Portal'
-  };
-
-  try {
-    const res = await fetch('/api/v1/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reportPayload)
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert('Scam successfully reported to community registry! (Report ID: ' + data.report_id + ')');
-    } else {
-      alert('Report failed: ' + data.message);
+    } catch (error) {
+      this.displayNetworkError(error.message);
+    } finally {
+      this.scanButton.disabled = false;
+      this.scanLoading.style.display = 'none';
     }
-  } catch (err) {
-    alert('Error: ' + err.message);
+  }
+
+  displayResponse(data) {
+    this.noResponseState.style.display = 'none';
+    this.responseContainer.style.display = 'block';
+
+    // Display raw JSON
+    this.rawJsonPre.textContent = JSON.stringify(data, null, 2);
+    document.getElementById('raw-json').style.display = 'none';
+    this.toggleJsonBtn.textContent = 'Show';
+
+    // Risk Assessment
+    const riskAssessment = data.risk_assessment || {};
+    const riskScore = Math.round(riskAssessment.score || 0);
+    const riskSeverity = (riskAssessment.severity || 'UNKNOWN').toLowerCase();
+
+    document.getElementById('risk-score').textContent = riskScore;
+    document.getElementById('risk-level').textContent = `Risk Level: ${riskAssessment.severity || 'UNKNOWN'}`;
+    document.getElementById('risk-reasoning').textContent = riskAssessment.reasoning || 'No reasoning provided.';
+
+    // Update risk circle styling
+    const riskCircle = document.querySelector('.risk-score-circle');
+    riskCircle.className = 'risk-score-circle';
+    if (riskScore < 30) {
+      riskCircle.classList.add('low');
+    } else if (riskScore < 70) {
+      riskCircle.classList.add('medium');
+    } else {
+      riskCircle.classList.add('high');
+    }
+
+    // Protection Decision
+    const decision = data.protection_decision || {};
+    const decisionAction = (decision.action || 'UNKNOWN').replace(/_/g, ' ');
+    const decisionContent = document.getElementById('protection-decision-content');
+
+    decisionContent.innerHTML = `
+      <p class="decision-action ${decision.action?.toLowerCase().replace(/_/g, '-')}">${decisionAction}</p>
+      <p class="decision-reason">${decision.reason || 'No reason provided.'}</p>
+      <p class="decision-guidance">${decision.user_guidance || 'No guidance available.'}</p>
+    `;
+
+    // Payment Intent Mismatch
+    const mismatchCard = document.getElementById('mismatch-card');
+    if (data.payment_intent_mismatch && Object.keys(data.payment_intent_mismatch).length > 0) {
+      const mismatch = data.payment_intent_mismatch;
+      mismatchCard.style.display = 'block';
+      document.getElementById('mismatch-content').innerHTML = `
+        <p><strong>Stated Intent:</strong> ${mismatch.stated_intent || 'N/A'}</p>
+        <p><strong>Actual Action:</strong> ${mismatch.actual_action || 'N/A'}</p>
+        <p><strong>Mismatch Confidence:</strong> ${mismatch.confidence_score || 'N/A'}</p>
+        <p><strong>Details:</strong> ${mismatch.details || 'No details.'}</p>
+      `;
+    } else {
+      mismatchCard.style.display = 'none';
+    }
+
+    // Scam Chain
+    const scamchainCard = document.getElementById('scamchain-card');
+    if (data.scam_chain && Object.keys(data.scam_chain).length > 0) {
+      const chain = data.scam_chain;
+      scamchainCard.style.display = 'block';
+      const nodes = chain.chain_nodes || [];
+      const edges = chain.chain_edges || [];
+      document.getElementById('scamchain-content').innerHTML = `
+        <p><strong>Nodes:</strong> ${nodes.length > 0 ? nodes.map(n => n.label || 'Unknown').join(' → ') : 'None'}</p>
+        <p><strong>Edges:</strong> ${edges.length > 0 ? edges.map(e => `${e.source} → ${e.target}`).join(', ') : 'None'}</p>
+        <p><strong>Threat Confidence:</strong> ${chain.threat_confidence_score || 'N/A'}</p>
+      `;
+    } else {
+      scamchainCard.style.display = 'none';
+    }
+
+    // Evidence Pack
+    const evidencePack = data.evidence_pack || {};
+    const evidenceItems = evidencePack.evidence_items || [];
+    const evidenceHtml = evidenceItems.length > 0
+      ? evidenceItems.map(item => `
+        <div class="evidence-item">
+          <div class="evidence-id">ID: ${item.evidence_id || 'N/A'}</div>
+          <div class="evidence-description">${item.description || item.label || 'No description'}</div>
+        </div>
+      `).join('')
+      : '<p>No evidence items recorded.</p>';
+    document.getElementById('evidence-pack').innerHTML = evidenceHtml;
+  }
+
+  displayError(data) {
+    this.noResponseState.style.display = 'none';
+    this.responseContainer.style.display = 'block';
+
+    const errorCard = document.getElementById('error-card');
+    errorCard.style.display = 'block';
+    document.getElementById('error-message').textContent = data.error_code || 'UNKNOWN_ERROR';
+    document.getElementById('error-details').textContent = data.message || data.details?.[0] || 'No details available.';
+
+    // Hide success cards
+    document.getElementById('risk-card').style.display = 'none';
+    document.getElementById('protection-decision-content').innerHTML = '';
+    document.getElementById('mismatch-card').style.display = 'none';
+    document.getElementById('scamchain-card').style.display = 'none';
+  }
+
+  displayNetworkError(errorMessage) {
+    this.noResponseState.style.display = 'none';
+    this.responseContainer.style.display = 'block';
+
+    const errorCard = document.getElementById('error-card');
+    errorCard.style.display = 'block';
+    document.getElementById('error-message').textContent = 'NETWORK_ERROR';
+    document.getElementById('error-details').textContent = `Could not connect to API: ${errorMessage}\n\nMake sure the RefGuard server is running on http://localhost:3000`;
+  }
+
+  toggleRawJson() {
+    const jsonElement = document.getElementById('raw-json');
+    const isHidden = jsonElement.style.display === 'none';
+    jsonElement.style.display = isHidden ? 'block' : 'none';
+    this.toggleJsonBtn.textContent = isHidden ? 'Hide' : 'Show';
   }
 }
+
+// Initialize the demo when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  new RefGuardDemo();
+});
