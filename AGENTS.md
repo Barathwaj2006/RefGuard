@@ -1,29 +1,74 @@
-# Multi-Agent Engineering Contract & Universal Workflow
+# Multi-Agent Engineering Contract
 
-This repository operates as a shared source of truth for multiple AI coding agents. It follows a **Universal Multi-Agent Engineering Workflow** designed to ensure agents work efficiently without collisions.
+> **This is the primary entry point for every AI agent working on this repository.**
+> Read this file first. Then read the documents it references before taking any action.
 
-## 1. SHARED SOURCE OF TRUTH & GIT SAFETY
-- GitHub is the authoritative shared state between agents.
-- Before modifying anything: inspect git status, branch, recent commits, and uncommitted work.
-- Never destroy existing user work. Use isolated branches for meaningful feature work.
-- Only the designated integrator should merge agent branches unless explicitly authorized.
-- Any agent making project changes must validate its changes, inspect git status/diff, commit logically, push to remote, and verify the remote commit.
+This repository follows the **Universal Multi-Agent Engineering Workflow (v3)** — a reusable framework that governs how multiple AI coding agents collaborate through a shared GitHub source of truth.
 
-## 2. PROJECT-SPECIFIC INSTRUCTIONS
-Agents must always consult the project-specific configurations before beginning work:
-- **`agent-system/AGENT_TEAM.md`**: Defines project-specific agent responsibilities and available roster.
-- **`agent-system/PROJECT_PROFILE.md`**: Contains the project context, architecture, tech stack, and current hackathon mode.
-- **`agent-system/agents/`**: Contains exact authorized paths and roles for specific agents.
+---
 
-## 3. STRICT TASK OWNERSHIP & PRIORITY MODEL
-An agent may modify only the files/directories explicitly assigned to it.
-- **Primary Responsibility**: Highest priority. Cannot abandon unfinished primary work for secondary work.
-- **Secondary Responsibility**: Backup responsibility. Requires primary completion or explicit assignment. Overlaps default to the Primary Owner.
-- **Tertiary Responsibility**: Last-resort. Requires explicit instruction.
-An agent cannot self-declare completion and silently switch responsibilities mid-task. Ownership is temporary and task-specific, but strictly enforced while active. Do not cross domain boundaries.
+## How This System Works
 
-## 4. TASK LIFECYCLE & HANDOFF PROTOCOL
-Tasks transition through: `PENDING` -> `ASSIGNED` -> `RUNNING` -> `COMPLETED` (or `BLOCKED`, `FAILED`, `NEEDS_REVIEW`).
+1. **This file (`AGENTS.md`)** — the permanent contract. Defines principles that never change between projects.
+2. **[`agent-system/AGENT_TEAM.md`](agent-system/AGENT_TEAM.md)** — the universal operating model. Defines the priority model, responsibility matrix, handoff protocol, quality gates, duration modes, escalation rules, Git safety, rollback, and all operational procedures. Identical across all repositories using this workflow.
+3. **[`agent-system/PROJECT_CONTEXT.md`](agent-system/PROJECT_CONTEXT.md)** — the project-specific context. Defines *this* project's name, repo, tech stack, stage, hackathon mode, active agent roster, domain backlogs, authorized paths, and contract locations. **This is the only file that changes between projects.**
+4. **[`agent-system/PROJECT_PROFILE.md`](agent-system/PROJECT_PROFILE.md)** — the project profile. Describes the repository's purpose, architecture, domains, and quality requirements.
+5. **[`agent-system/agents/`](agent-system/agents/)** — per-agent configuration files with authorized/restricted paths and completion criteria.
+
+---
+
+## Permanent Principles
+
+These principles are non-negotiable and apply to every agent, every project, every duration mode.
+
+### 1. Shared Source of Truth
+GitHub is the authoritative shared state. All coordination happens through the repository.
+
+### 2. Strict Task Ownership
+An agent may modify **only** the files/directories explicitly assigned to it for its current task.
+- Do not modify another agent's owned files.
+- Do not refactor unrelated files.
+- Do not add features outside your assignment.
+- Do not "helpfully" change another agent's implementation.
+- Do not cross domain boundaries (e.g., alter UI while assigned to backend).
+- If you discover a problem outside your ownership, **report it** — do not fix it.
+
+### 3. Primary / Secondary / Tertiary Priority Model
+See [AGENT_TEAM.md §3](agent-system/AGENT_TEAM.md) for full rules. Summary:
+- Primary has highest priority. Never abandon unfinished primary work.
+- Secondary requires primary completion or explicit assignment.
+- Tertiary requires explicit instruction.
+- Escalation requires a completed or blocked Handoff Report — never mid-task self-judgment.
+
+### 4. Contract-First Development
+Once shared contracts/interfaces are locked, they are owned by the human/integrator. No agent may modify a locked contract. If a change is needed: STOP work → report mismatch → wait for human review. See [AGENT_TEAM.md §13](agent-system/AGENT_TEAM.md).
+
+### 5. Context Hygiene
+Agents receive only the information required for their current task: Project Context Header, relevant contract slice, specific task, relevant repo context, completion criteria. Do not dump entire histories, unrelated logs, or other agents' full outputs.
+
+### 6. Secrets Hygiene
+**NEVER** place live secrets (API keys, passwords, tokens, credentials) in any agent prompt or committed file. Reference environment variables or secret-store names only. This applies to all agents including cloud-based tools.
+
+### 7. Git Checkpoint Requirement (Non-Negotiable)
+Any agent that makes project changes must:
+1. Validate its changes (lint, test, build).
+2. Inspect `git status` and relevant diffs.
+3. Create a meaningful commit with a concise subject and useful body.
+4. Push the commit to the configured GitHub remote.
+5. Verify the commit exists on the remote.
+6. **Only then** declare the task complete.
+
+A task is NOT complete if changes are uncommitted, unpushed, or unverified. Do not force-push. Do not rewrite history. Do not create unsolicited PRs. If push fails, the task remains BLOCKED.
+
+### 8. Quality Gates
+All changes must pass 5 gates (depth determined by duration mode):
+- **Gate 1 — Contract:** Conforms to shared interfaces?
+- **Gate 2 — Tests:** Relevant tests pass?
+- **Gate 3 — Integration:** Works with the rest of the system?
+- **Gate 4 — Security:** No secrets, PII leaks, prompt injection, auth issues?
+- **Gate 5 — UX:** Understandable and usable by the user?
+
+### 9. Handoff Protocol
 Every completed or blocked task must produce a Handoff Report:
 ```
 TASK:
@@ -38,25 +83,46 @@ DEPENDENCIES:
 ASSUMPTIONS:
 RECOMMENDED NEXT ACTION:
 ```
-The next task should be based on the actual result, not pre-generated.
+The next task is generated from the actual result — never pre-generated as a chain.
 
-## 5. CONTEXT & SECRETS HYGIENE
-- **Context Hygiene**: Agents should receive only required information (Project Context Header, relevant contracts, current task, relevant repo context, completion criteria). Do not dump entire histories.
-- **Secrets Hygiene**: NEVER place live secrets (API keys, passwords, tokens) inside an agent prompt. Reference environment variables or secret-store names instead.
+### 10. Human Escalation
+Escalate when: blocked, contract mismatch, stage completes, architecture changes, security-sensitive decisions, or explicit approval required. Successful in-scope primary completion proceeds to next backlog item without human round-trip.
 
-## 6. CONTRACT OWNERSHIP & QUALITY GATES
-Once shared contracts/interfaces are locked, they are owned exclusively by the human/integrator. If a change is needed, STOP work, report mismatch, and wait for human review.
-All changes must pass 5 Quality Gates (depth determined by Hackathon Mode):
-- **Gate 1: CONTRACT** - Conforms to shared interfaces?
-- **Gate 2: TESTS** - Do tests pass?
-- **Gate 3: INTEGRATION** - Works with the rest of the system?
-- **Gate 4: SECURITY** - No secrets, PII leaks, prompt injections, auth issues?
-- **Gate 5: UX** - Understandable by user?
+### 11. No Cross-Domain Takeover
+If blocked, perform bounded in-domain work (analysis, tests, docs) — never take another agent's domain. Cross-domain work requires explicit authorization.
 
-## 7. HUMAN ESCALATION & NO-IDLE RULE
-Escalate to the human when: blocked, contract mismatch occurs, stage completes, architecture changes, security-sensitive decisions occur, or explicit approval is required.
-If an agent is blocked, do not take another agent's domain. Assign bounded work inside its own domain (e.g., analysis, test prep, documentation).
+### 12. Rollback Safety
+Agent work must remain recoverable. Failed branches must not damage sibling branches or the stable integration branch. Cross-agent file collisions at merge time are ownership violations, not routine conflicts.
 
-## 8. AUTONOMOUS ORCHESTRATION & ROLLBACK
-Future phases may introduce fully autonomous orchestrators. Until then, handoffs are human-mediated.
-Rollbacks: Agent work must remain recoverable. A failed branch must not damage stable integration branches.
+### 13. No Unauthorized Feature Development
+Do not implement features not explicitly requested. This repository is a coordination system — not a product.
+
+---
+
+## For the Full Operating Model
+
+Read **[agent-system/AGENT_TEAM.md](agent-system/AGENT_TEAM.md)** for:
+- Complete priority rules and escalation procedures
+- Agent responsibility matrix and per-agent detail
+- Overlapping secondary domain resolution
+- Duration modes and mode transition rules
+- Stage awareness
+- Domain backlogs
+- Contract ownership protocol
+- Manual handoff protocol
+- Dynamic handoff principle
+- No-idle rule
+- Git and branch isolation
+- Rollback and branch recovery
+- Merge-time ownership violations
+- Autonomous orchestrator entry conditions
+
+## For This Project's Context
+
+Read **[agent-system/PROJECT_CONTEXT.md](agent-system/PROJECT_CONTEXT.md)** for:
+- Project name, repo, tech stack
+- Current stage and hackathon mode
+- Active agent roster for this project
+- Domain-specific notes
+- Current domain backlogs
+- Contract locations
