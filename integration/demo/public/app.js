@@ -52,7 +52,7 @@ async function executeScan() {
   const contentValue = document.getElementById('contentValueArea').value;
 
   if (!contentValue.trim()) {
-    alert('Please enter content to scan.');
+    showToast('Please enter content to scan.', 'error');
     return;
   }
 
@@ -196,7 +196,7 @@ function renderScanResponse(data) {
 async function reportScam() {
   const contentValue = document.getElementById('contentValueArea').value;
   if (!contentValue.trim()) {
-    alert('Please enter content to report.');
+    showToast('Please enter content to report.', 'error');
     return;
   }
 
@@ -217,11 +217,35 @@ async function reportScam() {
     });
     const data = await res.json();
     if (res.ok) {
-      alert('Scam successfully reported to community registry! (Report ID: ' + data.report_id + ')');
+      showToast('Scam successfully reported to community registry! (Report ID: ' + data.report_id + ')', 'success');
     } else {
-      alert('Report failed: ' + data.message);
+      showToast('Report failed: ' + (data.message || data.error_message), 'error');
     }
   } catch (err) {
-    alert('Error: ' + err.message);
+    showToast('Error: ' + err.message, 'error');
   }
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  
+  let icon = 'ℹ️';
+  if (type === 'success') icon = '✅';
+  if (type === 'error') icon = '❌';
+  
+  toast.innerHTML = '<span>' + icon + '</span><span>' + message + '</span>';
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+    setTimeout(() => {
+      if (container.contains(toast)) {
+        container.removeChild(toast);
+      }
+    }, 300);
+  }, 4000);
 }

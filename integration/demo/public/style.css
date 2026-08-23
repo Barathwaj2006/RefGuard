@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg-main: #0B0F17;
   --bg-panel: #131A26;
   --bg-card: #1B2433;
@@ -293,6 +293,31 @@ select:focus, input:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
+.error-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-critical);
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid var(--color-critical);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.error-state p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -352,7 +377,7 @@ select:focus, input:focus, textarea:focus {
   font-weight: 800;
   font-family: var(--font-mono);
   background: var(--bg-main);
-  border: 3px solid var(--color-critical);
+  border: 3px solid var(--border-color); /* Default fallback */
 }
 
 .severity-tag {
@@ -360,8 +385,17 @@ select:focus, input:focus, textarea:focus {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-critical);
 }
+
+.decision-title {
+  margin: 0.25rem 0;
+}
+
+/* Dynamic Severity Colors for Text & Borders */
+.CRITICAL { color: var(--color-critical); border-color: var(--color-critical); }
+.HIGH { color: var(--color-high); border-color: var(--color-high); }
+.MEDIUM { color: var(--color-medium); border-color: var(--color-medium); }
+.LOW { color: var(--color-low); border-color: var(--color-low); }
 
 .card {
   background: var(--bg-card);
@@ -379,7 +413,6 @@ select:focus, input:focus, textarea:focus {
 }
 
 .highlight-instruction {
-  color: #F87171;
   font-weight: 700;
 }
 
@@ -478,4 +511,53 @@ pre {
   font-size: 0.8rem;
   color: var(--text-muted);
   border-top: 1px solid var(--border-color);
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease-out forwards;
+  max-width: 350px;
+}
+
+.toast.success { border-left: 4px solid var(--color-low); }
+.toast.error { border-left: 4px solid var(--color-critical); }
+.toast.info { border-left: 4px solid var(--accent-blue); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+@media (max-width: 600px) {
+  .toast-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+  }
+  .toast {
+    max-width: 100%;
+  }
 }
