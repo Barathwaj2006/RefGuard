@@ -10,6 +10,7 @@ import {
 } from '../models/types';
 import { communityStore } from './communityStore';
 import { extractTradingFraudSignals, TradingFraudSignals } from './extractors/tradingFraudExtractor';
+import { extractUpiFraudSignals, UpiFraudSignals } from './extractors/upiFraudExtractor';
 import { sanitizeText } from './extractors/piiSanitizer';
 import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
 
@@ -92,6 +93,9 @@ export class AnalyzerService {
 
     // --- Trading Fraud Extraction ---
     const tradingSignals = extractTradingFraudSignals(request.content_value);
+
+    // --- UPI / Telecom Fraud Extraction ---
+    const upiSignals = extractUpiFraudSignals(request.content_value);
 
     // --- Threat Detection (existing) ---
     const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
@@ -182,6 +186,31 @@ export class AnalyzerService {
       }
     }
 
+    // --- Scoring: UPI/Telecom fraud signals (additive) ---
+    if (upiSignals.hasUpiFraudSignals) {
+      signals.push(...upiSignals.matchedKeywords);
+
+      if (upiSignals.digitalArrestScam || upiSignals.customsParcelScam) {
+        riskScore = Math.max(riskScore, 95);
+        riskSeverity = 'CRITICAL';
+      }
+
+      if (upiSignals.electricityBillScam || upiSignals.telecomKycScam || upiSignals.refundCashbackScam) {
+        if (entities.vpa || entities.url || entities.isCollectRequest) {
+          riskScore = Math.max(riskScore, 90);
+          riskSeverity = 'CRITICAL';
+        } else {
+          riskScore = Math.max(riskScore, 80);
+          riskSeverity = 'HIGH';
+        }
+      }
+
+      if (upiSignals.familyEmergencyScam) {
+        riskScore = Math.max(riskScore, 75);
+        if (riskSeverity !== 'CRITICAL') riskSeverity = 'HIGH';
+      }
+    }
+
     // --- Gemini Reasoning Escalation ---
     let geminiVerdict: GeminiVerdict | null = null;
     if (shouldEscalateToGemini(riskScore)) {
@@ -217,21 +246,28 @@ export class AnalyzerService {
     let decision: ProtectionDecision;
     if (riskSeverity === 'CRITICAL') {
       const isTradingScam = tradingSignals.hasTradingFraudSignals && tradingSignals.signalCount >= 2;
+      const isUpiScam = upiSignals.hasUpiFraudSignals;
       decision = {
         action: 'DISCOURAGE_PROCEED',
         detected_summary: isMismatch
           ? 'Critical Payment-Intent Mismatch Detected'
           : isTradingScam
             ? 'Trading/Investment Fraud Pattern Detected'
-            : 'Known Scam Signature Identified',
+            : isUpiScam
+              ? 'Social Engineering / Impersonation Fraud Detected'
+              : 'Known Scam Signature Identified',
         why_it_matters: isMismatch
           ? 'You were told you are receiving money/prize, but this transaction will DEBIT money from your bank account.'
           : isTradingScam
             ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
-            : 'This identifier matches confirmed fraud signatures reported by the community.',
+            : isUpiScam
+              ? 'This matches a known highly-prevalent scam template (e.g. digital arrest, fake electricity bill, or customs seizure) designed to steal your money.'
+              : 'This identifier matches confirmed fraud signatures reported by the community.',
         user_instruction: isTradingScam
           ? 'DO NOT deposit money, share KYC documents, or join any trading group promoted here. Report this to SEBI/cybercrime.'
-          : 'DO NOT enter your UPI PIN. Cancel this transaction immediately.'
+          : isUpiScam
+            ? 'DO NOT pay. Legitimate authorities/companies do not demand immediate UPI/bank transfers via WhatsApp/SMS. Report to 1930.'
+            : 'DO NOT enter your UPI PIN. Cancel this transaction immediately.'
       };
     } else if (riskSeverity === 'HIGH') {
       const isTradingRelated = tradingSignals.hasTradingFraudSignals;
@@ -293,13 +329,15 @@ export class AnalyzerService {
         ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url }] : []),
         ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa }] : []),
         ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : []),
-        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal' }] : [])
+        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal' }] : []),
+        ...(upiSignals.hasUpiFraudSignals ? [{ node_id: 'node_social_eng', node_type: 'MESSAGE' as const, entity_reference: 'Social Engineering Pattern' }] : [])
       ],
       edges: [
         ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction' }] : []),
         ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction' }] : []),
         ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis' }] : []),
-        ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor' }] : [])
+        ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor' }] : []),
+        ...(upiSignals.hasUpiFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_social_eng', relationship: 'EMPLOYS_SOCIAL_ENGINEERING', confidence: 0.90, provenance: 'upi_fraud_extractor' }] : [])
       ]
     };
 
