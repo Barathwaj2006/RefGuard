@@ -699,3 +699,147 @@ pre {
   padding-left: 1rem;
 }
 
+
+/* Evidence & Adaptive Scam Chain Styles */
+.evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.evidence-item {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.evidence-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.evidence-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+  letter-spacing: 0.05em;
+}
+
+.evidence-data {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.evidence-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.adaptive-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chain-stage {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+}
+
+.chain-stage.state-ACTIVE_NOW {
+  border-left: 4px solid var(--color-high);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.1);
+}
+
+.chain-stage.state-COMPLETED {
+  border-left: 4px solid var(--color-critical);
+  opacity: 0.8;
+}
+
+.chain-stage.state-ANTICIPATED {
+  border-left: 4px dashed var(--color-medium);
+  opacity: 0.7;
+}
+
+.stage-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.stage-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.stage-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.stage-details strong {
+  color: var(--text-primary);
+}
+
+.detected-badge {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-critical);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.likely-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-medium);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.reporting-action {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-color);
+  text-align: right;
+}
+
+.reporting-btn {
+  background: transparent;
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.reporting-btn:hover {
+  background: var(--accent-blue);
+  color: #fff;
+}
+

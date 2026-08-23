@@ -1,32 +1,32 @@
 const presets = {
   fake_referral: {
     type: 'URL',
-    context: 'com.whatsapp',
+    context: 'WhatsApp',
     value: 'http://free-cashback-loot.xyz/claim?ref=998877'
   },
   qr_scam: {
     type: 'QR',
-    context: 'com.google.android.apps.nbu.paisa.user',
+    context: 'Unknown',
     value: 'upi://pay?pa=scammer@oksbi&pn=RewardClaim&am=2500&cu=INR'
   },
   intent_mismatch: {
     type: 'TEXT',
-    context: 'com.phonepe.app',
+    context: 'SMS',
     value: 'Congratulations! You won Rs. 5000 cashback scratch card. Enter UPI PIN to claim: upi://pay?pa=fake.refund@okhdfcbank&pn=CashbackRefund&am=5000'
   },
   high_risk_vpa: {
     type: 'UPI_VPA',
-    context: 'com.refguard.manual',
+    context: 'Web',
     value: 'lottery.winner@paytm'
   },
   screenshot_ocr: {
     type: 'IMAGE',
-    context: 'com.android.gallery',
+    context: 'Telegram',
     value: 'VGVsZWdyYW0gVGFzayBFYXJuaW5nIFZJUDogRWFybiA1MDAwIGRhaWx5IGJ5IGxpa2luZyB2aWRlb3MuIENvbnRhY3Qgd2EubWUvOTE5ODc2NTQzMjEwIHJlZj1UQVNLOTk='
   },
   legit_merchant: {
-    type: 'QR',
-    context: 'com.swiggy.consumer',
+    type: 'UPI_VPA',
+    context: 'Unknown',
     value: 'upi://pay?pa=swiggy@icici&pn=SwiggyOrders&am=450&cu=INR'
   }
 };
@@ -173,36 +173,104 @@ function renderScanResponse(data) {
     document.getElementById('mismatchCard').style.display = 'none';
   }
 
-  // Chain Nodes
-  const chainContainer = document.getElementById('chainNodesContainer');
-  chainContainer.innerHTML = '';
-  if (chain && chain.nodes && chain.nodes.length > 0) {
-    chain.nodes.forEach((n, idx) => {
-      const pill = document.createElement('div');
-      pill.className = 'node-pill';
-      pill.innerHTML = '<span class="node-type">' + n.node_type + '</span>: ' + (n.entity_reference || 'Content');
-      chainContainer.appendChild(pill);
-      if (idx < chain.nodes.length - 1) {
-        const arrow = document.createElement('span');
-        arrow.style.color = 'var(--text-muted)';
-        arrow.style.fontSize = '1.2rem';
-        arrow.innerHTML = '&rarr;';
-        chainContainer.appendChild(arrow);
-      }
-    });
+  // Adaptive Scam Chain
+  const adaptiveChain = data.adaptive_scam_chain;
+  const adaptiveContainer = document.getElementById('adaptiveChainContainer');
+  const fallbackChain = document.getElementById('chainNodesContainer');
+  document.getElementById('scamChainCard').style.display = 'block';
+
+  if (adaptiveChain) {
+    fallbackChain.style.display = 'none';
+    adaptiveContainer.style.display = 'flex';
+    adaptiveContainer.className = 'adaptive-chain';
+    
+    // Distinguish DETECTED vs LIKELY
+    const stateClass = `state-${adaptiveChain.state || 'ACTIVE_NOW'}`;
+    const detectedTitle = adaptiveChain.state === 'ANTICIPATED' ? 'Likely Future Stage' : 'Detected Stage';
+    const badge = adaptiveChain.state === 'ANTICIPATED' ? '<span class="likely-badge">→ LIKELY NEXT</span>' : '<span class="detected-badge">✓ DETECTED</span>';
+
+    adaptiveContainer.innerHTML = `
+      <div class="chain-stage ${stateClass}">
+        <div class="stage-meta">
+          <span>Stage ${adaptiveChain.stageIndex || '?'} of ${adaptiveChain.totalStages || '?'}</span>
+          <span>${detectedTitle}</span>
+        </div>
+        <h5 class="stage-title">${badge}${adaptiveChain.stageTitle || adaptiveChain.currentStage || 'Unknown Stage'}</h5>
+        <div class="stage-details">
+          <div><strong>Evidence:</strong> ${adaptiveChain.evidenceDetected ? adaptiveChain.evidenceDetected.join(', ') : 'None'}</div>
+          <div><strong>Objective:</strong> ${adaptiveChain.attackerObjective || 'Unknown'}</div>
+          <div><strong>Previous:</strong> ${adaptiveChain.previousLikelyStage || 'None'}</div>
+          <div><strong>Next Step:</strong> ${adaptiveChain.nextLikelyStep || 'None'}</div>
+          <div><strong>Risk:</strong> ${adaptiveChain.userRisk || 'Unknown'}</div>
+          <div><strong>Action:</strong> ${adaptiveChain.recommendedAction || 'None'}</div>
+          <div><strong>Confidence:</strong> ${adaptiveChain.confidence ? (adaptiveChain.confidence * 100).toFixed(0) + '%' : 'N/A'}</div>
+        </div>
+        ${adaptiveChain.reportingPath ? `
+          <div class="reporting-action">
+            <a href="${adaptiveChain.reportingPath}" target="_blank" class="reporting-btn">Report to Authority</a>
+          </div>
+        ` : ''}
+      </div>
+    `;
   } else {
-    chainContainer.innerHTML = '<span style="color: #64748b;">No multi-step chain detected.</span>';
+    adaptiveContainer.style.display = 'none';
+    fallbackChain.style.display = 'flex';
+    fallbackChain.innerHTML = '';
+    if (chain && chain.nodes && chain.nodes.length > 0) {
+      chain.nodes.forEach((n, idx) => {
+        const pill = document.createElement('div');
+        pill.className = 'node-pill';
+        pill.innerHTML = '<span class="node-type">' + n.node_type + '</span>: ' + (n.entity_reference || 'Content');
+        fallbackChain.appendChild(pill);
+        if (idx < chain.nodes.length - 1) {
+          const arrow = document.createElement('span');
+          arrow.style.color = 'var(--text-muted)';
+          arrow.style.fontSize = '1.2rem';
+          arrow.innerHTML = '&rarr;';
+          fallbackChain.appendChild(arrow);
+        }
+      });
+    } else {
+      fallbackChain.innerHTML = '<span style="color: #64748b;">No multi-step chain detected.</span>';
+    }
   }
 
-  // Signals List
-  const signalsList = document.getElementById('signalsList');
-  signalsList.innerHTML = '';
-  if (risk.signals && risk.signals.length > 0) {
-    risk.signals.forEach(s => {
-      const li = document.createElement('li');
-      li.innerText = s;
-      signalsList.appendChild(li);
+  // Evidence Pack
+  const evidencePack = data.evidence_pack;
+  const evidenceContainer = document.getElementById('evidenceContainer');
+  const fallbackSignals = document.getElementById('signalsList');
+  document.getElementById('evidenceCard').style.display = 'block';
+
+  if (evidencePack && evidencePack.items && evidencePack.items.length > 0) {
+    fallbackSignals.style.display = 'none';
+    evidenceContainer.style.display = 'grid';
+    evidenceContainer.innerHTML = '';
+    
+    evidencePack.items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'evidence-item';
+      div.innerHTML = `
+        <div class="evidence-header">
+          <span class="evidence-type">${item.evidence_type}</span>
+        </div>
+        <div class="evidence-data">${item.data}</div>
+        <div class="evidence-desc">${item.evidence_id}</div>
+      `;
+      evidenceContainer.appendChild(div);
     });
+  } else {
+    evidenceContainer.style.display = 'none';
+    fallbackSignals.style.display = 'block';
+    fallbackSignals.innerHTML = '';
+    if (risk.signals && risk.signals.length > 0) {
+      risk.signals.forEach(s => {
+        const li = document.createElement('li');
+        li.innerText = s;
+        fallbackSignals.appendChild(li);
+      });
+    } else {
+      fallbackSignals.innerHTML = '<span style="color: #64748b;">No explicit threat signals detected.</span>';
+    }
   }
 
   // Raw JSON
