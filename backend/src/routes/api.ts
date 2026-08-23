@@ -22,6 +22,10 @@ router.get('/health', (_req: Request, res: Response) => {
 // Scan Ingress
 router.post('/scan', validateRequest('scan-request.json'), validateResponse('scan-response.json'), scanContent);
 
+import { getIncidentRecommendation } from '../controllers/incidentController';
+// Incident Response Recommendation
+router.post('/incident/recommendation', getIncidentRecommendation);
+
 // Community Report Ingestion with Abuse Prevention & Rate Limiting
 router.post('/report', reportRateLimiter, validateRequest('scam-report.json'), submitReport);
 
