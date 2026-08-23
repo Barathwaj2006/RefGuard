@@ -959,3 +959,62 @@ pre {
   font-weight: 600;
 }
 
+
+/* Feedback & Intel Styles */
+.feedback-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.btn-success:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--color-low);
+  color: var(--color-low);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--color-critical);
+  color: var(--color-critical);
+}
+.intel-view {
+  margin-top: 1.5rem;
+}
+.intel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+@media (max-width: 768px) {
+  .intel-grid { grid-template-columns: 1fr; }
+}
+.intel-col h4 {
+  margin-bottom: 1rem;
+  color: var(--accent-blue);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+.intel-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.intel-list li {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.intel-indicator {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  word-break: break-all;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.intel-meta {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+

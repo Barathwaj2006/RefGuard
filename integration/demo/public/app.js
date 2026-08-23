@@ -108,6 +108,7 @@ async function executeScan() {
 }
 
 function renderScanResponse(data) {
+  currentScanId = data.scan_id;
   document.getElementById('resultContent').style.display = 'block';
   document.getElementById('scanIdBadge').innerText = data.scan_id;
 
@@ -344,23 +345,34 @@ const HISTORY_STORAGE_KEY = "refguard_scan_history";
 function switchTab(tab) {
   const scannerNav = document.getElementById("navScanner");
   const historyNav = document.getElementById("navHistory");
+  const intelNav = document.getElementById("navIntel");
+  
   const presetsSection = document.getElementById("presetsSection");
   const workspaceGrid = document.getElementById("workspaceGrid");
   const historyView = document.getElementById("historyView");
+  const intelView = document.getElementById("intelView");
+
+  scannerNav.classList.remove("active");
+  historyNav.classList.remove("active");
+  intelNav.classList.remove("active");
+  
+  presetsSection.style.display = "none";
+  workspaceGrid.style.display = "none";
+  historyView.style.display = "none";
+  intelView.style.display = "none";
 
   if (tab === "scanner") {
     scannerNav.classList.add("active");
-    historyNav.classList.remove("active");
     presetsSection.style.display = "block";
     workspaceGrid.style.display = "grid";
-    historyView.style.display = "none";
   } else if (tab === "history") {
     historyNav.classList.add("active");
-    scannerNav.classList.remove("active");
-    presetsSection.style.display = "none";
-    workspaceGrid.style.display = "none";
     historyView.style.display = "block";
     renderHistory();
+  } else if (tab === "intel") {
+    intelNav.classList.add("active");
+    intelView.style.display = "block";
+    loadIntel();
   }
 }
 
@@ -523,6 +535,92 @@ async function fetchIncidentRecommendation(scanResponse) {
     console.error(err);
     loading.style.display = "none";
     error.style.display = "flex";
+  }
+}
+
+
+let currentScanId = null;
+
+// --- Feedback Loop ---
+async function submitFeedback(verdict) {
+  if (!currentScanId) return;
+  
+  try {
+    const res = await fetch("/api/v1/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scan_id: currentScanId,
+        indicator: "USER_FEEDBACK",
+        verdict: verdict,
+        user_notes: "Feedback via web UI"
+      })
+    });
+    
+    if (res.ok) {
+      document.getElementById("feedbackThanks").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("feedbackThanks").style.display = "none";
+      }, 5000);
+    } else {
+      const errData = await res.json();
+      showToast(errData.message || "Failed to submit feedback", "error");
+    }
+  } catch (err) {
+    showToast("Error submitting feedback: " + err.message, "error");
+  }
+}
+
+// --- Threat Intel ---
+async function loadIntel() {
+  const trendingList = document.getElementById("trendingList");
+  const reportsList = document.getElementById("reportsList");
+  
+  trendingList.innerHTML = "Loading...";
+  reportsList.innerHTML = "Loading...";
+  
+  try {
+    const [trendRes, reportRes] = await Promise.all([
+      fetch("/api/v1/intel/trending"),
+      fetch("/api/v1/intel/reports")
+    ]);
+    
+    const trendingData = await trendRes.json();
+    const reportsData = await reportRes.json();
+    
+    trendingList.innerHTML = "";
+    if (trendingData.trending_indicators && trendingData.trending_indicators.length > 0) {
+      trendingData.trending_indicators.forEach(ind => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="intel-indicator">${ind.indicator}</span>
+          <span class="intel-meta">Severity: <strong>${ind.severity}</strong> | Sightings: ${ind.sightings}</span>
+        `;
+        trendingList.appendChild(li);
+      });
+    } else {
+      trendingList.innerHTML = "<li>No trending threats available.</li>";
+    }
+    
+    reportsList.innerHTML = "";
+    if (reportsData.reports && reportsData.reports.length > 0) {
+      reportsData.reports.forEach(rep => {
+        const li = document.createElement("li");
+        const dateStr = new Date(rep.submission_timestamp).toLocaleString();
+        li.innerHTML = `
+          <span class="intel-indicator">${rep.reported_indicator}</span>
+          <span class="intel-meta">Category: ${rep.report_category} | ${dateStr}</span>
+        `;
+        reportsList.appendChild(li);
+      });
+    } else {
+      reportsList.innerHTML = "<li>No recent community reports.</li>";
+    }
+    
+  } catch (err) {
+    trendingList.innerHTML = `<li style="color: var(--color-critical);">Failed to load.</li>`;
+    reportsList.innerHTML = `<li style="color: var(--color-critical);">Failed to load.</li>`;
+    showToast("Error loading Threat Intel", "error");
   }
 }
 

@@ -216,6 +216,19 @@
             </div>
           </div>
 
+          <!-- Feedback Loop Section -->
+          <div class="card feedback-card" id="feedbackCard">
+            <h4>Was this analysis correct?</h4>
+            <p>Help improve RefGuard by providing feedback on this assessment.</p>
+            <div class="feedback-actions">
+              <button class="secondary-btn btn-success" onclick="submitFeedback('FALSE_ALARM')">❌ False Alarm (Safe)</button>
+              <button class="secondary-btn btn-danger" onclick="submitFeedback('CONFIRMED_FRAUD')">✅ Correct (Confirmed Scam)</button>
+            </div>
+            <div id="feedbackThanks" style="display: none; color: var(--color-low); margin-top: 0.5rem; font-weight: 600;">
+              Thanks! Your feedback has been recorded for model calibration.
+            </div>
+          </div>
+
           <!-- Raw Contract JSON -->
           <details class="card json-card">
             <summary>📦 View Raw ScanResponse (Contract JSON)</summary>
@@ -237,6 +250,26 @@
         </div>
       </section>
     </div>
+
+    <!-- Threat Intel View Panel -->
+    <div class="intel-view" id="intelView" style="display: none;">
+      <section class="panel intel-panel">
+        <div class="panel-header">
+          <h3>Global Threat Intelligence</h3>
+          <button class="secondary-btn" onclick="loadIntel()">↻ Refresh</button>
+        </div>
+        <div class="intel-grid">
+          <div class="intel-col">
+            <h4>Trending Threats</h4>
+            <ul id="trendingList" class="intel-list">Loading...</ul>
+          </div>
+          <div class="intel-col">
+            <h4>Recent Community Reports</h4>
+            <ul id="reportsList" class="intel-list">Loading...</ul>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <div id="toastContainer" class="toast-container"></div>
@@ -251,9 +284,9 @@
       <span class="nav-icon">📊</span>
       <span>History</span>
     </button>
-    <button class="nav-item">
-      <span class="nav-icon">⚙️</span>
-      <span>Settings</span>
+    <button class="nav-item" id="navIntel" onclick="switchTab('intel')">
+      <span class="nav-icon">🌍</span>
+      <span>Global Intel</span>
     </button>
   </nav>
 
