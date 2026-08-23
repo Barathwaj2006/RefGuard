@@ -24,19 +24,19 @@
 
   <main class=\"container\">
     <!-- Quick Presets -->
-    <section class=\"presets-section\">
+    <section class="presets-section" id="presetsSection">
       <h2>🎯 Quick Test Scenarios (E2E Verified)</h2>
-      <div class=\"preset-buttons\">
-        <button class=\"preset-btn danger\" onclick=\"loadPreset('fake_referral')\">🚨 Fake Referral</button>
-        <button class=\"preset-btn danger\" onclick=\"loadPreset('qr_scam')\">📱 Tampered QR Code</button>
-        <button class=\"preset-btn danger\" onclick=\"loadPreset('intent_mismatch')\">⚠️ Payment-Intent Mismatch</button>
-        <button class=\"preset-btn warning\" onclick=\"loadPreset('high_risk_vpa')\">🚩 High-Risk VPA</button>
-        <button class=\"preset-btn danger\" onclick=\"loadPreset('screenshot_ocr')\">🖼️ Screenshot OCR</button>
-        <button class=\"preset-btn success\" onclick=\"loadPreset('legit_merchant')\">✅ Legitimate Merchant</button>
+      <div class="preset-buttons">
+        <button class="preset-btn danger" onclick="loadPreset('fake_referral')">🚨 Fake Referral</button>
+        <button class="preset-btn danger" onclick="loadPreset('qr_scam')">📱 Tampered QR Code</button>
+        <button class="preset-btn danger" onclick="loadPreset('intent_mismatch')">⚠️ Payment-Intent Mismatch</button>
+        <button class="preset-btn warning" onclick="loadPreset('high_risk_vpa')">🚩 High-Risk VPA</button>
+        <button class="preset-btn danger" onclick="loadPreset('screenshot_ocr')">🖼️ Screenshot OCR</button>
+        <button class="preset-btn success" onclick="loadPreset('legit_merchant')">✅ Legitimate Merchant</button>
       </div>
     </section>
 
-    <div class=\"workspace-grid\">
+    <div class="workspace-grid" id="workspaceGrid">
       <!-- Input Panel -->
       <section class=\"panel input-panel\">
         <div class=\"panel-header\">
@@ -173,17 +173,30 @@
         </div>
       </section>
     </div>
+
+    <!-- History View Panel -->
+    <div class="history-view" id="historyView" style="display: none;">
+      <section class="panel history-panel">
+        <div class="panel-header">
+          <h3>Local Scan History</h3>
+          <button class="secondary-btn" onclick="clearHistory()">Clear History</button>
+        </div>
+        <div id="historyListContainer" class="history-list-container">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+    </div>
   </main>
 
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Mobile Bottom Nav Bar (Stitch Component Direction) -->
   <nav class="bottom-nav-bar">
-    <button class="nav-item active">
+    <button class="nav-item active" id="navScanner" onclick="switchTab('scanner')">
       <span class="nav-icon">🛡️</span>
       <span>Scanner</span>
     </button>
-    <button class="nav-item">
+    <button class="nav-item" id="navHistory" onclick="switchTab('history')">
       <span class="nav-icon">📊</span>
       <span>History</span>
     </button>

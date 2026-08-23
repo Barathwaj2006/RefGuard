@@ -94,6 +94,7 @@ async function executeScan() {
       throw new Error('Malformed response received from backend.');
     }
 
+    saveToHistory(payload, data);
     renderScanResponse(data);
   } catch (err) {
     document.getElementById('loadingState').style.display = 'none';
@@ -264,3 +265,127 @@ function showToast(message, type = 'info') {
     }, 300);
   }, 4000);
 }
+
+
+// --- History Module ---
+const HISTORY_STORAGE_KEY = "refguard_scan_history";
+
+function switchTab(tab) {
+  const scannerNav = document.getElementById("navScanner");
+  const historyNav = document.getElementById("navHistory");
+  const presetsSection = document.getElementById("presetsSection");
+  const workspaceGrid = document.getElementById("workspaceGrid");
+  const historyView = document.getElementById("historyView");
+
+  if (tab === "scanner") {
+    scannerNav.classList.add("active");
+    historyNav.classList.remove("active");
+    presetsSection.style.display = "block";
+    workspaceGrid.style.display = "grid";
+    historyView.style.display = "none";
+  } else if (tab === "history") {
+    historyNav.classList.add("active");
+    scannerNav.classList.remove("active");
+    presetsSection.style.display = "none";
+    workspaceGrid.style.display = "none";
+    historyView.style.display = "block";
+    renderHistory();
+  }
+}
+
+function saveToHistory(payload, response) {
+  try {
+    let history = [];
+    try {
+      const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (stored) {
+        history = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn("Corrupted history data. Resetting.", e);
+      history = [];
+    }
+
+    const historyEntry = {
+      id: response.scan_id,
+      timestamp: new Date().toISOString(),
+      payloadSummary: (payload.content_value || "").substring(0, 60),
+      severity: response.risk_assessment.risk_severity,
+      score: response.risk_assessment.risk_score,
+      summary: response.protection_decision.detected_summary,
+      fullResponse: response // Storing the full response so we can view it later
+    };
+
+    history.unshift(historyEntry); // Add to beginning
+    if (history.length > 50) history = history.slice(0, 50); // Keep last 50 items
+
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  } catch (e) {
+    console.error("Failed to save history", e);
+  }
+}
+
+function renderHistory() {
+  const container = document.getElementById("historyListContainer");
+  container.innerHTML = "";
+  
+  let history = [];
+  try {
+    const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (stored) {
+      history = JSON.parse(stored);
+    }
+  } catch (e) {
+    history = [];
+  }
+
+  if (history.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📂</div>
+      <h4>No History Found</h4>
+      <p>Your recent scans will appear here.</p>
+    </div>`;
+    return;
+  }
+
+  history.forEach(item => {
+    const div = document.createElement("div");
+    div.className = `history-item ${item.severity}`;
+    div.onclick = () => viewHistoryItem(item);
+    
+    const dateStr = new Date(item.timestamp).toLocaleString();
+    
+    div.innerHTML = `
+      <div class="history-content">
+        <div class="history-time">${dateStr}</div>
+        <div class="history-summary">${item.summary || "Scan Completed"}</div>
+        <div class="history-payload">${item.payloadSummary || ""}</div>
+      </div>
+      <div class="history-score ${item.severity}">${item.score}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function clearHistory() {
+  if (confirm("Are you sure you want to clear your local scan history?")) {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    renderHistory();
+    showToast("History cleared.", "success");
+  }
+}
+
+function viewHistoryItem(item) {
+  if (!item || !item.fullResponse) return;
+  // Load into scanner
+  switchTab("scanner");
+  
+  // Hide empty/loading/error
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("errorState").style.display = "none";
+  
+  // Re-render
+  renderScanResponse(item.fullResponse);
+}
+
