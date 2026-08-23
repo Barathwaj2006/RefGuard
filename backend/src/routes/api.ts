@@ -56,4 +56,10 @@ router.post('/feedback', (req: Request, res: Response) => {
   });
 });
 
+import { getTrendingIntel, getRecentReports } from '../controllers/intelController';
+
+// Threat Intelligence feeds
+router.get('/intel/trending', getTrendingIntel);
+router.get('/intel/reports', getRecentReports);
+
 export default router;
