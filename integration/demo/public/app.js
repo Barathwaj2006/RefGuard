@@ -124,7 +124,13 @@ function renderScanResponse(data) {
   scoreVal.className = 'risk-score-circle ' + risk.risk_severity;
 
   const severityTag = document.getElementById('severityTag');
-  severityTag.innerText = risk.risk_severity + ' RISK (' + risk.risk_score + '/100)';
+  const severityMap = {
+    'CRITICAL': 'CRITICAL RISK',
+    'HIGH': 'HIGH RISK',
+    'MEDIUM': 'CAUTION',
+    'LOW': 'SAFE'
+  };
+  severityTag.innerText = severityMap[risk.risk_severity] + ' (' + risk.risk_score + '/100)';
   severityTag.className = 'severity-tag ' + risk.risk_severity;
 
   const aiBadge = document.getElementById('aiBadge');
@@ -148,6 +154,13 @@ function renderScanResponse(data) {
   document.getElementById('whyItMatters').innerText = decision.why_it_matters;
   document.getElementById('recommendedAction').innerText = risk.recommended_action;
 
+  const blockProtectContainer = document.getElementById('blockProtectContainer');
+  if (risk.risk_severity === 'CRITICAL' || risk.risk_severity === 'HIGH') {
+    blockProtectContainer.style.display = 'block';
+  } else {
+    blockProtectContainer.style.display = 'none';
+  }
+
   // Mismatch
   if (mismatch && mismatch.status === 'DETECTED') {
     document.getElementById('mismatchCard').style.display = 'block';
@@ -170,7 +183,9 @@ function renderScanResponse(data) {
       chainContainer.appendChild(pill);
       if (idx < chain.nodes.length - 1) {
         const arrow = document.createElement('span');
-        arrow.innerText = ' ➔ ';
+        arrow.style.color = 'var(--text-muted)';
+        arrow.style.fontSize = '1.2rem';
+        arrow.innerHTML = '&rarr;';
         chainContainer.appendChild(arrow);
       }
     });

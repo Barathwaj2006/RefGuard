@@ -8,7 +8,7 @@
   <link href=\"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">
 </head>
 <body>
-  <header class=\"top-bar\">
+  <header class="top-app-bar">
     <div class=\"brand\">
       <div class=\"shield-icon\">🛡️</div>
       <div class=\"brand-text\">
@@ -93,6 +93,7 @@
 
         <div id="loadingState" class="loading-state" style="display: none;">
           <div class="spinner"></div>
+          <h4>Threat Analysis in Progress</h4>
           <p>Running Extraction, Threat Intelligence, Intent Mismatch, and Graph Engines...</p>
         </div>
 
@@ -118,12 +119,17 @@
           </div>
 
           <!-- Protection Advisory -->
-          <div class=\"card advisory-card\">
+          <div class="card advisory-card">
             <h4>🛡️ Protective Action Advisory</h4>
-            <div class=\"advisory-content\">
-              <p><strong>Direct User Guidance:</strong> <span id=\"userInstruction\" class=\"highlight-instruction\"></span></p>
-              <p><strong>Why it matters:</strong> <span id=\"whyItMatters\"></span></p>
-              <p><strong>Recommended Action:</strong> <span id=\"recommendedAction\"></span></p>
+            <div class="advisory-content">
+              <p><strong>Direct User Guidance:</strong> <span id="userInstruction" class="highlight-instruction"></span></p>
+              <p><strong>Why it matters:</strong> <span id="whyItMatters"></span></p>
+              <p><strong>Recommended Action:</strong> <span id="recommendedAction"></span></p>
+            </div>
+            <div id="blockProtectContainer" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              <button class="primary-btn" style="background: var(--color-critical); width: 100%; font-size: 1rem; padding: 1rem;" onclick="showToast('Incident response triggered. Blocking source...', 'info')">
+                🛡️ BLOCK & PROTECT
+              </button>
             </div>
           </div>
 
@@ -170,6 +176,22 @@
   </main>
 
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Mobile Bottom Nav Bar (Stitch Component Direction) -->
+  <nav class="bottom-nav-bar">
+    <button class="nav-item active">
+      <span class="nav-icon">🛡️</span>
+      <span>Scanner</span>
+    </button>
+    <button class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span>History</span>
+    </button>
+    <button class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span>Settings</span>
+    </button>
+  </nav>
 
   <footer class="footer">
     <p>RefGuard — India UPI Referral & Payment Scam Protection. Privacy-first: Zero UPI PINs, passwords, or credentials collected.</p>
