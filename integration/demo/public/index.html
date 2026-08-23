@@ -176,6 +176,46 @@
             <ul id="signalsList" class="signals-list"></ul>
           </div>
 
+          <!-- Incident Response Section -->
+          <div class="card incident-card" id="incidentCard" style="display: none;">
+            <div id="incidentLoading" class="incident-loading" style="display: none;">
+              <div class="spinner-small"></div>
+              <span>Preparing your protection steps...</span>
+            </div>
+            <div id="incidentContent" style="display: none;">
+              <div class="incident-header">
+                <h4>🛡️ Protect & Recover</h4>
+                <span class="incident-badge" id="incidentCategoryBadge"></span>
+              </div>
+              
+              <div class="incident-section">
+                <h5>Immediate Actions</h5>
+                <ul class="action-list">
+                  <li id="incImmediateAction"></li>
+                  <li id="incPaymentAction"></li>
+                  <li id="incEvidenceAction"></li>
+                </ul>
+              </div>
+
+              <div class="incident-section">
+                <h5>Why this matters</h5>
+                <p id="incReportingReason"></p>
+              </div>
+
+              <div class="incident-section">
+                <h5>Report this incident</h5>
+                <p id="incReportingDest"></p>
+              </div>
+            </div>
+            <div id="incidentError" class="incident-error" style="display: none;">
+              <p>Could not load tailored recovery steps. Please rely on the general recommendations above.</p>
+              <button class="secondary-btn btn-small" id="retryIncidentBtn">Retry</button>
+            </div>
+            <div id="incidentSafe" class="incident-safe" style="display: none;">
+              <p>✅ No immediate action required.</p>
+            </div>
+          </div>
+
           <!-- Raw Contract JSON -->
           <details class="card json-card">
             <summary>📦 View Raw ScanResponse (Contract JSON)</summary>

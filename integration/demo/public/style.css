@@ -843,3 +843,119 @@ pre {
   color: #fff;
 }
 
+
+/* Incident Response Styles */
+.incident-card {
+  border: 2px solid var(--accent-blue);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.incident-loading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.incident-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.incident-header h4 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.incident-badge {
+  background: var(--bg-main);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.incident-section {
+  margin-bottom: 1.25rem;
+}
+
+.incident-section h5 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.action-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-list li {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  font-size: 0.95rem;
+}
+
+.action-list li::before {
+  content: "👉";
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.incident-error {
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid var(--color-critical);
+  border-radius: 6px;
+  color: var(--color-critical);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.incident-safe {
+  padding: 1rem;
+  color: var(--color-low);
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+/* Make URLs and numbers tappable */
+.tappable-link {
+  color: var(--accent-blue);
+  text-decoration: underline;
+  font-weight: 600;
+}
+

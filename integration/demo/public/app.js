@@ -275,6 +275,9 @@ function renderScanResponse(data) {
 
   // Raw JSON
   document.getElementById('jsonViewer').innerText = JSON.stringify(data, null, 2);
+
+  // Trigger Incident Recommendation
+  fetchIncidentRecommendation(data);
 }
 
 async function reportScam() {
@@ -455,5 +458,71 @@ function viewHistoryItem(item) {
   
   // Re-render
   renderScanResponse(item.fullResponse);
+}
+
+
+// --- Incident Response Module ---
+async function fetchIncidentRecommendation(scanResponse) {
+  const card = document.getElementById("incidentCard");
+  const loading = document.getElementById("incidentLoading");
+  const content = document.getElementById("incidentContent");
+  const error = document.getElementById("incidentError");
+  const safeState = document.getElementById("incidentSafe");
+  const retryBtn = document.getElementById("retryIncidentBtn");
+  
+  card.style.display = "block";
+  loading.style.display = "flex";
+  content.style.display = "none";
+  error.style.display = "none";
+  safeState.style.display = "none";
+
+  retryBtn.onclick = () => fetchIncidentRecommendation(scanResponse);
+
+  // Do not request for SAFE/LOW severity unless explicitly needed, we can short-circuit if preferred, 
+  // but the endpoint handles LOW and returns BENIGN. Lets call the endpoint to be safe and use actual backend semantics.
+  try {
+    const res = await fetch("/api/v1/incident/recommendation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(scanResponse)
+    });
+    
+    if (!res.ok) throw new Error("Incident API error");
+    
+    const data = await res.json();
+    const rec = data.incident_recommendation;
+    
+    loading.style.display = "none";
+
+    if (!rec || rec.incident_category === "BENIGN") {
+      safeState.style.display = "block";
+      return;
+    }
+
+    content.style.display = "block";
+    document.getElementById("incidentCategoryBadge").innerText = rec.incident_category.replace(/_/g, " ");
+    
+    document.getElementById("incImmediateAction").innerText = rec.immediate_action;
+    document.getElementById("incPaymentAction").innerText = rec.payment_account_protection_action;
+    document.getElementById("incEvidenceAction").innerText = rec.evidence_preservation_guidance;
+    
+    document.getElementById("incReportingReason").innerText = rec.reporting_reason;
+
+    // Formatting Reporting Dest to make URLs/Phone numbers tappable
+    let reportingHtml = rec.reporting_destination;
+    // Catch common domain patterns without http
+    reportingHtml = reportingHtml.replace(/\b(cybercrime\.gov\.in|scores\.gov\.in)\b/gi, `<a href="https://$1" target="_blank" class="tappable-link">$1</a>`);
+    // Basic regex for URLs with http
+    reportingHtml = reportingHtml.replace(/(https?:\/\/[^\s]+)/g, `<a href="$1" target="_blank" class="tappable-link">$1</a>`);
+    // Basic regex for 1930
+    reportingHtml = reportingHtml.replace(/\b(1930)\b/g, `<a href="tel:$1" class="tappable-link">$1</a>`);
+    
+    document.getElementById("incReportingDest").innerHTML = reportingHtml;
+
+  } catch (err) {
+    console.error(err);
+    loading.style.display = "none";
+    error.style.display = "flex";
+  }
 }
 
