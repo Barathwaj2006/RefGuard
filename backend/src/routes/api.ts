@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { scanContent } from '../controllers/scanController';
 import { submitReport } from '../controllers/reportController';
+import { getIncidentRecommendation } from '../controllers/incidentController';
+import { getTrendingIntel, getRecentReports } from '../controllers/intelController';
 import { validateRequest, validateResponse } from '../middleware/validator';
 import { reportRateLimiter } from '../middleware/rateLimiter';
 import { communityStore } from '../services/communityStore';
@@ -21,6 +23,9 @@ router.get('/health', (_req: Request, res: Response) => {
 
 // Scan Ingress
 router.post('/scan', validateRequest('scan-request.json'), validateResponse('scan-response.json'), scanContent);
+
+// Incident Response Recommendation
+router.post('/incident/recommendation', getIncidentRecommendation);
 
 // Community Report Ingestion with Abuse Prevention & Rate Limiting
 router.post('/report', reportRateLimiter, validateRequest('scam-report.json'), submitReport);
@@ -51,5 +56,9 @@ router.post('/feedback', (req: Request, res: Response) => {
     message: 'Feedback received and recorded for model calibration.'
   });
 });
+
+// Threat Intelligence feeds
+router.get('/intel/trending', getTrendingIntel);
+router.get('/intel/reports', getRecentReports);
 
 export default router;

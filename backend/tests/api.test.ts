@@ -1,4 +1,4 @@
-﻿import request from 'supertest';
+import request from 'supertest';
 import app from '../src/app';
 
 describe('RefGuard API v1 Foundation', () => {
@@ -101,6 +101,94 @@ describe('RefGuard API v1 Foundation', () => {
 
       expect(res.body).toHaveProperty('error_code', 'MALFORMED_REQUEST');
     });
+
+    it('should flag trading scam messages appropriately', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Open an account with Angel Broking and get 50% guaranteed returns weekly. Deposit ₹10,000 to start trading with us.',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(res.body.risk_assessment.signals).toContain('fake_broker_reference');
+      expect(res.body.risk_assessment.signals).toContain('guaranteed_return_claim');
+      expect(res.body.risk_assessment.signals).toContain('deposit_payment_request');
+    });
+
+    it('should ignore benign trading discussion', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Do you think it is a good time to buy more shares in that tech company? The market is down.',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('LOW');
+      expect(res.body.protection_decision.action).toBe('ALLOW');
+    });
+
+    it('should detect crypto wallet scams', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Deposit ₹100 to activate your account. Send to 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(res.body.risk_assessment.signals).toContain('crypto_wallet_address');
+    });
+
+    it('should detect KYC phishing in trading context', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'I am a SEBI registered broker. Share your PAN and Aadhaar for KYC immediately.',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(res.body.risk_assessment.signals).toContain('sebi_reference');
+      expect(res.body.risk_assessment.signals).toContain('kyc_phishing');
+    });
+
+    it('should successfully fallback when Gemini is unavailable on ambiguous messages', async () => {
+      const originalApiKey = process.env.GEMINI_API_KEY;
+      delete process.env.GEMINI_API_KEY; // Force fallback
+
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Urgent action required! Claim your cashback now.', // 55 score (Medium) - triggers escalation
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('MEDIUM');
+      expect(res.header['x-gemini-used']).toBe('false');
+
+      if (originalApiKey) process.env.GEMINI_API_KEY = originalApiKey;
+    });
   });
 
   describe('POST /api/v1/report & Dynamic Threat Memory', () => {
@@ -151,6 +239,37 @@ describe('RefGuard API v1 Foundation', () => {
         .expect(400);
 
       expect(res.body).toHaveProperty('error_code', 'INVALID_REQUEST');
+    });
+
+    it('should sanitize PII from report descriptions and evidence references', async () => {
+      const reportPayload = {
+        report_id: 'rep-pii-001',
+        reported_indicator: 'scammer@upi',
+        report_category: 'UPI_FRAUD',
+        description: 'The scammer called me from 9876543210 and asked for my Aadhaar 1234-5678-9012.',
+        evidence_references: ['Here is the email: victim@gmail.com'],
+        submission_timestamp: new Date().toISOString(),
+        moderation_status: 'PENDING',
+        confidence: 0.9,
+        provenance: 'USER_SUBMISSION'
+      };
+
+      const res = await request(app)
+        .post('/api/v1/report')
+        .send(reportPayload)
+        .expect(200);
+
+      expect(res.body.status).toBe('RECEIVED');
+
+      // Verify via intel/reports endpoint
+      const intelRes = await request(app).get('/api/v1/intel/reports?limit=5');
+      const sanitizedReport = intelRes.body.recent_reports.find((r: any) => r.report_id === 'rep-pii-001');
+      
+      expect(sanitizedReport).toBeDefined();
+      expect(sanitizedReport.description).toContain('XXXXXX3210');
+      expect(sanitizedReport.description).toContain('[AADHAAR_REDACTED]');
+      expect(sanitizedReport.description).not.toContain('9876543210');
+      expect(sanitizedReport.description).not.toContain('1234-5678-9012');
     });
   });
 });

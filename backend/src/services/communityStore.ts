@@ -218,6 +218,23 @@ class CommunityReportStore {
   public getFeedbacksCount(): number {
     return this.feedbacks.length;
   }
+  public getTrendingIndicators(limit: number = 10): ThreatRecord[] {
+    const allRecords = Array.from(this.threatRecords.values());
+    const blockedRecords = allRecords.filter(r => r.isBlocked);
+    // Sort by report count descending
+    blockedRecords.sort((a, b) => b.reportCount - a.reportCount);
+    return blockedRecords.slice(0, limit);
+  }
+
+  public getRecentReports(limit: number = 20): ScamReport[] {
+    // Sort reports by submission_timestamp descending
+    const sorted = [...this.reports].sort((a, b) => {
+      const timeA = a.submission_timestamp ? new Date(a.submission_timestamp).getTime() : 0;
+      const timeB = b.submission_timestamp ? new Date(b.submission_timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
+    return sorted.slice(0, limit);
+  }
 }
 
 export const communityStore = new CommunityReportStore();

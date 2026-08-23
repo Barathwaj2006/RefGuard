@@ -1,4 +1,4 @@
-﻿import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ErrorResponse } from '../models/types';
 
 export const errorHandler = (
@@ -15,6 +15,24 @@ export const errorHandler = (
     };
     return res.status(400).json(errorResponse);
   }
+
+  if (err instanceof Error) {
+    if (err.message === 'ANALYSIS_TIMEOUT') {
+      return res.status(408).json({
+        error_code: 'ANALYSIS_TIMEOUT',
+        error_message: 'The analysis took too long to complete',
+      });
+    }
+
+    if (err.message.includes('GoogleGenAI') || err.message.includes('Gemini')) {
+      return res.status(503).json({
+        error_code: 'AI_SERVICE_UNAVAILABLE',
+        error_message: 'AI reasoning service is temporarily unavailable',
+      });
+    }
+  }
+
+  console.error('Unhandled Error:', err);
 
   const errorResponse: ErrorResponse = {
     error_code: 'INTERNAL_SERVER_ERROR',
