@@ -22,4 +22,12 @@ It is designed to be reusable for future application repositories and supports a
 - `.ai/GIT_PROTOCOL.md`: Mandatory Git workflow.
 - `.ai/INTEGRATION.md`: Synchronization and integration rules.
 
+## Universal Multi-Agent Engineering Workflow
+
+This repository follows a structured multi-agent engineering workflow.
+Please refer to the following resources to understand agent responsibilities and context:
+- [AGENTS.md](AGENTS.md)
+- [agent-system/AGENT_TEAM.md](agent-system/AGENT_TEAM.md)
+- [agent-system/PROJECT_PROFILE.md](agent-system/PROJECT_PROFILE.md)
+
 **Note:** Do not implement application features in this coordination repository.
