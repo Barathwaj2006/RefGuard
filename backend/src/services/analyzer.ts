@@ -13,6 +13,7 @@ import { extractTradingFraudSignals, TradingFraudSignals } from './extractors/tr
 import { extractUpiFraudSignals, UpiFraudSignals } from './extractors/upiFraudExtractor';
 import { sanitizeText } from './extractors/piiSanitizer';
 import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
+import { EvidenceAggregator } from './evidenceAggregator';
 
 interface ParsedEntities {
   vpa?: string;
@@ -90,6 +91,10 @@ export class AnalyzerService {
     const timestamp = new Date().toISOString();
     const entities = this.extractEntities(request);
     const text = request.content_value.toLowerCase();
+    
+    const evidenceAggregator = new EvidenceAggregator(scanId, timestamp);
+    const sanitizedContent = sanitizeText(request.content_value);
+    evidenceAggregator.addEvidence('ORIGINAL_CONTENT', 'ORIGINAL', sanitizedContent.sanitizedText.slice(0, 120));
 
     // Normalize Source Context
     const sourceRaw = request.source_context || 'unknown';
@@ -99,6 +104,15 @@ export class AnalyzerService {
     else if (/mms|sms|message/i.test(sourceRaw)) normalizedSource = 'SMS';
     else if (/mail/i.test(sourceRaw)) normalizedSource = 'Email';
     else if (/browser|web|chrome|safari/i.test(sourceRaw)) normalizedSource = 'Web Browser';
+    
+    evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'SOURCE', `Source Context: ${normalizedSource}`);
+    
+    if (entities.url) evidenceAggregator.addEvidence('URL', 'URL', entities.url);
+    if (entities.vpa) evidenceAggregator.addEvidence('UPI_IDENTIFIER', 'UPI', entities.vpa);
+    if (entities.amount) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', `Amount: ${entities.amount}`);
+    if (entities.urgencyWords.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'URGENCY', `Urgency Words: ${entities.urgencyWords.join(', ')}`);
+    if (entities.hasOtpSolicitation) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'CREDENTIAL', 'OTP Solicitation Detected');
+    if (entities.isCollectRequest) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', 'Payment/Collect Request');
 
 
     // --- Trading Fraud Extraction ---
@@ -115,6 +129,21 @@ export class AnalyzerService {
 
     // Mismatch Detection
     const isMismatch = hasRewardClaims && entities.isCollectRequest;
+
+    if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
+    if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
+    if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims');
+    if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)');
+
+    if (tradingSignals.hasTradingFraudSignals) {
+      evidenceAggregator.addEvidence('RISK_SIGNAL', 'TRADING', `Trading Fraud Signals: ${tradingSignals.matchedKeywords.join(', ')}`);
+      if (tradingSignals.detectedCryptoAddresses.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Crypto addresses: ${tradingSignals.detectedCryptoAddresses.join(', ')}`);
+      if (tradingSignals.detectedBrokerNames.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Broker references: ${tradingSignals.detectedBrokerNames.join(', ')}`);
+    }
+
+    if (upiSignals.hasUpiFraudSignals) {
+      evidenceAggregator.addEvidence('RISK_SIGNAL', 'SOCIAL_ENG', `Social Engineering Signals: ${upiSignals.matchedKeywords.join(', ')}`);
+    }
 
     let riskScore = 10;
     let riskSeverity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
@@ -256,6 +285,7 @@ export class AnalyzerService {
         riskScore = Math.max(0, Math.min(100, riskScore + geminiVerdict.risk_adjustment));
         signals.push(...geminiVerdict.detected_patterns.map(p => 'gemini_' + p.toLowerCase().replace(/\s+/g, '_')));
         signals.push('gemini_reasoning_applied');
+        evidenceAggregator.addEvidence('RISK_SIGNAL', 'GEMINI', `Gemini Reasoning: ${geminiVerdict.reasoning}`);
       }
     }
 
@@ -335,6 +365,7 @@ export class AnalyzerService {
       risk_severity: riskSeverity,
       confidence,
       signals,
+      evidence_references: evidenceAggregator.getAllEvidenceIds(),
       human_explanation: decision.why_it_matters,
       recommended_action: decision.user_instruction
     };
@@ -348,66 +379,33 @@ export class AnalyzerService {
       amount: entities.amount,
       recipient_vpa: entities.vpa,
       confidence: isMismatch ? 0.95 : 0.8,
-      provenance: 'rule_engine'
+      provenance: 'rule_engine',
+      evidence: evidenceAggregator.getEvidenceIdsByCategories(['PAYMENT', 'REWARD', 'INTENT_MISMATCH'])
     };
 
     // Scam Chain DAG
     const scamChain: ScamChain = {
       nodes: [
-        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: `${normalizedSource} Message` },
-        ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url }] : []),
-        ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa }] : []),
-        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : []),
-        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal' }] : []),
-        ...(upiSignals.hasUpiFraudSignals ? [{ node_id: 'node_social_eng', node_type: 'MESSAGE' as const, entity_reference: 'Social Engineering Pattern' }] : [])
+        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: `${normalizedSource} Message`, evidence_references: evidenceAggregator.getEvidenceIdsByCategories(['ORIGINAL', 'SOURCE']) },
+        ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('URL') }] : []),
+        ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('UPI') }] : []),
+        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('PAYMENT') }] : []),
+        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('TRADING') }] : []),
+        ...(upiSignals.hasUpiFraudSignals ? [{ node_id: 'node_social_eng', node_type: 'MESSAGE' as const, entity_reference: 'Social Engineering Pattern', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : [])
       ],
       edges: [
-        ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction' }] : []),
-        ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction' }] : []),
-        ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis' }] : []),
-        ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor' }] : []),
-        ...(upiSignals.hasUpiFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_social_eng', relationship: 'EMPLOYS_SOCIAL_ENGINEERING', confidence: 0.90, provenance: 'upi_fraud_extractor' }] : [])
+        ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('URL') }] : []),
+        ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('UPI') }] : []),
+        ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('PAYMENT') }] : []),
+        ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('TRADING') }] : []),
+        ...(upiSignals.hasUpiFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_social_eng', relationship: 'EMPLOYS_SOCIAL_ENGINEERING', confidence: 0.90, provenance: 'upi_fraud_extractor', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : [])
       ]
     };
 
     // Evidence Pack — PII-safe
-    const sanitizedContent = sanitizeText(request.content_value);
-    const evidencePack: EvidencePack = {
-      incident_id: 'inc_' + scanId.slice(0, 8),
-      timestamp,
-      items: [
-        {
-          evidence_id: 'ev_orig',
-          evidence_type: 'ORIGINAL_CONTENT',
-          data: sanitizedContent.sanitizedText.slice(0, 120)
-        },
-        ...(entities.vpa ? [{
-          evidence_id: 'ev_vpa',
-          evidence_type: 'UPI_IDENTIFIER' as const,
-          data: entities.vpa
-        }] : []),
-        ...(entities.url ? [{
-          evidence_id: 'ev_url',
-          evidence_type: 'URL' as const,
-          data: entities.url
-        }] : []),
-        ...(signals.length > 0 ? [{
-          evidence_id: 'ev_sig',
-          evidence_type: 'RISK_SIGNAL' as const,
-          data: signals.join(', ')
-        }] : []),
-        ...(tradingSignals.detectedCryptoAddresses.length > 0 ? [{
-          evidence_id: 'ev_crypto',
-          evidence_type: 'EXTRACTED_ENTITY' as const,
-          data: 'Crypto addresses: ' + tradingSignals.detectedCryptoAddresses.join(', ')
-        }] : []),
-        ...(tradingSignals.detectedBrokerNames.length > 0 ? [{
-          evidence_id: 'ev_broker',
-          evidence_type: 'EXTRACTED_ENTITY' as const,
-          data: 'Broker references: ' + tradingSignals.detectedBrokerNames.join(', ')
-        }] : [])
-      ]
-    };
+    const evidencePack: EvidencePack = evidenceAggregator.hasEvidence() 
+      ? evidenceAggregator.buildEvidencePack() 
+      : { incident_id: 'inc_' + scanId.slice(0, 8), timestamp, items: [] };
 
     return {
       scan_id: scanId,
