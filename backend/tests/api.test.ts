@@ -240,5 +240,36 @@ describe('RefGuard API v1 Foundation', () => {
 
       expect(res.body).toHaveProperty('error_code', 'INVALID_REQUEST');
     });
+
+    it('should sanitize PII from report descriptions and evidence references', async () => {
+      const reportPayload = {
+        report_id: 'rep-pii-001',
+        reported_indicator: 'scammer@upi',
+        report_category: 'UPI_FRAUD',
+        description: 'The scammer called me from 9876543210 and asked for my Aadhaar 1234-5678-9012.',
+        evidence_references: ['Here is the email: victim@gmail.com'],
+        submission_timestamp: new Date().toISOString(),
+        moderation_status: 'PENDING',
+        confidence: 0.9,
+        provenance: 'USER_SUBMISSION'
+      };
+
+      const res = await request(app)
+        .post('/api/v1/report')
+        .send(reportPayload)
+        .expect(200);
+
+      expect(res.body.status).toBe('RECEIVED');
+
+      // Verify via intel/reports endpoint
+      const intelRes = await request(app).get('/api/v1/intel/reports?limit=5');
+      const sanitizedReport = intelRes.body.recent_reports.find((r: any) => r.report_id === 'rep-pii-001');
+      
+      expect(sanitizedReport).toBeDefined();
+      expect(sanitizedReport.description).toContain('XXXXXX3210');
+      expect(sanitizedReport.description).toContain('[AADHAAR_REDACTED]');
+      expect(sanitizedReport.description).not.toContain('9876543210');
+      expect(sanitizedReport.description).not.toContain('1234-5678-9012');
+    });
   });
 });
