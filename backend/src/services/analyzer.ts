@@ -1,4 +1,4 @@
-﻿import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import {
   ScanRequest,
   ScanResponse,
@@ -9,6 +9,9 @@ import {
   EvidencePack
 } from '../models/types';
 import { communityStore } from './communityStore';
+import { extractTradingFraudSignals, TradingFraudSignals } from './extractors/tradingFraudExtractor';
+import { sanitizeText } from './extractors/piiSanitizer';
+import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
 
 interface ParsedEntities {
   vpa?: string;
@@ -77,13 +80,20 @@ export class AnalyzerService {
     return entities;
   }
 
-  public analyze(request: ScanRequest): ScanResponse {
+  /**
+   * Analyze content for fraud/scam signals.
+   * Now async to support Gemini escalation on ambiguous cases.
+   */
+  public async analyze(request: ScanRequest): Promise<ScanResponse> {
     const scanId = uuidv4();
     const timestamp = new Date().toISOString();
     const entities = this.extractEntities(request);
     const text = request.content_value.toLowerCase();
 
-    // Threat Detection
+    // --- Trading Fraud Extraction ---
+    const tradingSignals = extractTradingFraudSignals(request.content_value);
+
+    // --- Threat Detection (existing) ---
     const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
     const hasSuspiciousTLD = entities.url ? /\.(tk|xyz|top|work|click|gq|ml|cf)\b/i.test(entities.url) : false;
     const isLegitimateMerchant = entities.vpa ? /(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
@@ -96,6 +106,7 @@ export class AnalyzerService {
     let riskSeverity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
     const signals: string[] = [];
 
+    // --- Scoring: Existing deterministic rules ---
     if (isCommunityReported) {
       riskScore = 95;
       riskSeverity = 'CRITICAL';
@@ -122,29 +133,127 @@ export class AnalyzerService {
       signals.push('verified_merchant_whitelist');
     }
 
+    // --- Scoring: Trading fraud signals (additive to existing) ---
+    if (tradingSignals.hasTradingFraudSignals) {
+      // Add all matched trading signals
+      signals.push(...tradingSignals.matchedKeywords);
+
+      // Score based on severity and signal count
+      if (tradingSignals.guaranteedReturnClaim || tradingSignals.fakeIpoAllotment) {
+        // Critical trading fraud indicators
+        if (riskScore < 85) {
+          riskScore = Math.max(riskScore, 85);
+          riskSeverity = 'HIGH';
+        }
+      }
+
+      if (tradingSignals.cryptoWalletAddress && tradingSignals.depositPaymentRequest) {
+        // Crypto + deposit = critical combo
+        riskScore = Math.max(riskScore, 90);
+        riskSeverity = 'CRITICAL';
+      }
+
+      if (tradingSignals.kycRequest && (tradingSignals.sebiReference || tradingSignals.fakeBrokerReference)) {
+        // KYC phishing + fake authority = critical
+        riskScore = Math.max(riskScore, 88);
+        riskSeverity = 'HIGH';
+      }
+
+      if (tradingSignals.tradingTipGroup) {
+        riskScore = Math.max(riskScore, 70);
+        if (riskSeverity === 'LOW') riskSeverity = 'MEDIUM';
+      }
+
+      if (tradingSignals.dematAccountReference && tradingSignals.depositPaymentRequest) {
+        riskScore = Math.max(riskScore, 80);
+        riskSeverity = 'HIGH';
+      }
+
+      // Multi-signal escalation: 3+ trading signals = very suspicious
+      if (tradingSignals.signalCount >= 3 && riskScore < 85) {
+        riskScore = Math.max(riskScore, 85);
+        riskSeverity = 'HIGH';
+      }
+
+      // Single weak signal in ambiguous zone
+      if (tradingSignals.signalCount === 1 && riskScore < 55) {
+        riskScore = Math.max(riskScore, 55);
+        if (riskSeverity === 'LOW') riskSeverity = 'MEDIUM';
+      }
+    }
+
+    // --- Gemini Reasoning Escalation ---
+    let geminiVerdict: GeminiVerdict | null = null;
+    if (shouldEscalateToGemini(riskScore)) {
+      const sanitizationResult = sanitizeText(request.content_value);
+      geminiVerdict = await analyzeWithGemini({
+        sanitizedContent: sanitizationResult.sanitizedText,
+        deterministicScore: riskScore,
+        existingSignals: signals,
+        contentType: request.content_type,
+      });
+
+      if (geminiVerdict.gemini_used) {
+        // Apply bounded adjustment
+        riskScore = Math.max(0, Math.min(100, riskScore + geminiVerdict.risk_adjustment));
+        signals.push(...geminiVerdict.detected_patterns.map(p => 'gemini_' + p.toLowerCase().replace(/\s+/g, '_')));
+        signals.push('gemini_reasoning_applied');
+      }
+    }
+
+    // --- Re-classify severity after all adjustments ---
+    if (riskScore >= 85) riskSeverity = 'CRITICAL';
+    else if (riskScore >= 65) riskSeverity = 'HIGH';
+    else if (riskScore >= 40) riskSeverity = 'MEDIUM';
+    else riskSeverity = 'LOW';
+
+    // --- Confidence Calculation (signal-count-based) ---
+    const baseConfidence = 0.6;
+    const signalBoost = Math.min(0.35, signals.length * 0.05);
+    const geminiBoost = geminiVerdict?.gemini_used ? geminiVerdict.confidence * 0.1 : 0;
+    const confidence = Math.min(1.0, +(baseConfidence + signalBoost + geminiBoost).toFixed(2));
+
     // Protection Decision
     let decision: ProtectionDecision;
     if (riskSeverity === 'CRITICAL') {
+      const isTradingScam = tradingSignals.hasTradingFraudSignals && tradingSignals.signalCount >= 2;
       decision = {
         action: 'DISCOURAGE_PROCEED',
-        detected_summary: isMismatch ? 'Critical Payment-Intent Mismatch Detected' : 'Known Scam Signature Identified',
-        why_it_matters: isMismatch 
+        detected_summary: isMismatch
+          ? 'Critical Payment-Intent Mismatch Detected'
+          : isTradingScam
+            ? 'Trading/Investment Fraud Pattern Detected'
+            : 'Known Scam Signature Identified',
+        why_it_matters: isMismatch
           ? 'You were told you are receiving money/prize, but this transaction will DEBIT money from your bank account.'
-          : 'This identifier matches confirmed fraud signatures reported by the community.',
-        user_instruction: 'DO NOT enter your UPI PIN. Cancel this transaction immediately.'
+          : isTradingScam
+            ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
+            : 'This identifier matches confirmed fraud signatures reported by the community.',
+        user_instruction: isTradingScam
+          ? 'DO NOT deposit money, share KYC documents, or join any trading group promoted here. Report this to SEBI/cybercrime.'
+          : 'DO NOT enter your UPI PIN. Cancel this transaction immediately.'
       };
     } else if (riskSeverity === 'HIGH') {
+      const isTradingRelated = tradingSignals.hasTradingFraudSignals;
       decision = {
         action: 'REQUIRE_CONFIRMATION',
-        detected_summary: 'High Risk Phishing Pattern Detected',
-        why_it_matters: 'Suspicious elements were found that resemble credential-harvesting or scam links.',
-        user_instruction: 'Do not share OTPs, click unknown links, or send funds.'
+        detected_summary: isTradingRelated
+          ? 'Suspicious Trading/Investment Pattern Detected'
+          : 'High Risk Phishing Pattern Detected',
+        why_it_matters: isTradingRelated
+          ? 'This content contains indicators of potential investment fraud such as guaranteed returns, unregistered advisors, or suspicious trading platforms.'
+          : 'Suspicious elements were found that resemble credential-harvesting or scam links.',
+        user_instruction: isTradingRelated
+          ? 'Verify any investment advice through SEBI-registered channels only. Never deposit money to unverified platforms.'
+          : 'Do not share OTPs, click unknown links, or send funds.'
       };
     } else if (riskSeverity === 'MEDIUM') {
       decision = {
         action: 'WARN_CAUTION',
         detected_summary: 'Suspicious Indicators Found',
-        why_it_matters: 'The message contains psychological urgency or unverified claims.',
+        why_it_matters: geminiVerdict?.gemini_used
+          ? `AI analysis: ${geminiVerdict.reasoning.slice(0, 200)}`
+          : 'The message contains psychological urgency or unverified claims.',
         user_instruction: 'Verify the identity of the sender through official channels before proceeding.'
       };
     } else {
@@ -159,7 +268,7 @@ export class AnalyzerService {
     const riskAssessment: RiskAssessment = {
       risk_score: riskScore,
       risk_severity: riskSeverity,
-      confidence: 0.92,
+      confidence,
       signals,
       human_explanation: decision.why_it_matters,
       recommended_action: decision.user_instruction
@@ -183,16 +292,19 @@ export class AnalyzerService {
         { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: 'User Ingress' },
         ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url }] : []),
         ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa }] : []),
-        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : [])
+        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit' }] : []),
+        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal' }] : [])
       ],
       edges: [
         ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction' }] : []),
         ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction' }] : []),
-        ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis' }] : [])
+        ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis' }] : []),
+        ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor' }] : [])
       ]
     };
 
-    // Evidence Pack
+    // Evidence Pack — PII-safe
+    const sanitizedContent = sanitizeText(request.content_value);
     const evidencePack: EvidencePack = {
       incident_id: 'inc_' + scanId.slice(0, 8),
       timestamp,
@@ -200,7 +312,7 @@ export class AnalyzerService {
         {
           evidence_id: 'ev_orig',
           evidence_type: 'ORIGINAL_CONTENT',
-          data: request.content_value.slice(0, 120)
+          data: sanitizedContent.sanitizedText.slice(0, 120)
         },
         ...(entities.vpa ? [{
           evidence_id: 'ev_vpa',
@@ -216,6 +328,16 @@ export class AnalyzerService {
           evidence_id: 'ev_sig',
           evidence_type: 'RISK_SIGNAL' as const,
           data: signals.join(', ')
+        }] : []),
+        ...(tradingSignals.detectedCryptoAddresses.length > 0 ? [{
+          evidence_id: 'ev_crypto',
+          evidence_type: 'EXTRACTED_ENTITY' as const,
+          data: 'Crypto addresses: ' + tradingSignals.detectedCryptoAddresses.join(', ')
+        }] : []),
+        ...(tradingSignals.detectedBrokerNames.length > 0 ? [{
+          evidence_id: 'ev_broker',
+          evidence_type: 'EXTRACTED_ENTITY' as const,
+          data: 'Broker references: ' + tradingSignals.detectedBrokerNames.join(', ')
         }] : [])
       ]
     };
