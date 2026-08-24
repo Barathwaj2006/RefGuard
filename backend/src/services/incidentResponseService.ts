@@ -32,7 +32,7 @@ export class IncidentResponseService {
 
     // Determine category based on signals
     let category: IncidentResponseRecommendation['incident_category'] = 'UNKNOWN';
-    let urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = risk.risk_severity === 'UNKNOWN' ? 'LOW' : risk.risk_severity;
+    const urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = risk.risk_severity === 'UNKNOWN' ? 'LOW' : risk.risk_severity;
 
     const hasTrading = signals.some(s => s.includes('trading') || s.includes('crypto') || s.includes('broker') || s.includes('investment') || s.includes('sebi'));
     const hasImpersonation = signals.some(s => s.includes('digital_arrest') || s.includes('customs') || s.includes('authority_impersonation') || s.includes('police'));

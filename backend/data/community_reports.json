@@ -116,6 +116,60 @@
       "moderation_status": "PENDING",
       "confidence": 0.8,
       "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-24T16:30:34.653Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-24T16:30:34.674Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "demo-rep-101",
+      "reported_indicator": "new-malicious-vpa@okaxis",
+      "report_category": "UPI_FRAUD",
+      "description": "Fraudster asked for payment on WhatsApp from +91-XXXXXX3210",
+      "submission_timestamp": "2026-08-24T16:34:59.104Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "COMMUNITY_REPORT"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-24T16:37:42.462Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-24T16:37:42.486Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
     }
   ]
 }

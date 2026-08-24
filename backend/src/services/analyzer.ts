@@ -9,8 +9,8 @@ import {
   EvidencePack
 } from '../models/types';
 import { communityStore } from './communityStore';
-import { extractTradingFraudSignals, TradingFraudSignals } from './extractors/tradingFraudExtractor';
-import { extractUpiFraudSignals, UpiFraudSignals } from './extractors/upiFraudExtractor';
+import { extractTradingFraudSignals } from './extractors/tradingFraudExtractor';
+import { extractUpiFraudSignals } from './extractors/upiFraudExtractor';
 import { sanitizeText } from './extractors/piiSanitizer';
 import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
 import { EvidenceAggregator } from './evidenceAggregator';

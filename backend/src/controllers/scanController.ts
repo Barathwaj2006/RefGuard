@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AnalyzerService } from '../services/analyzer';
-import { ScanRequest } from '../models/types';
+import { ScanRequest, ScanResponse } from '../models/types';
 
 const analyzer = new AnalyzerService();
 
@@ -26,12 +26,12 @@ export const scanContent = async (req: Request, res: Response, next: NextFunctio
       timer = setTimeout(() => reject(new Error('ANALYSIS_TIMEOUT')), timeoutMs);
     });
 
-    let response: any;
+    let response: ScanResponse;
     try {
-      response = await Promise.race([
+      response = (await Promise.race([
         analyzer.analyze(scanReq),
         timeoutPromise
-      ]);
+      ])) as ScanResponse;
     } finally {
       clearTimeout(timer!);
     }
@@ -39,7 +39,7 @@ export const scanContent = async (req: Request, res: Response, next: NextFunctio
     // Add Gemini header if present in evidence pack or somewhere
     const isGeminiUsed = response.evidence_pack && response.evidence_pack.items 
       ? response.evidence_pack.items.some(
-          (item: any) => item.evidence_type === 'RISK_SIGNAL' && item.data.includes('gemini_reasoning_applied')
+          (item) => item.evidence_type === 'RISK_SIGNAL' && item.data.includes('gemini_reasoning_applied')
         )
       : false;
     

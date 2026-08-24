@@ -132,9 +132,9 @@ Respond with JSON only.`;
       },
     });
 
-    let result: any;
+    let result: { text?: string } | null;
     try {
-      result = await Promise.race([geminiPromise, timeoutPromise]);
+      result = (await Promise.race([geminiPromise, timeoutPromise])) as { text?: string } | null;
     } finally {
       clearTimeout(timeoutId!);
     }

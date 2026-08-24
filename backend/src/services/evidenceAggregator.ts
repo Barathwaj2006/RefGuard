@@ -1,5 +1,4 @@
 import { EvidencePack } from '../models/types';
-import { v4 as uuidv4 } from 'uuid';
 
 export type EvidenceType = 'ORIGINAL_CONTENT' | 'EXTRACTED_ENTITY' | 'URL' | 'UPI_IDENTIFIER' | 'RISK_SIGNAL';
 
