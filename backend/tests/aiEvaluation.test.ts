@@ -14,7 +14,10 @@ jest.mock('@google/genai', () => {
             
             if (prompt.includes('timeout_test')) {
               // Simulate timeout by never resolving (or taking very long)
-              return new Promise(resolve => setTimeout(resolve, 10000));
+              return new Promise(resolve => {
+                const t = setTimeout(resolve, 10000);
+                if (t && typeof t.unref === 'function') t.unref();
+              });
             }
             if (prompt.includes('api_failure')) {
               throw new Error('API Rate Limit Exceeded');

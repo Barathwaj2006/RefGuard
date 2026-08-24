@@ -1,8 +1,20 @@
-﻿import express, { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import apiRoutes from './routes/api';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+
+// Enable CORS for frontend and demo dashboard access
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+  res.setHeader('Access-Control-Expose-Headers', 'X-Gemini-Used');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 app.use(express.json());
 
@@ -18,3 +30,4 @@ app.use('/api/v1', apiRoutes);
 app.use(errorHandler);
 
 export default app;
+

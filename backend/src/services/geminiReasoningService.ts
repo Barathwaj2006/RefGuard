@@ -117,8 +117,9 @@ ${input.sanitizedContent.slice(0, 2000)}
 Respond with JSON only.`;
 
     // Race between Gemini call and timeout
+    let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), GEMINI_TIMEOUT_MS);
+      timeoutId = setTimeout(() => resolve(null), GEMINI_TIMEOUT_MS);
     });
 
     const geminiPromise = ai.models.generateContent({
@@ -131,7 +132,12 @@ Respond with JSON only.`;
       },
     });
 
-    const result = await Promise.race([geminiPromise, timeoutPromise]);
+    let result: any;
+    try {
+      result = await Promise.race([geminiPromise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId!);
+    }
 
     if (result === null) {
       // Timeout

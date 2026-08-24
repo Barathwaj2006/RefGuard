@@ -81,11 +81,14 @@ const IPO_SCAM_PATTERNS = [
   /\bunlisted\s+shares?\b/i,
 ];
 
-// Demat/account solicitation patterns
+// Demat/account solicitation and phishing patterns
 const DEMAT_PATTERNS = [
-  /\b(?:demat|d[\s-]*mat)\s*(?:account|a\/c)\b/i,
-  /\bCDSL|NSDL\b/i,
-  /\b(?:depository\s+participant|DP\s+ID)\b/i,
+  /\b(?:send|share|provide|enter|submit)\s+(?:your\s+)?(?:demat|d[\s-]*mat)\s*(?:account|a\/c|number|id)?\b/i,
+  /\b(?:demat|d[\s-]*mat)\s*(?:account|a\/c)?\s*(?:number|id)?\s*(?:to\s+(?:receive|claim|get)|for)\s*(?:the\s+)?(?:bonus|reward|prize|profit|cashback)\b/i,
+  /\b(?:open|create|activate)\s*(?:a\s+)?(?:free\s+)?(?:demat|d[\s-]*mat)\s*(?:account|a\/c)?\s*(?:to\s+(?:avoid|get|earn)|and\s+get)\b/i,
+  /\b(?:demat|d[\s-]*mat)\s*(?:account|a\/c)?\s*(?:will\s*be\s*|is\s*)?(?:blocked|suspended|deactivated|frozen|closed)\b/i,
+  /\b(?:update|complete)\s*(?:your\s+)?(?:e-?kyc|kyc)\s*(?:for|in|or)?\s*(?:your\s+)?(?:demat|d[\s-]*mat)\b/i,
+  /\b(?:cdsl|nsdl)\s*(?:kyc|verification|blocked|suspended|warning|alert\s*call|fake)\b/i,
 ];
 
 // Trading tip group patterns

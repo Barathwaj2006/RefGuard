@@ -34,7 +34,7 @@ class CommunityReportStore {
   // Protected ecosystem whitelists that cannot be blacklisted by user reports
   private static readonly PROTECTED_WHITELIST: RegExp[] = [
     /^(?:[^@]+@)?(?:swiggy|zomato|amazon|flipkart|uber|ola|paytm|phonepe|bhim|google|cred|irctc|licindia)(?:@[a-z]+)?$/i,
-    /^(?:https?:\/\/)?(?:[^\/]+\.)?(?:google\.com|amazon\.in|flipkart\.com|swiggy\.com|zomato\.com|irctc\.co\.in|cybercrime\.gov\.in|npci\.org\.in)(?:\/.*)?$/i
+    /^(?:https?:\/\/)?(?:[^\/]+\.)?(?:google\.com|amazon\.in|flipkart\.com|swiggy\.com|zomato\.com|irctc\.co\.in|cybercrime\.gov\.in|npci\.org\.in|cdslindia\.com|nsdl\.co\.in)(?:\/.*)?$/i
   ];
 
   constructor() {

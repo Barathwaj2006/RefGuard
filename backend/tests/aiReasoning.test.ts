@@ -10,7 +10,10 @@ jest.mock('@google/genai', () => {
         models: {
           generateContent: jest.fn().mockImplementation(async (params) => {
             if (params.contents.includes('TIMEOUT_TEST')) {
-              return new Promise(resolve => setTimeout(resolve, 9000));
+              return new Promise(resolve => {
+                const t = setTimeout(resolve, 9000);
+                if (t && typeof t.unref === 'function') t.unref();
+              });
             }
             if (params.contents.includes('API_FAILURE_TEST')) {
               throw new Error('API Error');

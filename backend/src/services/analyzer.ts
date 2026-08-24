@@ -75,7 +75,7 @@ export class AnalyzerService {
       entities.hasOtpSolicitation = true;
     }
 
-    if (/\b(?:collect|request money|pay now|debit)\b/i.test(text) || upiMatch) {
+    if (/\b(?:collect\s*(?:request|money)?|request\s+money|pay\s+now|approve\s+debit|authorize\s+debit|upi\s+debit)\b/i.test(text) || upiMatch) {
       entities.isCollectRequest = true;
     }
 
@@ -149,6 +149,7 @@ export class AnalyzerService {
     const signals: string[] = [];
 
     // --- Scoring: Existing deterministic rules ---
+    const isLegitimateDepository = /\b(cdsl|nsdl)\b/i.test(text) && !tradingSignals.depositPaymentRequest && !tradingSignals.cryptoWalletAddress && !tradingSignals.guaranteedReturnClaim && !entities.isCollectRequest && !entities.hasOtpSolicitation;
     if (isCommunityReported) {
       riskScore = 95;
       riskSeverity = 'CRITICAL';
@@ -169,14 +170,14 @@ export class AnalyzerService {
       riskScore = 55;
       riskSeverity = 'MEDIUM';
       signals.push('urgency_manipulation');
-    } else if (isLegitimateMerchant) {
+    } else if (isLegitimateMerchant || isLegitimateDepository) {
       riskScore = 5;
       riskSeverity = 'LOW';
-      signals.push('verified_merchant_whitelist');
+      signals.push(isLegitimateDepository ? 'verified_depository_alert' : 'verified_merchant_whitelist');
     }
 
     // --- Scoring: Trading fraud signals (additive to existing) ---
-    if (tradingSignals.hasTradingFraudSignals) {
+    if (tradingSignals.hasTradingFraudSignals && !isLegitimateDepository) {
       signals.push(...tradingSignals.matchedKeywords);
 
       if (tradingSignals.guaranteedReturnClaim || tradingSignals.fakeIpoAllotment) {
@@ -343,11 +344,16 @@ export class AnalyzerService {
         user_instruction: 'Verify the identity of the sender through official channels before proceeding.'
       };
     } else {
+      const isDepository = signals.includes('verified_depository_alert');
       decision = {
         action: 'ALLOW',
-        detected_summary: 'No Threat Detected',
-        why_it_matters: 'Content matches standard legitimate interaction patterns.',
-        user_instruction: 'Proceed with normal caution.'
+        detected_summary: isDepository ? 'Legitimate Depository Notification' : 'No Threat Detected (Safe)',
+        why_it_matters: isDepository
+          ? 'This message matches standard legitimate transactional alerts from CDSL/NSDL depositories with no fraudulent debit or credential solicitation.'
+          : 'Content matches standard legitimate interaction patterns with zero malicious indicators.',
+        user_instruction: isDepository
+          ? 'No action required. This is an official informational alert from your depository participant.'
+          : 'Proceed with normal caution.'
       };
     }
 

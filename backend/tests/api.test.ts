@@ -189,6 +189,83 @@ describe('RefGuard API v1 Foundation', () => {
 
       if (originalApiKey) process.env.GEMINI_API_KEY = originalApiKey;
     });
+
+    it('Demo Scenario 1: should flag UPI refund/PIN scam as CRITICAL', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'Dear user, your electricity bill refund of Rs 2,500 is approved. Click to enter your UPI PIN to claim immediately: upi://pay?pa=refund-desk@okaxis&am=2500',
+        source_context: 'com.whatsapp',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(res.body.risk_assessment.risk_score).toBeGreaterThanOrEqual(85);
+      expect(res.body.protection_decision.action).toBe('DISCOURAGE_PROCEED');
+      expect(res.body.payment_intent_mismatch.status).toBe('DETECTED');
+      expect(res.body.payment_intent_mismatch.payment_direction).toBe('OUTBOUND_DEBIT');
+      expect(res.body.evidence_pack.items.length).toBeGreaterThan(0);
+    });
+
+    it('Demo Scenario 2: should flag Digital arrest / authority impersonation as CRITICAL', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'This is Cyber Crime Branch CBI Officer. An arrest warrant has been issued against your Aadhaar card for illegal narcotics parcel. Connect on Skype video call immediately to avoid digital arrest. Transfer ₹50,000 clearance fee to upi://pay?pa=cbi-clearance@sbi&am=50000',
+        source_context: 'com.whatsapp',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
+      expect(res.body.risk_assessment.risk_score).toBeGreaterThanOrEqual(90);
+      expect(res.body.protection_decision.action).toBe('DISCOURAGE_PROCEED');
+      expect(res.body.evidence_pack.items.length).toBeGreaterThan(0);
+
+      // Verify incident recommendation for digital arrest
+      const incidentRes = await request(app)
+        .post('/api/v1/incident/recommendation')
+        .send(res.body)
+        .expect(200);
+
+      expect(incidentRes.body.incident_recommendation.incident_category).toBe('AUTHORITY_IMPERSONATION');
+      expect(incidentRes.body.incident_recommendation.urgency).toBe('CRITICAL');
+    });
+
+    it('Demo Scenario 3: should classify legitimate CDSL/NSDL financial notification as LOW/SAFE', async () => {
+      const payload = {
+        content_type: 'TEXT',
+        content_value: 'CDSL: Debit in Demat a/c 1208160012345678 for 50 shares of INFY on 24-AUG-2026. If not done by you, contact DP or CDSL at www.cdslindia.com',
+        source_context: 'SMS',
+        timestamp: new Date().toISOString()
+      };
+
+      const res = await request(app)
+        .post('/api/v1/scan')
+        .send(payload)
+        .expect(200);
+
+      expect(res.body.risk_assessment.risk_severity).toBe('LOW');
+      expect(res.body.risk_assessment.risk_score).toBeLessThanOrEqual(20);
+      expect(res.body.protection_decision.action).toBe('ALLOW');
+      expect(res.body.payment_intent_mismatch.status).toBe('NOT_DETECTED');
+
+      // Verify incident recommendation for benign alert
+      const incidentRes = await request(app)
+        .post('/api/v1/incident/recommendation')
+        .send(res.body)
+        .expect(200);
+
+      expect(incidentRes.body.incident_recommendation.incident_category).toBe('BENIGN');
+      expect(incidentRes.body.incident_recommendation.urgency).toBe('LOW');
+    });
   });
 
   describe('POST /api/v1/report & Dynamic Threat Memory', () => {
