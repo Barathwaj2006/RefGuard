@@ -67,6 +67,9 @@
         <button id="scanBtn" class="primary-btn" onclick="executeScan()">
           CHECK FOR SCAM
         </button>
+        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem; line-height: 1.4;">
+          🔒 RefGuard analyzes suspicious content to identify scam signals. Sensitive personal information is protected before processing.
+        </p>
       </section>
 
       <!-- Analysis Results Panel -->
@@ -146,6 +149,8 @@
           <div class="explanation-card" id="explanationCard">
             <h3>Why RefGuard flagged this</h3>
             <div class="signal-grid" id="signalGrid">
+              <!-- Friendly Signal Cards -->
+              <div id="dynamicSignalsContainer" style="display: contents;"></div>
               <!-- Mismatch -> inserted dynamically if exists -->
               <div id="mismatchCard" class="signal-item" style="display:none;">
                 <div class="signal-title">Payment Intent Mismatch</div>
@@ -226,6 +231,45 @@
       <div id="historyListContainer"></div>
     </div>
 
+    
+
+    <!-- REPORT VIEW -->
+    <div class="scanner-container" id="reportView" style="display: none;">
+      <div class="input-header">
+        <h2>Report this Scam</h2>
+        <p>Help protect the community by reporting fraudulent messages or links.</p>
+      </div>
+      
+      <div class="input-card" style="margin-top: 0;">
+        <div class="form-group">
+          <label for="reportIndicator">Suspicious Content (URL, Message, or UPI ID)</label>
+          <textarea id="reportIndicator" placeholder="Paste the exact message or link..." style="min-height: 80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="reportCategory">Category</label>
+          <select id="reportCategory">
+            <option value="COMMUNITY_REPORT">General Suspicious Activity</option>
+            <option value="UPI_FRAUD">UPI / Payment Fraud</option>
+            <option value="IMPERSONATION">Authority Impersonation</option>
+            <option value="PHISHING">Phishing Link</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="reportDesc">Additional Details (Optional)</label>
+          <textarea id="reportDesc" placeholder="How did you encounter this?" style="min-height: 60px;"></textarea>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Your report will be analyzed and added to the Global Intel registry if verified.
+        </p>
+        <button id="submitReportBtn" class="primary-btn" onclick="submitUserReport()">
+          SUBMIT REPORT
+        </button>
+        <div id="reportSuccess" style="display: none; margin-top: 1rem; color: var(--color-low); text-align: center; font-weight: 600;">
+          ✅ Report submitted successfully. Thank you!
+        </div>
+      </div>
+    </div>
+  
     <!-- INTEL VIEW -->
     <div class="scanner-container" id="intelView" style="display: none;">
       <div class="input-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -259,6 +303,10 @@
     <button class="nav-btn" id="navIntel" onclick="switchTab('intel')">
       <span class="nav-icon">🌍</span>
       <span>Intel</span>
+    </button>
+    <button class="nav-btn" id="navReport" onclick="switchTab('report')">
+      <span class="nav-icon">📢</span>
+      <span>Report</span>
     </button>
   </nav>
 

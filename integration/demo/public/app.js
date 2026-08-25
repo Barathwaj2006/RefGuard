@@ -161,8 +161,8 @@ function renderScanResponse(data) {
   if (severityTag) {
     if (severity === 'CRITICAL') severityTag.innerText = 'CRITICAL SCAM RISK';
     else if (severity === 'HIGH') severityTag.innerText = 'HIGH RISK';
-    else if (severity === 'MEDIUM') severityTag.innerText = 'BE CAREFUL';
-    else severityTag.innerText = 'LIKELY SAFE';
+    else if (severity === 'MEDIUM') severityTag.innerText = '⚠ NEEDS CAUTION';
+    else severityTag.innerText = '✓ LOOKS SAFE';
   }
   
   if (verdictIcon) {
@@ -445,20 +445,24 @@ function switchTab(tab) {
   const navScanner = document.getElementById('navScanner');
   const navHistory = document.getElementById('navHistory');
   const navIntel = document.getElementById('navIntel');
+  const navReport = document.getElementById('navReport');
 
   const presetsSection = document.getElementById('presetsSection');
   const workspaceGrid = document.getElementById('workspaceGrid');
   const historyView = document.getElementById('historyView');
   const intelView = document.getElementById('intelView');
+  const reportView = document.getElementById('reportView');
 
   if (navScanner) navScanner.classList.remove('active');
   if (navHistory) navHistory.classList.remove('active');
   if (navIntel) navIntel.classList.remove('active');
+  if (navReport) navReport.classList.remove('active');
 
   if (presetsSection) presetsSection.style.display = 'none';
   if (workspaceGrid) workspaceGrid.style.display = 'none';
   if (historyView) historyView.style.display = 'none';
   if (intelView) intelView.style.display = 'none';
+  if (reportView) reportView.style.display = 'none';
 
   if (tab === 'scanner') {
     if (navScanner) navScanner.classList.add('active');
@@ -472,6 +476,9 @@ function switchTab(tab) {
     if (navIntel) navIntel.classList.add('active');
     if (intelView) intelView.style.display = 'block';
     loadIntel();
+  } else if (tab === 'report') {
+    if (navReport) navReport.classList.add('active');
+    if (reportView) reportView.style.display = 'block';
   }
 }
 
@@ -671,3 +678,63 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPreset('upi_refund_trap');
   }
 });
+
+async function submitUserReport() {
+  const indicatorEl = document.getElementById('reportIndicator');
+  const catEl = document.getElementById('reportCategory');
+  const descEl = document.getElementById('reportDesc');
+  const btn = document.getElementById('submitReportBtn');
+  const successMsg = document.getElementById('reportSuccess');
+
+  const indicator = indicatorEl ? indicatorEl.value.trim() : '';
+  if (!indicator) {
+    showToast('Please provide the suspicious content to report.', 'error');
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'SUBMITTING...';
+  }
+  if (successMsg) successMsg.style.display = 'none';
+
+  const reportPayload = {
+    report_id: 'rep_' + Math.random().toString(36).substring(2, 10),
+    reported_indicator: indicator.substring(0, 500),
+    report_category: catEl ? catEl.value : 'COMMUNITY_REPORT',
+    description: descEl ? descEl.value.substring(0, 500) : '',
+    submission_timestamp: new Date().toISOString(),
+    moderation_status: 'PENDING',
+    confidence: 0.85,
+    provenance: 'USER_SUBMISSION'
+  };
+
+  try {
+    const res = await fetch('/api/v1/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportPayload)
+    });
+
+    if (!res.ok) {
+      throw new Error('Report rejected by server');
+    }
+
+    if (successMsg) successMsg.style.display = 'block';
+    if (indicatorEl) indicatorEl.value = '';
+    if (descEl) descEl.value = '';
+    
+    // Switch to intel to see it potentially (if we supported instant optimistic updates, we would do it here)
+    setTimeout(() => {
+      if (successMsg) successMsg.style.display = 'none';
+    }, 4000);
+
+  } catch (err) {
+    showToast('Failed to submit report: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = 'SUBMIT REPORT';
+    }
+  }
+}
