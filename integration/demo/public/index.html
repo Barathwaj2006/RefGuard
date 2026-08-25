@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE<!--<!--<!--<!--<!--<!--EXTRACTED id="evidenceCard" -->EXTRACTED id="incidentCard" -->EXTRACTED id="nextStepCard" -->EXTRACTED id="objectiveCard" -->EXTRACTED id="scamChainCard" -->EXTRACTED id="explanationCard" -->html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -85,7 +85,7 @@
       <section id="resultsPanel" style="display: none;">
         
         <!-- Loading State -->
-        <div id="loadingState" class="loading-overlay" style="display: none;">
+        <div id="loadingState" class="loading-overlay" style="display: none;" aria-live="assertive" aria-atomic="true">
           <div class="spinner"></div>
           <h4 class="loading-text" id="loadingText">Scanning for threats...</h4>
           <p class="loading-subtext">Checking payment intent and risk heuristics.</p>
@@ -100,16 +100,18 @@
         </div>
 
         <!-- Result Content Container -->
-        <div id="resultContent" style="display: none;">
+        <div id="resultContent" style="display: none;" aria-live="polite">
           
           <!-- Verdict Hero -->
           <div id="riskBanner" class="verdict-hero">
             <div class="verdict-icon" id="verdictIcon">⚠️</div>
             <h2 class="verdict-title" id="severityTag">ANALYZING</h2>
             <p class="verdict-desc" id="decisionTitle">Waiting for verdict</p>
-            <div class="confidence-badge">
-              <span id="riskScoreVal">0</span>/100 Risk Score
+            <div class="confidence-badge" style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
+              <span>Score: <strong id="riskScoreVal">0</strong>/100</span>
+              <span style="border-left: 1px solid rgba(255,255,255,0.3); padding-left: 1rem;">Confidence: <strong id="riskConfidenceVal">0</strong>%</span>
             </div>
+            <div id="heroImmediateAction" style="margin-top: 1.5rem; font-weight: 600; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px; display: none;"></div>
           </div>
           
           <!-- Protect & Recover (Incident Response) -->
@@ -180,16 +182,41 @@
 
           
           <!-- Attacker Objective -->
-          <div class="explanation-card" id="objectiveCard" style="display: none; border-left: 4px solid var(--color-high);">
-            <h3 style="color: var(--color-high);">What is the attacker trying to do?</h3>
-            <p id="attackerObjectiveDesc" style="font-size: 0.95rem; color: var(--text-primary); margin-top: 0.5rem;"></p>
-          </div>
+          
 
           <!-- Next Likely Step -->
-          <div class="explanation-card" id="nextStepCard" style="display: none; border-left: 4px solid var(--text-muted);">
-            <h3 style="color: var(--text-muted);">What may happen next</h3>
-            <p id="nextStepDesc" style="font-size: 0.95rem; color: var(--text-primary); margin-top: 0.5rem;"></p>
-          </div>
+          
+            <!-- Adaptive Intelligence Card -->
+            <div class="explanation-card" id="adaptiveIntelCard" style="display: none; border-left: 4px solid var(--accent-blue);">
+              <h3 style="color: var(--accent-blue);">Threat Profile</h3>
+              <div class="intel-grid" style="display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 1rem;">
+                <div id="aiScamTypeBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Scam Type</strong>
+                  <div id="aiScamType" style="font-weight: 500;"></div>
+                </div>
+                <div id="aiCurrentStageBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Current Stage</strong>
+                  <div id="aiCurrentStage" style="font-weight: 500;"></div>
+                </div>
+                <div id="aiObjectiveBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Attacker Objective</strong>
+                  <div id="aiObjective"></div>
+                </div>
+                <div id="aiUserRiskBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">User Risk</strong>
+                  <div id="aiUserRisk"></div>
+                </div>
+                <div id="aiNextStepBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">What May Happen Next</strong>
+                  <div id="aiNextStep"></div>
+                </div>
+                <div id="aiRecommendedActionBox" style="display: none;">
+                  <strong style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Recommended Action</strong>
+                  <div id="aiRecommendedAction" style="font-weight: 500; color: var(--color-critical);"></div>
+                </div>
+              </div>
+            </div>
+
 
           <!-- Scam Chain -->
           <div class="scam-chain-card" id="scamChainCard" style="display: none;">

@@ -209,9 +209,23 @@ function renderScanResponse(data) {
 
   if (banner) banner.className = 'verdict-hero ' + model.severity.toLowerCase();
   if (scoreVal) scoreVal.innerText = model.score;
+
+  const confVal = document.getElementById('riskConfidenceVal');
+  if (confVal) confVal.innerText = Math.round((model.confidence || 0) * 100);
+  
+  const heroAction = document.getElementById('heroImmediateAction');
+  if (heroAction) {
+    if (model.action && model.severity !== 'LOW') {
+      heroAction.innerText = 'Action: ' + model.action;
+      heroAction.style.display = 'block';
+    } else {
+      heroAction.style.display = 'none';
+    }
+  }
+
   
   if (severityTag) {
-    if (model.severity === 'CRITICAL') severityTag.innerText = 'CRITICAL SCAM RISK';
+    if (model.severity === 'CRITICAL') severityTag.innerText = 'CRITICAL RISK';
     else if (model.severity === 'HIGH') severityTag.innerText = 'HIGH RISK';
     else if (model.severity === 'MEDIUM') severityTag.innerText = '⚠ NEEDS CAUTION';
     else severityTag.innerText = '✓ LOOKS SAFE';
@@ -220,8 +234,8 @@ function renderScanResponse(data) {
   if (verdictIcon) {
     if (model.severity === 'CRITICAL') verdictIcon.innerText = '🚨';
     else if (model.severity === 'HIGH') verdictIcon.innerText = '⚠️';
-    else if (model.severity === 'MEDIUM') verdictIcon.innerText = '👀';
-    else verdictIcon.innerText = '✅';
+    else if (model.severity === 'MEDIUM') verdictIcon.innerText = '⚠';
+    else verdictIcon.innerText = '✓';
   }
 
   if (decisionTitle) {
@@ -275,24 +289,14 @@ function renderScanResponse(data) {
     }
   }
 
-  // Attacker Objective
-  const objectiveCard = document.getElementById('objectiveCard');
-  const objectiveDesc = document.getElementById('attackerObjectiveDesc');
-  if (objectiveCard && objectiveDesc) {
-    if ((model.severity === 'CRITICAL' || model.severity === 'HIGH') && model.adaptiveIntel.objective) {
-      objectiveCard.style.display = 'block';
-      objectiveDesc.innerText = model.adaptiveIntel.objective;
-    } else {
-      objectiveCard.style.display = 'none';
-    }
-  }
-
-  // Next Likely Step
-  const nextStepCard = document.getElementById('nextStepCard');
-  const nextStepDesc = document.getElementById('nextStepDesc');
+  // Unified Adaptive Intelligence Card
+  const adaptiveIntelCard = document.getElementById('adaptiveIntelCard');
   
-  if (nextStepCard && nextStepDesc) {
-    // If backend provides a predicted next step, use it, else synthesize from scam chain
+  if (adaptiveIntelCard) {
+    // Determine visibility based on available fields and severity
+    let hasIntel = false;
+    
+    // Objective / Next Step synthesis
     let nextText = model.adaptiveIntel.nextStep;
     if (!nextText && model.chainNodes.length > 2) {
       const predictedNext = model.chainNodes[2];
@@ -300,11 +304,33 @@ function renderScanResponse(data) {
       nextText = 'The attacker will likely try to execute a ' + typeText + ' (' + (predictedNext.entity_reference || predictedNext.node_id) + '). Do not proceed.';
     }
 
-    if (nextText && (model.severity === 'CRITICAL' || model.severity === 'HIGH')) {
-      nextStepCard.style.display = 'block';
-      nextStepDesc.innerText = nextText;
+    const fields = [
+      { id: 'aiScamType', boxId: 'aiScamTypeBox', val: model.adaptiveIntel.archetype },
+      { id: 'aiCurrentStage', boxId: 'aiCurrentStageBox', val: model.adaptiveIntel.stage },
+      { id: 'aiObjective', boxId: 'aiObjectiveBox', val: model.adaptiveIntel.objective },
+      { id: 'aiUserRisk', boxId: 'aiUserRiskBox', val: model.adaptiveIntel.userRisk },
+      { id: 'aiNextStep', boxId: 'aiNextStepBox', val: nextText },
+      { id: 'aiRecommendedAction', boxId: 'aiRecommendedActionBox', val: model.action } // Reuse the action
+    ];
+
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      const box = document.getElementById(f.boxId);
+      if (el && box) {
+        if (f.val) {
+          el.innerText = f.val;
+          box.style.display = 'block';
+          hasIntel = true;
+        } else {
+          box.style.display = 'none';
+        }
+      }
+    });
+
+    if (hasIntel && (model.severity === 'CRITICAL' || model.severity === 'HIGH' || model.severity === 'MEDIUM')) {
+      adaptiveIntelCard.style.display = 'block';
     } else {
-      nextStepCard.style.display = 'none';
+      adaptiveIntelCard.style.display = 'none';
     }
   }
 
@@ -316,17 +342,22 @@ function renderScanResponse(data) {
     if (model.chainNodes.length > 0) {
       chainCard.style.display = 'block';
       model.chainNodes.forEach((node, idx) => {
-        // Distinguish OBSERVED vs INFERRED vs PREDICTED
-        // Index 0 is typically OBSERVED. Index 1 INFERRED. Index 2+ PREDICTED.
-        let status = 'OBSERVED';
-        let icon = '✓';
-        let cls = 'detected';
+        // Consume explicit backend semantics for node status
+        const rawStatus = (node.status || node.state || node.node_status || node.observation_status || '').toUpperCase();
         
-        if (idx === 1) {
+        let status = 'UNVERIFIED';
+        let icon = '⁈';
+        let cls = 'inferred';
+        
+        if (rawStatus === 'OBSERVED') {
+          status = 'OBSERVED';
+          icon = '✓';
+          cls = 'detected';
+        } else if (rawStatus === 'INFERRED') {
           status = 'INFERRED';
           icon = '◉';
           cls = 'inferred';
-        } else if (idx > 1) {
+        } else if (rawStatus === 'PREDICTED') {
           status = 'PREDICTED';
           icon = '→';
           cls = 'predicted';
@@ -800,6 +831,9 @@ async function submitUserReport() {
       body: JSON.stringify(reportPayload)
     });
 
+    if (res.status === 409) {
+      throw new Error('This indicator has already been reported.');
+    }
     if (!res.ok) {
       throw new Error('Report rejected by server');
     }
