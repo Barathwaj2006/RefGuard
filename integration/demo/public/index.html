@@ -2,342 +2,252 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RefGuard — India UPI & Referral Scam Protection Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RefGuard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Top App Bar -->
   <header class="top-bar">
     <div class="brand">
-      <span class="shield-icon">🛡️</span>
+      <span class="shield-icon" style="font-size: 1.8rem;">🛡️</span>
       <div class="brand-text">
         <h1>RefGuard</h1>
-        <span class="badge">UPI & Scam Defense Engine</span>
+        <span class="brand-subtitle">Ambient Scam Protection</span>
       </div>
-    </div>
-    <div class="header-meta">
-      <div class="live-status">
-        <span class="status-dot"></span>
-        <span class="status-text">API Live</span>
-      </div>
-      <span class="version-tag">v1.0-mvp</span>
     </div>
   </header>
 
   <main class="container">
-    <!-- Presets Bar (Judge Demo Scenarios) -->
-    <section class="presets-section" id="presetsSection">
-      <div class="section-title-row">
-        <h3>⚡ Quick Demo Scenarios</h3>
-        <span class="hint-label">Select a verified test scenario:</span>
-      </div>
-      <div class="presets-grid">
-        <button class="preset-btn danger" onclick="loadPreset('upi_refund_trap')">
-          <span class="preset-icon">⚡</span>
-          <div class="preset-info">
-            <strong>1. UPI Refund / PIN Scam</strong>
-            <small>Deceptive cashback & PIN collect trap</small>
-          </div>
-        </button>
-        <button class="preset-btn danger" onclick="loadPreset('digital_arrest_scam')">
-          <span class="preset-icon">🚨</span>
-          <div class="preset-info">
-            <strong>2. Digital Arrest Scam</strong>
-            <small>CBI/Customs authority extortion</small>
-          </div>
-        </button>
-        <button class="preset-btn success" onclick="loadPreset('legit_cdsl_alert')">
-          <span class="preset-icon">✅</span>
-          <div class="preset-info">
-            <strong>3. Legitimate CDSL Alert</strong>
-            <small>Official depository stock transaction</small>
-          </div>
-        </button>
-        <button class="preset-btn warning" onclick="loadPreset('trading_tip_scam')">
-          <span class="preset-icon">📈</span>
-          <div class="preset-info">
-            <strong>4. Fake Trading Tips</strong>
-            <small>Guaranteed 50% returns weekly</small>
-          </div>
-        </button>
-        <button class="preset-btn warning" onclick="loadPreset('fake_referral')">
-          <span class="preset-icon">🔗</span>
-          <div class="preset-info">
-            <strong>5. Malicious Referral URL</strong>
-            <small>Phishing shortlink & viral loop</small>
-          </div>
-        </button>
-        <button class="preset-btn success" onclick="loadPreset('legit_merchant')">
-          <span class="preset-icon">🏪</span>
-          <div class="preset-info">
-            <strong>6. Clean Swiggy Merchant</strong>
-            <small>Verified whitelist QR payment</small>
-          </div>
-        </button>
-      </div>
-    </section>
-
-    <!-- Scanner Ingress & Analysis Grid -->
-    <div class="workspace-grid" id="workspaceGrid">
-      <!-- Input Panel -->
-      <section class="panel input-panel">
-        <div class="panel-header">
-          <h3>Content Ingress</h3>
-          <span class="privacy-pill">🔒 Zero PIN Collection</span>
-        </div>
-
-        <div class="form-group">
-          <label for="contentTypeSelect">Content Type:</label>
-          <select id="contentTypeSelect">
-            <option value="TEXT">📝 Text Message / Chat Message</option>
-            <option value="URL">🔗 URL / Web Link</option>
-            <option value="UPI_VPA">💳 UPI VPA (ID)</option>
-            <option value="QR">📲 UPI QR Payload (upi://pay)</option>
-            <option value="IMAGE">🖼️ Screenshot OCR (Base64)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="sourceContextSelect">Source Context (Platform):</label>
-          <select id="sourceContextSelect">
-            <option value="SMS">SMS Message</option>
-            <option value="WhatsApp">WhatsApp</option>
-            <option value="Telegram">Telegram</option>
-            <option value="Email">Email</option>
-            <option value="Web">Web Browser</option>
-            <option value="Unknown">Unknown / Manual</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="contentValueArea">Content to Analyze:</label>
-          <textarea id="contentValueArea" rows="5" placeholder="Paste SMS, WhatsApp text, suspicious link, UPI ID, or UPI URI..."></textarea>
-        </div>
-
-        <div class="action-row">
-          <button id="scanBtn" class="primary-btn" onclick="executeScan()">
-            <span class="btn-icon">⚡</span> Scan & Analyze Risk
-          </button>
-          <button class="secondary-btn" onclick="reportScam()">
-            <span class="btn-icon">📢</span> Report to Community
-          </button>
+    
+    <!-- SCANNER VIEW -->
+    <div id="workspaceGrid" class="scanner-container">
+      
+      <section class="presets-section" id="presetsSection">
+        <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Quick Test Scenarios</h3>
+        <div class="presets-grid">
+          <div class="preset-pill" onclick="loadPreset('upi_refund_trap')">UPI Trap</div>
+          <div class="preset-pill" onclick="loadPreset('digital_arrest_scam')">Digital Arrest</div>
+          <div class="preset-pill" onclick="loadPreset('legit_cdsl_alert')">Legit CDSL</div>
+          <div class="preset-pill" onclick="loadPreset('fake_referral')">Fake Link</div>
         </div>
       </section>
 
+      <!-- Input Panel -->
+      <section class="input-card" id="inputPanel">
+        <div class="input-header">
+          <h2>Check for fraud</h2>
+          <p>Paste a message, link, or UPI ID to verify it's safe.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="contentTypeSelect">What are we checking?</label>
+          <select id="contentTypeSelect">
+            <option value="TEXT">Message / Chat</option>
+            <option value="URL">Web Link</option>
+            <option value="UPI_VPA">UPI ID</option>
+            <option value="QR">QR Code Payload</option>
+          </select>
+        </div>
+        
+        <div class="form-group hidden">
+          <!-- Hidden but preserved for app.js functionality -->
+          <select id="sourceContextSelect">
+            <option value="Unknown" selected>Unknown</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <textarea id="contentValueArea" placeholder="e.g. You have won 10,000 INR! Click here..."></textarea>
+        </div>
+
+        <button id="scanBtn" class="primary-btn" onclick="executeScan()">
+          CHECK FOR SCAM
+        </button>
+      </section>
+
       <!-- Analysis Results Panel -->
-      <section class="panel output-panel" id="resultsPanel">
-        <div class="panel-header">
-          <h3>Security Assessment & Protection</h3>
-          <span id="scanIdBadge" class="scan-id">Awaiting scan...</span>
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <h4>Ready for Content Ingress</h4>
-          <p>Select a quick scenario above or paste any message, QR code, or link to run multi-engine threat detection.</p>
-        </div>
-
+      <section id="resultsPanel" style="display: none;">
+        
         <!-- Loading State -->
-        <div id="loadingState" class="loading-state" style="display: none;">
+        <div id="loadingState" class="loading-overlay" style="display: none;">
           <div class="spinner"></div>
-          <h4>Threat Analysis in Progress</h4>
-          <p>Evaluating Intent Mismatch, Heuristics, Threat Intelligence, and AI Reasoning...</p>
+          <h4 class="loading-text" id="loadingText">Scanning for threats...</h4>
+          <p class="loading-subtext">Checking payment intent and risk heuristics.</p>
         </div>
 
         <!-- Error State -->
-        <div id="errorState" class="error-state" style="display: none;">
-          <div class="error-icon">⚠️</div>
-          <h4>Analysis Request Failed</h4>
-          <p id="errorMessage">Unable to reach RefGuard API.</p>
+        <div id="errorState" class="loading-overlay" style="display: none;">
+          <div class="verdict-icon">⚠️</div>
+          <h4 class="loading-text">Unable to connect</h4>
+          <p id="errorMessage" class="loading-subtext">Could not reach the protection engine.</p>
           <button class="secondary-btn" onclick="executeScan()" style="margin-top: 1rem;">Try Again</button>
         </div>
 
         <!-- Result Content Container -->
         <div id="resultContent" style="display: none;">
-          <!-- Risk Severity Banner -->
-          <div id="riskBanner" class="risk-banner">
-            <div class="risk-main">
-              <div class="risk-score-circle" id="riskScoreVal">95</div>
-              <div class="risk-meta">
-                <div class="badge-row">
-                  <span class="severity-tag" id="severityTag">CRITICAL RISK</span>
-                  <span class="ai-badge" id="aiBadge" style="display:none;">✨ AI Verified</span>
-                </div>
-                <h4 id="decisionTitle">DISCOURAGE PROCEED</h4>
-                <p id="detectedSummary"></p>
-              </div>
+          
+          <!-- Verdict Hero -->
+          <div id="riskBanner" class="verdict-hero">
+            <div class="verdict-icon" id="verdictIcon">⚠️</div>
+            <h2 class="verdict-title" id="severityTag">ANALYZING</h2>
+            <p class="verdict-desc" id="decisionTitle">Waiting for verdict</p>
+            <div class="confidence-badge">
+              <span id="riskScoreVal">0</span>/100 Risk Score
             </div>
           </div>
-
-          <!-- Protection Advisory Card -->
-          <div class="card advisory-card">
-            <h4>🛡️ Protective Action Advisory</h4>
-            <div class="advisory-content">
-              <p><strong>Direct User Guidance:</strong> <span id="userInstruction" class="highlight-instruction"></span></p>
-              <p><strong>Why it matters:</strong> <span id="whyItMatters"></span></p>
-              <p><strong>Recommended Action:</strong> <span id="recommendedAction"></span></p>
+          
+          <!-- Protect & Recover (Incident Response) -->
+          <div id="incidentCard" class="action-card" style="display: none;">
+            <div id="incidentLoading" class="loading-overlay" style="display: none;">
+              <div class="spinner" style="width:24px; height:24px; border-width: 2px;"></div>
+              <p>Preparing safety guidance...</p>
             </div>
-            <div id="blockProtectContainer" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-              <button class="primary-btn block-btn" onclick="triggerBlockProtect()">
-                🛡️ BLOCK & PROTECT SENDER
-              </button>
-            </div>
-          </div>
-
-          <!-- Payment Intent Mismatch Card -->
-          <div id="mismatchCard" class="card mismatch-card" style="display: none;">
-            <h4>⚖️ Payment Intent Mismatch Analyzer</h4>
-            <div class="mismatch-grid">
-              <div class="mismatch-box stated">
-                <span class="box-label">User Stated Intent</span>
-                <p id="statedIntent">-</p>
-              </div>
-              <div class="mismatch-arrow">➡️ vs ⬅️</div>
-              <div class="mismatch-box actual">
-                <span class="box-label">Actual Payment Action</span>
-                <p id="actualPayment">-</p>
-              </div>
-            </div>
-            <div class="mismatch-status-bar">
-              <span>Status: <strong id="mismatchStatus">DETECTED</strong></span>
-              <span>Direction: <strong id="paymentDirection">OUTBOUND_DEBIT</strong></span>
-            </div>
-          </div>
-
-          <!-- Adaptive Scam Chain Graph -->
-          <div class="card chain-card" id="scamChainCard" style="display: none;">
-            <h4>🔗 Adaptive Scam Chain</h4>
-            <div id="adaptiveChainContainer" class="adaptive-chain"></div>
-          </div>
-
-          <!-- Verified Evidence Pack Section -->
-          <div class="card evidence-card" id="evidenceCard" style="display: none;">
-            <h4>📋 Verified Evidence Pack</h4>
-            <div id="evidenceContainer" class="evidence-grid"></div>
-          </div>
-
-          <!-- Incident Response Section -->
-          <div class="card incident-card" id="incidentCard" style="display: none;">
-            <div id="incidentLoading" class="incident-loading" style="display: none;">
-              <div class="spinner-small"></div>
-              <span>Preparing your tailored protection steps...</span>
-            </div>
+            
             <div id="incidentContent" style="display: none;">
-              <div class="incident-header">
-                <h4>🛡️ Protect & Recover</h4>
-                <span class="incident-badge" id="incidentCategoryBadge">INCIDENT RESPONSE</span>
-              </div>
-              
-              <div class="incident-section">
-                <h5>Immediate Actions</h5>
-                <ul class="action-list">
-                  <li id="incImmediateAction"></li>
-                  <li id="incPaymentAction"></li>
-                  <li id="incEvidenceAction"></li>
-                </ul>
-              </div>
-
-              <div class="incident-section">
-                <h5>Why this matters</h5>
-                <p id="incReportingReason"></p>
-              </div>
-
-              <div class="incident-section">
-                <h5>Official Reporting & Emergency Support</h5>
-                <p id="incReportingDest"></p>
-              </div>
+              <h3>🛡️ Protect Yourself Now</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                <strong id="incidentCategoryBadge">INCIDENT RESPONSE</strong>
+              </p>
+              <ul class="action-list">
+                <li id="incImmediateActionContainer">
+                  <div class="action-num">1</div>
+                  <div id="incImmediateAction"></div>
+                </li>
+                <li id="incPaymentActionContainer">
+                  <div class="action-num">2</div>
+                  <div id="incPaymentAction"></div>
+                </li>
+                <li id="incEvidenceActionContainer">
+                  <div class="action-num">3</div>
+                  <div id="incEvidenceAction"></div>
+                </li>
+                <li id="incReportingDestContainer">
+                  <div class="action-num">4</div>
+                  <div id="incReportingDest"></div>
+                </li>
+              </ul>
             </div>
-            <div id="incidentError" class="incident-error" style="display: none;">
-              <p>Could not load automated incident recovery recommendations.</p>
-              <button class="secondary-btn btn-small" id="retryIncidentBtn">Retry</button>
+            
+            <div id="incidentError" style="display: none;">
+              <p>Failed to load recovery steps.</p>
             </div>
-            <div id="incidentSafe" class="incident-safe" style="display: none;">
-              <p>✅ <strong>Safe Transaction:</strong> No immediate recovery action required. Standard financial protocol verified.</p>
-            </div>
-          </div>
-
-          <!-- Feedback Loop Section -->
-          <div class="card feedback-card" id="feedbackCard">
-            <h4>Was this analysis correct?</h4>
-            <p>Help calibrate RefGuard's detection models with your feedback.</p>
-            <div class="feedback-actions">
-              <button class="secondary-btn btn-success" onclick="submitFeedback('FALSE_ALARM')">❌ False Alarm (Safe)</button>
-              <button class="secondary-btn btn-danger" onclick="submitFeedback('CONFIRMED_FRAUD')">✅ Correct (Confirmed Scam)</button>
-            </div>
-            <div id="feedbackThanks" style="display: none; color: var(--color-low); margin-top: 0.5rem; font-weight: 600;">
-              ✨ Thank you! Your feedback has been recorded for model calibration.
+            
+            <div id="incidentSafe" style="display: none;">
+              <h3>✅ No action required</h3>
+              <p>This appears to be a standard, safe interaction. You can proceed normally.</p>
             </div>
           </div>
 
-          <!-- Raw Contract JSON -->
-          <details class="card json-card">
-            <summary>📦 View Raw ScanResponse (Contract JSON)</summary>
-            <pre><code id="jsonViewer"></code></pre>
+          <!-- Why Flagged (Explainable AI & Mismatch) -->
+          <div class="explanation-card" id="explanationCard">
+            <h3>Why RefGuard flagged this</h3>
+            <div class="signal-grid" id="signalGrid">
+              <!-- Mismatch -> inserted dynamically if exists -->
+              <div id="mismatchCard" class="signal-item" style="display:none;">
+                <div class="signal-title">Payment Intent Mismatch</div>
+                <div class="signal-desc">
+                  You thought: <strong id="statedIntent">-</strong><br>
+                  Actual action: <strong id="actualPayment">-</strong><br>
+                  Direction: <strong id="paymentDirection">-</strong>
+                </div>
+              </div>
+              <!-- AI explanation -->
+              <div class="signal-item">
+                <div class="signal-title">AI Analysis</div>
+                <div class="signal-desc" id="detectedSummary"></div>
+                <div class="signal-desc" id="whyItMatters" style="margin-top:0.5rem"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scam Chain -->
+          <div class="scam-chain-card" id="scamChainCard" style="display: none;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary);">How this scam works</h3>
+            <div id="adaptiveChainContainer" class="chain-timeline"></div>
+          </div>
+
+          <!-- Evidence Pack -->
+          <details class="evidence-details" id="evidenceCard" style="display: none;">
+            <summary>View Technical Evidence</summary>
+            <div id="evidenceContainer" class="evidence-list"></div>
           </details>
+
+          <!-- Feedback -->
+          <div class="feedback-section" id="feedbackCard">
+            <h4>Was this helpful?</h4>
+            <div class="feedback-buttons">
+              <button class="secondary-btn" onclick="submitFeedback('FALSE_ALARM')">No, it's safe</button>
+              <button class="secondary-btn" onclick="submitFeedback('CONFIRMED_FRAUD')" style="border-color: var(--color-high);">Yes, it's a scam</button>
+            </div>
+            <div id="feedbackThanks" class="hidden" style="margin-top: 1rem; color: var(--color-low);">
+              Thanks! Your feedback helps us improve.
+            </div>
+          </div>
+          
+          <!-- Unused elements hidden to preserve JS functionality -->
+          <div class="hidden">
+            <span id="scanIdBadge"></span>
+            <span id="aiBadge"></span>
+            <span id="userInstruction"></span>
+            <span id="recommendedAction"></span>
+            <span id="mismatchStatus"></span>
+            <span id="incReportingReason"></span>
+            <button id="retryIncidentBtn"></button>
+            <code id="jsonViewer"></code>
+          </div>
+
         </div>
       </section>
     </div>
 
-    <!-- History View Panel -->
-    <div class="history-view" id="historyView" style="display: none;">
-      <section class="panel history-panel">
-        <div class="panel-header">
-          <h3>Local Scan History</h3>
-          <button class="secondary-btn" onclick="clearHistory()">Clear History</button>
-        </div>
-        <div id="historyListContainer" class="history-list-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
+    <!-- HISTORY VIEW -->
+    <div class="scanner-container hidden" id="historyView">
+      <div class="input-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Scan History</h2>
+        <button class="secondary-btn" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="clearHistory()">Clear</button>
+      </div>
+      <div id="historyListContainer"></div>
     </div>
 
-    <!-- Threat Intel View Panel -->
-    <div class="intel-view" id="intelView" style="display: none;">
-      <section class="panel intel-panel">
-        <div class="panel-header">
-          <h3>Global Threat Intelligence Feed</h3>
-          <button class="secondary-btn" onclick="loadIntel()">↻ Refresh</button>
-        </div>
-        <div class="intel-grid">
-          <div class="intel-col">
-            <h4>🚨 Trending Threat Signatures</h4>
-            <ul id="trendingList" class="intel-list">Loading...</ul>
-          </div>
-          <div class="intel-col">
-            <h4>📢 Recent Community Reports</h4>
-            <ul id="reportsList" class="intel-list">Loading...</ul>
-          </div>
-        </div>
-      </section>
+    <!-- INTEL VIEW -->
+    <div class="scanner-container hidden" id="intelView">
+      <div class="input-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Scams Trending Now</h2>
+        <button class="secondary-btn" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="loadIntel()">Refresh</button>
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1rem; color: var(--color-high); margin-bottom: 1rem;">🚨 Top Threats</h3>
+        <div id="trendingList"></div>
+      </div>
+      <div>
+        <h3 style="font-size: 1rem; color: var(--accent-blue); margin-bottom: 1rem;">📢 Community Reports</h3>
+        <div id="reportsList"></div>
+      </div>
     </div>
+
   </main>
 
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Mobile Bottom Nav Bar -->
-  <nav class="bottom-nav-bar">
-    <button class="nav-item active" id="navScanner" onclick="switchTab('scanner')">
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="navScanner" onclick="switchTab('scanner')">
       <span class="nav-icon">🛡️</span>
-      <span>Scanner</span>
+      <span>Scan</span>
     </button>
-    <button class="nav-item" id="navHistory" onclick="switchTab('history')">
-      <span class="nav-icon">📊</span>
+    <button class="nav-btn" id="navHistory" onclick="switchTab('history')">
+      <span class="nav-icon">🕒</span>
       <span>History</span>
     </button>
-    <button class="nav-item" id="navIntel" onclick="switchTab('intel')">
+    <button class="nav-btn" id="navIntel" onclick="switchTab('intel')">
       <span class="nav-icon">🌍</span>
-      <span>Global Intel</span>
+      <span>Intel</span>
     </button>
   </nav>
-
-  <footer class="footer">
-    <p>🛡️ RefGuard — Ambient AI UPI & Referral Scam Protection. Zero credential collection. Built for India Hackathon.</p>
-  </footer>
 
   <script src="app.js"></script>
 </body>

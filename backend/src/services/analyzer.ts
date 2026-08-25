@@ -293,8 +293,8 @@ export class AnalyzerService {
     const geminiBoost = geminiVerdict?.gemini_used ? geminiVerdict.confidence * 0.1 : 0;
     const confidence = Math.min(1.0, +(baseConfidence + signalBoost + geminiBoost).toFixed(2));
 
-    // Protection Decision
     let decision: ProtectionDecision;
+    const amountStr = entities.amount ? ` ₹${entities.amount}` : ' money';
     if (riskSeverity === 'CRITICAL') {
       const isTradingScam = tradingSignals.hasTradingFraudSignals && tradingSignals.signalCount >= 2;
       const isUpiScam = upiSignals.hasUpiFraudSignals;
@@ -308,7 +308,7 @@ export class AnalyzerService {
               ? 'Social Engineering / Impersonation Fraud Detected'
               : 'Known Scam Signature Identified',
         why_it_matters: isMismatch
-          ? 'You were told you are receiving money/prize, but this transaction will DEBIT money from your bank account.'
+          ? `You were told you are receiving money/prize, but this UPI request will DEBIT${amountStr} from your account.`
           : isTradingScam
             ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
             : isUpiScam

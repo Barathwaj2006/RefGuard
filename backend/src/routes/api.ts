@@ -17,7 +17,8 @@ router.get('/health', (_req: Request, res: Response) => {
     service: 'RefGuard Backend API',
     uptime_seconds: process.uptime(),
     community_indicators_loaded: communityStore.getCount() + 7,
-    feedback_entries_logged: communityStore.getFeedbacksCount()
+    feedback_entries_logged: communityStore.getFeedbacksCount(),
+    gemini_configured: !!process.env.GEMINI_API_KEY
   });
 });
 

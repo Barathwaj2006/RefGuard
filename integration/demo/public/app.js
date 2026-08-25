@@ -79,6 +79,12 @@ async function executeScan() {
   if (resultContent) resultContent.style.display = 'none';
   if (errorState) errorState.style.display = 'none';
   if (loadingState) loadingState.style.display = 'block';
+  const loadingText = document.getElementById('loadingText');
+  if (loadingText) {
+    loadingText.innerText = 'Scanning for threats...';
+    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Checking payment intent...'; }, 600);
+    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Analyzing heuristics...'; }, 1200);
+  }
 
   const scanBtn = document.getElementById('scanBtn');
   if (scanBtn) scanBtn.disabled = true;
@@ -128,9 +134,6 @@ function renderScanResponse(data) {
   const resultContent = document.getElementById('resultContent');
   if (resultContent) resultContent.style.display = 'block';
 
-  const scanIdBadge = document.getElementById('scanIdBadge');
-  if (scanIdBadge) scanIdBadge.innerText = 'ID: ' + (data.scan_id || 'N/A');
-
   const risk = data.risk_assessment || {};
   const decision = data.protection_decision || {};
   const mismatch = data.payment_intent_mismatch || {};
@@ -140,97 +143,72 @@ function renderScanResponse(data) {
   const severity = risk.risk_severity || 'LOW';
   const score = risk.risk_score !== undefined ? risk.risk_score : 0;
 
-  // 1. Risk Banner
+  // Verdict Hero
   const banner = document.getElementById('riskBanner');
-  if (banner) {
-    banner.className = 'risk-banner ' + severity;
-  }
-
-  const scoreVal = document.getElementById('riskScoreVal');
-  if (scoreVal) scoreVal.innerText = score;
-
+  const verdictIcon = document.getElementById('verdictIcon');
   const severityTag = document.getElementById('severityTag');
-  if (severityTag) severityTag.innerText = severity + ' RISK';
-
-  // AI Verified Badge
-  const aiBadge = document.getElementById('aiBadge');
-  const signals = risk.signals || [];
-  const isAiUsed = signals.includes('gemini_reasoning_applied') || signals.some(s => s.startsWith('gemini_'));
-  if (aiBadge) {
-    aiBadge.style.display = isAiUsed ? 'inline-block' : 'none';
-  }
-
   const decisionTitle = document.getElementById('decisionTitle');
+  const scoreVal = document.getElementById('riskScoreVal');
+
+  if (banner) banner.className = 'verdict-hero ' + severity.toLowerCase();
+  if (scoreVal) scoreVal.innerText = score;
+  
+  if (severityTag) {
+    if (severity === 'CRITICAL') severityTag.innerText = 'CRITICAL SCAM RISK';
+    else if (severity === 'HIGH') severityTag.innerText = 'HIGH RISK';
+    else if (severity === 'MEDIUM') severityTag.innerText = 'BE CAREFUL';
+    else severityTag.innerText = 'LIKELY SAFE';
+  }
+  
+  if (verdictIcon) {
+    if (severity === 'CRITICAL') verdictIcon.innerText = '🚨';
+    else if (severity === 'HIGH') verdictIcon.innerText = '⚠️';
+    else if (severity === 'MEDIUM') verdictIcon.innerText = '👀';
+    else verdictIcon.innerText = '✅';
+  }
+
   if (decisionTitle) {
-    decisionTitle.innerText = decision.action ? decision.action.replace(/_/g, ' ') : 'ASSESSMENT COMPLETE';
+    decisionTitle.innerText = decision.detected_summary || risk.human_explanation || (severity === 'LOW' ? 'No malicious intent detected.' : 'Suspicious activity detected.');
   }
 
+  // AI Explanation & Mismatch
+  const explanationCard = document.getElementById('explanationCard');
   const detectedSummary = document.getElementById('detectedSummary');
-  if (detectedSummary) {
-    detectedSummary.innerText = decision.detected_summary || risk.human_explanation || '';
-  }
-
-  // 2. Protective Action Advisory Card
-  const userInstruction = document.getElementById('userInstruction');
-  if (userInstruction) userInstruction.innerText = decision.user_instruction || risk.recommended_action || 'Proceed with normal caution.';
-
   const whyItMatters = document.getElementById('whyItMatters');
-  if (whyItMatters) whyItMatters.innerText = decision.why_it_matters || risk.human_explanation || 'No malicious indicators detected.';
-
-  const recommendedAction = document.getElementById('recommendedAction');
-  if (recommendedAction) recommendedAction.innerText = risk.recommended_action || decision.user_instruction || 'Standard verification.';
-
-  const blockProtectContainer = document.getElementById('blockProtectContainer');
-  if (blockProtectContainer) {
-    blockProtectContainer.style.display = (severity === 'CRITICAL' || severity === 'HIGH') ? 'block' : 'none';
+  
+  if (explanationCard) {
+    explanationCard.style.display = (severity === 'LOW') ? 'none' : 'block';
   }
+  if (detectedSummary) detectedSummary.innerText = decision.why_it_matters || risk.human_explanation || '';
+  if (whyItMatters) whyItMatters.innerText = decision.user_instruction || risk.recommended_action || '';
 
-  // 3. Payment Intent Mismatch Analyzer
   const mismatchCard = document.getElementById('mismatchCard');
   if (mismatchCard) {
     if (mismatch.status === 'DETECTED') {
       mismatchCard.style.display = 'block';
-      const stated = document.getElementById('statedIntent');
-      if (stated) stated.innerText = mismatch.stated_intent ? mismatch.stated_intent.replace(/_/g, ' ') : 'RECEIVE FUNDS';
-
-      const actual = document.getElementById('actualPayment');
-      if (actual) actual.innerText = (mismatch.actual_payment_action ? mismatch.actual_payment_action.replace(/_/g, ' ') : 'OUTBOUND DEBIT') + (mismatch.amount ? ` (₹${mismatch.amount})` : '');
-
-      const statusEl = document.getElementById('mismatchStatus');
-      if (statusEl) statusEl.innerText = mismatch.status;
-
-      const dirEl = document.getElementById('paymentDirection');
-      if (dirEl) dirEl.innerText = mismatch.payment_direction || 'OUTBOUND_DEBIT';
+      document.getElementById('statedIntent').innerText = mismatch.stated_intent || 'RECEIVE FUNDS';
+      document.getElementById('actualPayment').innerText = mismatch.actual_payment_action || 'OUTBOUND DEBIT';
+      document.getElementById('paymentDirection').innerText = mismatch.payment_direction || 'OUTBOUND_DEBIT';
     } else {
       mismatchCard.style.display = 'none';
     }
   }
 
-  // 4. Adaptive Scam Chain
+  // Scam Chain
   const chainCard = document.getElementById('scamChainCard');
   const chainContainer = document.getElementById('adaptiveChainContainer');
   if (chainCard && chainContainer) {
     chainContainer.innerHTML = '';
     const nodes = scamChain.nodes || [];
-    const edges = scamChain.edges || [];
-
     if (nodes.length > 0) {
       chainCard.style.display = 'block';
       nodes.forEach((node, idx) => {
         const isDetected = idx < 2 || node.node_type === 'MESSAGE' || node.node_type === 'UPI_REQUEST';
         const div = document.createElement('div');
-        div.className = 'chain-stage ' + (isDetected ? 'detected-stage' : 'predicted-stage');
-
-        const badgeClass = isDetected ? 'detected' : 'predicted';
-        const badgeText = isDetected ? '✓ DETECTED' : '→ LIKELY NEXT';
-
-        div.innerHTML = `
-          <div class="stage-header">
-            <span class="stage-name">${escapeHtml(node.entity_reference || node.node_id)}</span>
-            <span class="stage-badge ${badgeClass}">${badgeText}</span>
-          </div>
-          <p class="stage-desc">Type: <strong>${escapeHtml(node.node_type)}</strong> ${node.evidence_references ? `| Evidence: [${escapeHtml(node.evidence_references.join(', '))}]` : ''}</p>
-        `;
+        div.className = 'chain-node ' + (isDetected ? 'detected' : 'predicted');
+        div.innerHTML = '<div class="chain-dot"></div>' +
+          '<div class="chain-node-title">' + escapeHtml(node.entity_reference || node.node_id) + '</div>' +
+          '<div class="chain-node-desc">' + escapeHtml(node.node_type) + (isDetected ? ' ✓ Detected' : ' → Likely next') + '</div>';
         chainContainer.appendChild(div);
       });
     } else {
@@ -238,7 +216,7 @@ function renderScanResponse(data) {
     }
   }
 
-  // 5. Evidence Pack
+  // Evidence
   const evidenceCard = document.getElementById('evidenceCard');
   const evidenceContainer = document.getElementById('evidenceContainer');
   if (evidenceCard && evidenceContainer) {
@@ -248,15 +226,8 @@ function renderScanResponse(data) {
       evidenceCard.style.display = 'block';
       items.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'evidence-item';
-        div.innerHTML = `
-          <div class="evidence-header">
-            <span class="evidence-type-tag">${escapeHtml(item.evidence_type)}</span>
-            <span class="evidence-category-tag">${escapeHtml(item.evidence_id)}</span>
-          </div>
-          <div class="evidence-data">${escapeHtml(item.data || '')}</div>
-          <div class="evidence-desc">Verified signal recorded in evidence pack</div>
-        `;
+        div.style.marginBottom = '0.5rem';
+        div.innerHTML = '<strong>' + escapeHtml(item.evidence_type) + ':</strong> ' + escapeHtml(item.data || '');
         evidenceContainer.appendChild(div);
       });
     } else {
@@ -264,17 +235,10 @@ function renderScanResponse(data) {
     }
   }
 
-  // 6. Raw JSON
-  const jsonViewer = document.getElementById('jsonViewer');
-  if (jsonViewer) {
-    jsonViewer.innerText = JSON.stringify(data, null, 2);
-  }
-
-  // 7. Trigger Incident Response Recommendation
+  // Trigger Incident
   fetchIncidentRecommendation(data);
 }
 
-// Incident Response & Recovery Flow
 async function fetchIncidentRecommendation(scanResponse) {
   const card = document.getElementById('incidentCard');
   const loading = document.getElementById('incidentLoading');

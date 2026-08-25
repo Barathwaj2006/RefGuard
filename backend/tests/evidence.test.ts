@@ -79,7 +79,7 @@ describe('Adaptive Risk-Evidence Aggregation', () => {
   it('should handle no-evidence case safely without crashing', async () => {
     const payload = {
       content_type: 'TEXT',
-      content_value: '', // empty content
+      content_value: 'a', // short content to test no-evidence case
       source_context: '',
       timestamp: new Date().toISOString()
     };

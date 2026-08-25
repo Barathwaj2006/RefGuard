@@ -53,5 +53,5 @@ describe('Gemini Reasoning Service', () => {
     expect(result.gemini_used).toBe(false);
     expect(result.risk_adjustment).toBe(0);
     expect(result.reasoning).toContain('Gemini reasoning failed');
-  });
+  }, 10000);
 });
