@@ -4,7 +4,7 @@
  */
 
 class RiskEngine {
-  evaluate(extractedData, threatAssessment, mismatch, evidenceIds) {
+  evaluate(extractedData, threatAssessment, mismatch, evidenceIds, scamChain) {
     let score = threatAssessment.threatScore;
     const signals = [];
 
@@ -24,6 +24,63 @@ class RiskEngine {
       score += 20;
       signals.push('High psychological pressure and artificial urgency detected.');
     }
+
+    // Add Scam Chain signals (evaluate graph depth and paths)
+    if (scamChain && scamChain.edges && scamChain.edges.length > 0) {
+      // The longer the chain of suspicious events, the higher the risk.
+      // Example: Message -> Referral -> URL -> UPI Collect
+
+      let chainDepth = 0;
+      let hasAccountTakeover = false;
+      let hasUnauthorizedDebit = false;
+      let isVerifiedMerchant = false;
+
+      threatAssessment.threats?.forEach(threat => {
+          if (threat.type === 'VERIFIED_MERCHANT') {
+             isVerifiedMerchant = true;
+          }
+      });
+
+      const nodeMap = new Map();
+      if (scamChain.nodes) {
+        scamChain.nodes.forEach(node => {
+          nodeMap.set(node.node_id, node);
+          if (node.node_type === 'ACCOUNT_TAKEOVER' && node.state !== 'OBSERVED') {
+             hasAccountTakeover = true;
+          }
+        });
+      }
+
+      scamChain.edges.forEach(edge => {
+        chainDepth++;
+        if (edge.relationship === 'EXECUTES_UNAUTHORIZED_DEBIT') {
+           hasUnauthorizedDebit = true;
+        }
+      });
+
+      if (!isVerifiedMerchant) {
+        if (chainDepth >= 3) {
+           score += 15;
+           signals.push('Complex multi-step scam chain detected (' + chainDepth + ' steps).');
+        } else if (chainDepth > 0 && threatAssessment.threatScore > 30) {
+           score += 5;
+           signals.push('Suspicious interaction flow detected.');
+        }
+
+        if (hasUnauthorizedDebit) {
+           score = Math.max(score, 95);
+           signals.push('CRITICAL: Scam chain leads directly to an unauthorized funds transfer.');
+        }
+
+        if (hasAccountTakeover) {
+           score = Math.max(score, 85);
+           signals.push('HIGH RISK: Interaction flow predicts a credential harvesting or account takeover attempt.');
+        }
+      }
+    }
+
+
+
 
     // Normalizing Score (0 to 100 integer)
     score = Math.min(100, Math.max(0, Math.round(score)));

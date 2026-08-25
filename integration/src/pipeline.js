@@ -51,7 +51,8 @@ class RefGuardPipeline {
       extractedData,
       threatAssessment,
       paymentIntentMismatch,
-      evidenceIds
+      evidenceIds,
+      scamChain
     );
 
     // 8. Build Aggregated ScanResponse
