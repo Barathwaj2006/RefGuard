@@ -149,119 +149,94 @@ export class AnalyzerService {
     let riskSeverity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
     const signals: string[] = [];
 
-    // --- Scoring: Existing deterministic rules ---
+    // --- Additive Scoring Engine ---
     const isLegitimateDepository = /\b(cdsl|nsdl)\b/i.test(text) && !tradingSignals.depositPaymentRequest && !tradingSignals.cryptoWalletAddress && !tradingSignals.guaranteedReturnClaim && !entities.isCollectRequest && !entities.hasOtpSolicitation;
-    if (isCommunityReported) {
-      riskScore = 95;
-      riskSeverity = 'CRITICAL';
-      signals.push('community_blacklist_match');
-    } else if (isMismatch) {
-      riskScore = 90;
-      riskSeverity = 'CRITICAL';
-      signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
-    } else if (entities.hasOtpSolicitation) {
-      riskScore = 85;
-      riskSeverity = 'HIGH';
-      signals.push('credential_otp_solicitation');
-    } else if (hasSuspiciousTLD) {
-      riskScore = 80;
-      riskSeverity = 'HIGH';
-      signals.push('suspicious_tld_domain');
-    } else if (entities.urgencyWords.length > 0) {
-      riskScore = 55;
-      riskSeverity = 'MEDIUM';
-      signals.push('urgency_manipulation');
-    } else if (isLegitimateMerchant || isLegitimateDepository) {
+
+    // Start with base score
+    riskScore = 10;
+
+    // Strong determinators override or provide heavy base weights
+    if (isLegitimateMerchant || isLegitimateDepository) {
       riskScore = 5;
-      riskSeverity = 'LOW';
       signals.push(isLegitimateDepository ? 'verified_depository_alert' : 'verified_merchant_whitelist');
-    }
+    } else {
+      if (isCommunityReported) {
+        riskScore += 85;
+        signals.push('community_blacklist_match');
+      }
 
-    // --- Scoring: Trading fraud signals (additive to existing) ---
-    if (tradingSignals.hasTradingFraudSignals && !isLegitimateDepository) {
-      signals.push(...tradingSignals.matchedKeywords);
+      if (isMismatch) {
+        riskScore += 80;
+        signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
+      }
 
-      if (tradingSignals.guaranteedReturnClaim || tradingSignals.fakeIpoAllotment) {
-        if (riskScore < 85) {
-          riskScore = Math.max(riskScore, 85);
-          riskSeverity = 'HIGH';
+      if (entities.hasOtpSolicitation) {
+        riskScore += 75;
+        signals.push('credential_otp_solicitation');
+      }
+
+      if (hasSuspiciousTLD) {
+        riskScore += 70;
+        signals.push('suspicious_tld_domain');
+      }
+
+      if (entities.urgencyWords.length > 0) {
+        riskScore += 15 * Math.min(3, entities.urgencyWords.length);
+        signals.push('urgency_manipulation');
+      }
+
+      // Trading fraud additive signals
+      if (tradingSignals.hasTradingFraudSignals) {
+        signals.push(...tradingSignals.matchedKeywords);
+
+        if (tradingSignals.cryptoWalletAddress && tradingSignals.depositPaymentRequest) riskScore += 80;
+        else if (tradingSignals.guaranteedReturnClaim || tradingSignals.fakeIpoAllotment) riskScore += 50;
+        else if (tradingSignals.kycRequest && (tradingSignals.sebiReference || tradingSignals.fakeBrokerReference)) riskScore += 45;
+        else if (tradingSignals.dematAccountReference && tradingSignals.depositPaymentRequest) riskScore += 40;
+        else if (tradingSignals.tradingTipGroup) riskScore += 30; // added this
+
+        // Add smaller weight for general signals
+        riskScore += tradingSignals.signalCount * 10;
+      }
+
+      // UPI / Social Engineering additive signals
+      if (upiSignals.hasUpiFraudSignals) {
+        signals.push(...upiSignals.matchedKeywords);
+
+        if (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.fakeCustomerSupportScam) {
+          riskScore += 85;
+        } else if (upiSignals.electricityBillScam || upiSignals.telecomKycScam || upiSignals.refundCashbackScam || upiSignals.qrScam) {
+          riskScore += (entities.vpa || entities.url || entities.isCollectRequest) ? 80 : 60;
+        } else if (upiSignals.familyEmergencyScam) {
+          riskScore += 50;
         }
       }
 
-      if (tradingSignals.cryptoWalletAddress && tradingSignals.depositPaymentRequest) {
-        riskScore = Math.max(riskScore, 90);
-        riskSeverity = 'CRITICAL';
+      // Source-Aware Multipliers & Contextual Adjustments
+      if (normalizedSource === 'Telegram' && tradingSignals.hasTradingFraudSignals) {
+        riskScore += 15;
+        signals.push('telegram_trading_scam');
       }
 
-      if (tradingSignals.kycRequest && (tradingSignals.sebiReference || tradingSignals.fakeBrokerReference)) {
-        riskScore = Math.max(riskScore, 88);
-        riskSeverity = 'HIGH';
+      if (normalizedSource === 'WhatsApp' && upiSignals.familyEmergencyScam) {
+        riskScore += 20;
+        signals.push('whatsapp_imposter_emergency');
       }
 
-      if (tradingSignals.tradingTipGroup) {
-        riskScore = Math.max(riskScore, 70);
-        if (riskSeverity === 'LOW') riskSeverity = 'MEDIUM';
-      }
-
-      if (tradingSignals.dematAccountReference && tradingSignals.depositPaymentRequest) {
-        riskScore = Math.max(riskScore, 80);
-        riskSeverity = 'HIGH';
-      }
-
-      if (tradingSignals.signalCount >= 3 && riskScore < 85) {
-        riskScore = Math.max(riskScore, 85);
-        riskSeverity = 'HIGH';
-      }
-
-      if (tradingSignals.signalCount === 1 && riskScore < 55) {
-        riskScore = Math.max(riskScore, 55);
-        if (riskSeverity === 'LOW') riskSeverity = 'MEDIUM';
+      if (normalizedSource === 'SMS' && (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.electricityBillScam)) {
+        riskScore += 15;
+        signals.push('sms_authority_impersonation');
       }
     }
 
-    // --- Scoring: UPI/Telecom fraud signals (additive) ---
-    if (upiSignals.hasUpiFraudSignals) {
-      signals.push(...upiSignals.matchedKeywords);
+    // Cap risk score before Gemini escalation but allow Gemini to push it to 100
+    riskScore = Math.min(100, Math.max(0, riskScore));
 
-      if (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.fakeCustomerSupportScam) {
-        riskScore = Math.max(riskScore, 95);
-        riskSeverity = 'CRITICAL';
-      }
-
-      if (upiSignals.electricityBillScam || upiSignals.telecomKycScam || upiSignals.refundCashbackScam || upiSignals.qrScam) {
-        if (entities.vpa || entities.url || entities.isCollectRequest) {
-          riskScore = Math.max(riskScore, 90);
-          riskSeverity = 'CRITICAL';
-        } else {
-          riskScore = Math.max(riskScore, 80);
-          riskSeverity = 'HIGH';
-        }
-      }
-
-      if (upiSignals.familyEmergencyScam) {
-        riskScore = Math.max(riskScore, 75);
-        if (riskSeverity !== 'CRITICAL') riskSeverity = 'HIGH';
-      }
-    }
-
-    // --- Source-Aware Weighting ---
-    if (normalizedSource === 'Telegram' && tradingSignals.hasTradingFraudSignals) {
-      riskScore = Math.max(riskScore, 85);
-      if (riskSeverity !== 'CRITICAL') riskSeverity = 'HIGH';
-      signals.push('telegram_trading_scam');
-    }
-
-    if (normalizedSource === 'WhatsApp' && upiSignals.familyEmergencyScam) {
-      riskScore = Math.max(riskScore, 90);
-      riskSeverity = 'CRITICAL';
-      signals.push('whatsapp_imposter_emergency');
-    }
-
-    if (normalizedSource === 'SMS' && (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.electricityBillScam)) {
-      riskScore = Math.max(riskScore, 90);
-      riskSeverity = 'CRITICAL';
-      signals.push('sms_authority_impersonation');
-    }
+    // Lower threshold for HIGH since we added more additive signals that stack up quickly
+    if (riskScore >= 85) riskSeverity = 'CRITICAL';
+    else if (riskScore >= 65) riskSeverity = 'HIGH';
+    else if (riskScore >= 40) riskSeverity = 'MEDIUM';
+    else riskSeverity = 'LOW';
 
     // --- Gemini Reasoning Escalation ---
     let geminiVerdict: GeminiVerdict | null = null;
@@ -294,8 +269,38 @@ export class AnalyzerService {
     const geminiBoost = geminiVerdict?.gemini_used ? geminiVerdict.confidence * 0.1 : 0;
     const confidence = Math.min(1.0, +(baseConfidence + signalBoost + geminiBoost).toFixed(2));
 
+    // Dynamic Explanation Generation
+    let generatedExplanation = '';
+    if (geminiVerdict?.gemini_used && geminiVerdict.reasoning) {
+      generatedExplanation = `AI reasoning: ${geminiVerdict.reasoning}`;
+    } else {
+      const explanationParts: string[] = [];
+      const amountStr = entities.amount ? ` ₹${entities.amount}` : ' funds';
+
+      if (signals.includes('payment_intent_mismatch')) explanationParts.push(`A deceptive reward or refund is being used to mask an outbound debit request for${amountStr}.`);
+      if (signals.includes('credential_otp_solicitation')) explanationParts.push("A dangerous request for credentials or OTP was detected.");
+      if (signals.includes('community_blacklist_match')) explanationParts.push("The recipient or link matches known community-reported scams.");
+      if (signals.includes('suspicious_tld_domain')) explanationParts.push("The link uses a top-level domain frequently associated with phishing.");
+
+      if (signals.includes('crypto_wallet_address') && signals.includes('deposit_payment_request')) explanationParts.push("A highly suspicious request to deposit funds into an untraceable crypto wallet was found.");
+      else if (signals.includes('fake_broker_reference') || signals.includes('sebi_reference')) explanationParts.push("The message impersonates legitimate brokers or SEBI authorities.");
+      else if (signals.includes('guaranteed_return_claim')) explanationParts.push("Promises of guaranteed high returns are a classic hallmark of investment fraud.");
+
+      if (signals.includes('digital_arrest_scam') || signals.includes('customs_courier_scam') || signals.includes('fake_customer_support_scam')) explanationParts.push("This closely matches the template of a severe authority impersonation or fake support scam.");
+      else if (signals.includes('electricity_bill_scam') || signals.includes('telecom_kyc_scam')) explanationParts.push("This mimics a utility or telecom disconnection threat designed to induce panic.");
+      else if (signals.includes('qr_receive_money_scam')) explanationParts.push("You are being tricked into scanning a QR code to 'receive' money, which actually initiates a debit.");
+      else if (signals.includes('emergency_imposter_scam')) explanationParts.push("This matches a pattern where scammers impersonate a friend in an emergency to extort money.");
+
+      if (signals.includes('urgency_manipulation') && explanationParts.length === 0) {
+        explanationParts.push("The message contains psychological urgency or unverified claims designed to make you act without thinking.");
+      }
+
+      if (explanationParts.length > 0) {
+        generatedExplanation = explanationParts.join(' ');
+      }
+    }
+
     let decision: ProtectionDecision;
-    const amountStr = entities.amount ? ` ₹${entities.amount}` : ' money';
     if (riskSeverity === 'CRITICAL') {
       const isTradingScam = tradingSignals.hasTradingFraudSignals && tradingSignals.signalCount >= 2;
       const isUpiScam = upiSignals.hasUpiFraudSignals;
@@ -308,13 +313,7 @@ export class AnalyzerService {
             : isUpiScam
               ? 'Social Engineering / Impersonation Fraud Detected'
               : 'Known Scam Signature Identified',
-        why_it_matters: isMismatch
-          ? `You were told you are receiving money/prize, but this UPI request will DEBIT${amountStr} from your account.`
-          : isTradingScam
-            ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
-            : isUpiScam
-              ? 'This matches a known highly-prevalent scam template (e.g. digital arrest, fake electricity bill, or customs seizure) designed to steal your money.'
-              : 'This identifier matches confirmed fraud signatures reported by the community.',
+        why_it_matters: generatedExplanation || 'This identifier matches confirmed fraud signatures reported by the community.',
         user_instruction: isTradingScam
           ? 'DO NOT deposit money, share KYC documents, or join any trading group promoted here. Report this to SEBI/cybercrime.'
           : isUpiScam
@@ -328,9 +327,7 @@ export class AnalyzerService {
         detected_summary: isTradingRelated
           ? 'Suspicious Trading/Investment Pattern Detected'
           : 'High Risk Phishing Pattern Detected',
-        why_it_matters: isTradingRelated
-          ? 'This content contains indicators of potential investment fraud such as guaranteed returns, unregistered advisors, or suspicious trading platforms.'
-          : 'Suspicious elements were found that resemble credential-harvesting or scam links.',
+        why_it_matters: generatedExplanation || 'Suspicious elements were found that resemble credential-harvesting or scam links.',
         user_instruction: isTradingRelated
           ? 'Verify any investment advice through SEBI-registered channels only. Never deposit money to unverified platforms.'
           : 'Do not share OTPs, click unknown links, or send funds.'
@@ -339,9 +336,7 @@ export class AnalyzerService {
       decision = {
         action: 'WARN_CAUTION',
         detected_summary: 'Suspicious Indicators Found',
-        why_it_matters: geminiVerdict?.gemini_used
-          ? `AI analysis: ${geminiVerdict.reasoning.slice(0, 200)}`
-          : 'The message contains psychological urgency or unverified claims.',
+        why_it_matters: generatedExplanation || 'The message contains psychological urgency or unverified claims.',
         user_instruction: 'Verify the identity of the sender through official channels before proceeding.'
       };
     } else {

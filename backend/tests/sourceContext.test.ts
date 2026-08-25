@@ -88,7 +88,8 @@ describe('Source-Aware Fraud Intelligence', () => {
       .send(payload)
       .expect(200);
 
-    expect(res.body.risk_assessment.risk_severity).toBe('HIGH');
+    // It correctly hits CRITICAL now because both suspicious TLD and urgency words ("lottery", "winner") trigger
+    expect(res.body.risk_assessment.risk_severity).toBe('CRITICAL');
     expect(res.body.scam_chain.nodes[0].entity_reference).toBe('Web Browser Message');
   });
 
