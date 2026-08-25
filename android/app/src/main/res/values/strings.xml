@@ -1,14 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">RefGuard</string>
-    <string name="scan_button">Scan for Scams</string>
-    <string name="paste_from_clipboard">Paste from Clipboard</string>
-    <string name="scan_qr">Scan QR Code</string>
-    <string name="import_image">Import Screenshot</string>
-    <string name="report_scam">Report to Community</string>
-    <string name="retry">Retry</string>
-    <string name="scan_another">Scan Another</string>
-    <string name="stop_transaction">DO NOT PROCEED — STOP TRANSACTION</string>
-    <string name="helpline_guide">National Cybercrime Helpline: Call 1930</string>
-    <string name="pin_warning">Entering your UPI PIN always sends money, never receives money.</string>
-    <string name="tile_label">RefGuard Scam Check</string>
+    <string name="title_activity_main">RefGuard</string>
+    <string name="package_name">com.refguard.app</string>
+    <string name="custom_url_scheme">com.refguard.app</string>
 </resources>

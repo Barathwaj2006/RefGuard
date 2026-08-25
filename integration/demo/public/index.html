@@ -269,6 +269,15 @@
     </button>
   </nav>
 
+  <script>
+    // Configure API base URL for Capacitor/Android environments (dev)
+    if (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost') {
+      // If we are actually running the frontend on port 3000 via a node server, it's dev web
+      if (window.location.port !== '3000') {
+         window.API_BASE_URL = 'http://10.0.2.2:3000'; 
+      }
+    }
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,22 +1,21 @@
-﻿# RefGuard Release ProGuard Rules
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Preserve RefGuard API and Domain Models for serialization/deserialization
--keep class com.refguard.app.api.** { *; }
--keep class com.refguard.app.domain.** { *; }
--keep class com.refguard.platform.models.** { *; }
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
 
-# Gson serialization rules
--keepattributes Signature
--keepattributes *Annotation*
--keep class com.google.gson.** { *; }
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
 
-# Retrofit / OkHttp
--dontwarn okhttp3.**
--dontwarn retrofit2.**
--dontwarn javax.annotation.**
-
-# ML Kit Barcode Scanning
--keep class com.google.mlkit.vision.barcode.** { *; }
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile

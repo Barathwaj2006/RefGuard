@@ -1,5 +1,6 @@
 // RefGuard — Core Web Application Logic
 const HISTORY_STORAGE_KEY = 'refguard_scan_history_v1';
+const API_BASE = window.API_BASE_URL !== undefined ? window.API_BASE_URL : '';
 let currentScanId = null;
 
 // Demo Test Scenarios
@@ -99,7 +100,7 @@ async function executeScan() {
   };
 
   try {
-    const res = await fetch('/api/v1/scan', {
+    const res = await fetch(`${API_BASE}/api/v1/scan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -443,7 +444,7 @@ async function fetchIncidentRecommendation(scanResponse) {
   }
 
   try {
-    const res = await fetch('/api/v1/incident/recommendation', {
+    const res = await fetch(`${API_BASE}/api/v1/incident/recommendation`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scanResponse)
@@ -521,7 +522,7 @@ async function reportScam() {
   };
 
   try {
-    const res = await fetch('/api/v1/report', {
+    const res = await fetch(`${API_BASE}/api/v1/report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reportPayload)
@@ -551,7 +552,7 @@ async function submitFeedback(verdict) {
   }
 
   try {
-    const res = await fetch('/api/v1/feedback', {
+    const res = await fetch(`${API_BASE}/api/v1/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -618,6 +619,35 @@ function switchTab(tab) {
     if (navReport) navReport.classList.add('active');
     if (reportView) reportView.style.display = 'block';
   }
+}
+
+// Android Hardware Back Button Handling
+if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+  window.Capacitor.Plugins.App.addListener('backButton', () => {
+    // Check if we are on a non-scanner tab
+    const historyView = document.getElementById('historyView');
+    const intelView = document.getElementById('intelView');
+    const reportView = document.getElementById('reportView');
+    
+    if ((historyView && historyView.style.display === 'block') ||
+        (intelView && intelView.style.display === 'block') ||
+        (reportView && reportView.style.display === 'block')) {
+      switchTab('scanner');
+      return;
+    }
+
+    // Check if we are viewing results on the scanner tab
+    const resultsPanel = document.getElementById('resultsPanel');
+    const desktopEmptyState = document.getElementById('desktopEmptyState');
+    if (resultsPanel && resultsPanel.style.display === 'block') {
+      resultsPanel.style.display = 'none';
+      if (desktopEmptyState) desktopEmptyState.style.display = 'flex';
+      return;
+    }
+
+    // Otherwise, exit the app
+    window.Capacitor.Plugins.App.exitApp();
+  });
 }
 
 // Local Scan History
@@ -724,8 +754,8 @@ async function loadIntel() {
 
   try {
     const [trendRes, reportRes] = await Promise.all([
-      fetch('/api/v1/intel/trending').catch(() => null),
-      fetch('/api/v1/intel/reports').catch(() => null)
+      fetch(`${API_BASE}/api/v1/intel/trending`).catch(() => null),
+      fetch(`${API_BASE}/api/v1/intel/reports`).catch(() => null)
     ]);
 
     if (trendingList) {

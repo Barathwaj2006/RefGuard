@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "refguard",
   "version": "1.0.0",
   "description": "RefGuard - The UPI Referral & Payment Scam Protection Platform",
@@ -23,5 +23,24 @@
     "android"
   ],
   "author": "RefGuard Team",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Barathwaj2006/RefGuard.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Barathwaj2006/RefGuard/issues"
+  },
+  "homepage": "https://github.com/Barathwaj2006/RefGuard#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
+  }
 }
