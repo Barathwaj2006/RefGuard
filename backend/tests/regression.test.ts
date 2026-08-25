@@ -54,6 +54,48 @@ describe('False Positive Regression Suite', () => {
   });
 
   describe('Scam (MALICIOUS) Scenarios', () => {
+    describe('Robustness Fixes', () => {
+      it('VPA Spoofing with legitimate merchant name (fakearmazon@scammerbank)', async () => {
+        await evaluate(
+          'You won Rs 5000 cashback on Swiggy! Click to receive: upi://pay?pa=fakearmazon@scammerbank&am=5000',
+          'com.whatsapp',
+          ['CRITICAL']
+        );
+      });
+
+      it('Alternate reward wording + collect request (Payment Intent Mismatch)', async () => {
+        await evaluate(
+          'Your returned item has been processed. Here is your money back. Click to collect: upi://pay?pa=scammer@ybl&am=2000',
+          'com.whatsapp',
+          ['CRITICAL']
+        );
+      });
+
+      it('Advance fee fraud (VPA + Reward claim without collect request)', async () => {
+        await evaluate(
+          'You won Rs 50,000! Send Rs 500 registration fee to scammer@ybl to claim.',
+          'com.whatsapp',
+          ['CRITICAL'] // Should now be critical due to advance fee fraud logic
+        );
+      });
+
+      it('Ambiguous emergency with subtle wording', async () => {
+        await evaluate(
+          'Hey bro, send money for the hospital bill fast. UPI id is john@okicici',
+          'com.whatsapp',
+          ['CRITICAL', 'HIGH'] // The source logic might bump it to CRITICAL if WhatsApp + emergency
+        );
+      });
+
+      it('False Positive: Legit pay for something with a reward keyword', async () => {
+        await evaluate(
+          'Please pay the remaining amount for the lottery ticket. upi://pay?pa=lottery@okbank&am=50',
+          'com.whatsapp',
+          ['LOW', 'MEDIUM']
+        );
+      });
+    });
+
     it('Digital Arrest Scam', async () => {
       await evaluate(
         'CBI Alert: Your Aadhaar is linked to illegal money laundering. Call immediately or face digital arrest.',

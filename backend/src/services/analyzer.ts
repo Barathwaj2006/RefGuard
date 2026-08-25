@@ -124,16 +124,22 @@ export class AnalyzerService {
     // --- Threat Detection ---
     const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
     const hasSuspiciousTLD = entities.url ? /\.(tk|xyz|top|work|click|gq|ml|cf)\b/i.test(entities.url) : false;
-    const isLegitimateMerchant = entities.vpa ? /(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
-    const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund)\b/i.test(text);
+    const isLegitimateMerchant = entities.vpa ? /^(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
+    const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund|money\s*back|gift|bonus|credited|received)\b/i.test(text);
+
+    const isPayingForSomething = /\b(pay(?:\s+\w+){0,3}\s*for|buy|purchase)\b/i.test(text);
 
     // Mismatch Detection
-    const isMismatch = hasRewardClaims && entities.isCollectRequest;
+    const isMismatch = hasRewardClaims && entities.isCollectRequest && !isPayingForSomething;
+
+    // Advance Fee Fraud: asking to send money to a VPA but claiming a reward (no collect request)
+    const isAdvanceFeeFraud = hasRewardClaims && !!entities.vpa && !entities.isCollectRequest && !isPayingForSomething;
 
     if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
     if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
     if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims');
     if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)');
+    if (isAdvanceFeeFraud) evidenceAggregator.addEvidence('RISK_SIGNAL', 'ADVANCE_FEE_FRAUD', 'Advance Fee Fraud (Reward claimed but asking to send money)');
 
     if (tradingSignals.hasTradingFraudSignals) {
       evidenceAggregator.addEvidence('RISK_SIGNAL', 'TRADING', `Trading Fraud Signals: ${tradingSignals.matchedKeywords.join(', ')}`);
@@ -159,6 +165,10 @@ export class AnalyzerService {
       riskScore = 90;
       riskSeverity = 'CRITICAL';
       signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
+    } else if (isAdvanceFeeFraud) {
+      riskScore = 90;
+      riskSeverity = 'CRITICAL';
+      signals.push('advance_fee_fraud', 'deceptive_reward_trigger');
     } else if (entities.hasOtpSolicitation) {
       riskScore = 85;
       riskSeverity = 'HIGH';
