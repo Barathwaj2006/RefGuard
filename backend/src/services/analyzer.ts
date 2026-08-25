@@ -95,7 +95,7 @@ export class AnalyzerService {
     
     const evidenceAggregator = new EvidenceAggregator(scanId, timestamp);
     const sanitizedContent = sanitizeText(request.content_value);
-    evidenceAggregator.addEvidence('ORIGINAL_CONTENT', 'ORIGINAL', sanitizedContent.sanitizedText.slice(0, 120));
+    evidenceAggregator.addEvidence('ORIGINAL_CONTENT', 'ORIGINAL', sanitizedContent.sanitizedText.slice(0, 120), 'The original content submitted for scanning, sanitized for PII.', 'OBSERVED_FACT');
 
     // Normalize Source Context
     const sourceRaw = request.source_context || 'unknown';
@@ -106,14 +106,14 @@ export class AnalyzerService {
     else if (/mail/i.test(sourceRaw)) normalizedSource = 'Email';
     else if (/browser|web|chrome|safari/i.test(sourceRaw)) normalizedSource = 'Web Browser';
     
-    evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'SOURCE', `Source Context: ${normalizedSource}`);
+    evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'SOURCE', `Source Context: ${normalizedSource}`, 'The application or context where the message was encountered.', 'OBSERVED_FACT');
     
-    if (entities.url) evidenceAggregator.addEvidence('URL', 'URL', entities.url);
-    if (entities.vpa) evidenceAggregator.addEvidence('UPI_IDENTIFIER', 'UPI', entities.vpa);
-    if (entities.amount) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', `Amount: ${entities.amount}`);
-    if (entities.urgencyWords.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'URGENCY', `Urgency Words: ${entities.urgencyWords.join(', ')}`);
-    if (entities.hasOtpSolicitation) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'CREDENTIAL', 'OTP Solicitation Detected');
-    if (entities.isCollectRequest) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', 'Payment/Collect Request');
+    if (entities.url) evidenceAggregator.addEvidence('URL', 'URL', entities.url, 'An extracted web link found in the message.', 'EXTRACTED_ENTITY');
+    if (entities.vpa) evidenceAggregator.addEvidence('UPI_IDENTIFIER', 'UPI', entities.vpa, 'An extracted UPI ID found in the message.', 'EXTRACTED_ENTITY');
+    if (entities.amount) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', `Amount: ${entities.amount}`, 'A monetary amount mentioned in the message.', 'EXTRACTED_ENTITY');
+    if (entities.urgencyWords.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'URGENCY', `Urgency Words: ${entities.urgencyWords.join(', ')}`, 'Words designed to create artificial urgency or panic.', 'EXTRACTED_ENTITY');
+    if (entities.hasOtpSolicitation) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'CREDENTIAL', 'OTP Solicitation Detected', 'The message attempts to solicit a One-Time Password.', 'DETERMINISTIC_RULE');
+    if (entities.isCollectRequest) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'PAYMENT', 'Payment/Collect Request', 'The message or link is designed to collect a payment.', 'DETERMINISTIC_RULE');
 
     // --- Trading Fraud Extraction ---
     const tradingSignals = extractTradingFraudSignals(request.content_value);
@@ -130,19 +130,19 @@ export class AnalyzerService {
     // Mismatch Detection
     const isMismatch = hasRewardClaims && entities.isCollectRequest;
 
-    if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
-    if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
-    if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims');
-    if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)');
+    if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community', 'The extracted identifier is reported as malicious by the community.', 'THREAT_INTELLIGENCE');
+    if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain', 'The link uses a suspicious top-level domain often associated with scams.', 'DETERMINISTIC_RULE');
+    if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims', 'The message makes claims about a reward, prize, or lottery.', 'EXTRACTED_ENTITY');
+    if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)', 'The stated intent of the message conflicts with the actual action.', 'INFERRED_RELATIONSHIP');
 
     if (tradingSignals.hasTradingFraudSignals) {
-      evidenceAggregator.addEvidence('RISK_SIGNAL', 'TRADING', `Trading Fraud Signals: ${tradingSignals.matchedKeywords.join(', ')}`);
-      if (tradingSignals.detectedCryptoAddresses.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Crypto addresses: ${tradingSignals.detectedCryptoAddresses.join(', ')}`);
-      if (tradingSignals.detectedBrokerNames.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Broker references: ${tradingSignals.detectedBrokerNames.join(', ')}`);
+      evidenceAggregator.addEvidence('RISK_SIGNAL', 'TRADING', `Trading Fraud Signals: ${tradingSignals.matchedKeywords.join(', ')}`, 'Trading or investment fraud keywords were detected.', 'DETERMINISTIC_RULE');
+      if (tradingSignals.detectedCryptoAddresses.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Crypto addresses: ${tradingSignals.detectedCryptoAddresses.join(', ')}`, 'Cryptocurrency wallet addresses extracted from the message.', 'EXTRACTED_ENTITY');
+      if (tradingSignals.detectedBrokerNames.length > 0) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'TRADING', `Broker references: ${tradingSignals.detectedBrokerNames.join(', ')}`, 'References to trading brokers extracted from the message.', 'EXTRACTED_ENTITY');
     }
 
     if (upiSignals.hasUpiFraudSignals) {
-      evidenceAggregator.addEvidence('RISK_SIGNAL', 'SOCIAL_ENG', `Social Engineering Signals: ${upiSignals.matchedKeywords.join(', ')}`);
+      evidenceAggregator.addEvidence('RISK_SIGNAL', 'SOCIAL_ENG', `Social Engineering Signals: ${upiSignals.matchedKeywords.join(', ')}`, 'Social engineering keywords commonly used in scams were detected.', 'DETERMINISTIC_RULE');
     }
 
     let riskScore = 10;
@@ -278,7 +278,7 @@ export class AnalyzerService {
         riskScore = Math.max(0, Math.min(100, riskScore + geminiVerdict.risk_adjustment));
         signals.push(...geminiVerdict.detected_patterns.map(p => 'gemini_' + p.toLowerCase().replace(/\s+/g, '_')));
         signals.push('gemini_reasoning_applied');
-        evidenceAggregator.addEvidence('RISK_SIGNAL', 'GEMINI', `Gemini Reasoning: ${geminiVerdict.reasoning}`);
+        evidenceAggregator.addEvidence('RISK_SIGNAL', 'GEMINI', `Gemini Reasoning: ${geminiVerdict.reasoning}`, 'AI reasoning applied to interpret the message intent.', 'CONTEXTUAL_AI_INTERPRETATION');
       }
     }
 

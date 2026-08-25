@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "EvidencePack",
   "description": "Incident documentation containing structured evidence items",
@@ -13,9 +13,11 @@
         "properties": {
           "evidence_id": { "type": "string", "description": "Unique identifier for this piece of evidence. MUST be the target of all evidence_references." },
           "evidence_type": { "type": "string", "enum": ["ORIGINAL_CONTENT", "EXTRACTED_ENTITY", "URL", "UPI_IDENTIFIER", "RISK_SIGNAL"] },
-          "data": { "type": "string", "description": "The evidence data itself or a hash" }
+          "data": { "type": "string", "description": "The evidence data itself or a hash" },
+          "explanation": { "type": "string", "description": "Human-readable explanation of why this evidence matters or what it indicates." },
+          "source_category": { "type": "string", "enum": ["OBSERVED_FACT", "EXTRACTED_ENTITY", "THREAT_INTELLIGENCE", "DETERMINISTIC_RULE", "CONTEXTUAL_AI_INTERPRETATION", "INFERRED_RELATIONSHIP"], "description": "The type of source or reasoning that produced this evidence." }
         },
-        "required": ["evidence_id", "evidence_type", "data"]
+        "required": ["evidence_id", "evidence_type", "data", "explanation", "source_category"]
       }
     }
   },

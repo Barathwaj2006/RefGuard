@@ -23,7 +23,9 @@
       {
         "evidence_id": "evid-1",
         "evidence_type": "UPI_IDENTIFIER",
-        "data": "scammer@bank"
+        "data": "scammer@bank",
+        "explanation": "Default explanation",
+        "source_category": "OBSERVED_FACT"
       }
     ]
   }

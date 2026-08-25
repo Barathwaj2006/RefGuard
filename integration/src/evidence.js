@@ -8,30 +8,32 @@ class EvidencePackBuilder {
     const items = [];
     let counter = 1;
 
-    const add = (type, data) => {
+    const add = (type, data, explanation, source_category) => {
       const evidence_id = 'ev_' + scanId.slice(0, 8) + '_' + (counter++);
       items.push({
         evidence_id,
         evidence_type: type,
-        data: String(data)
+        data: String(data),
+        explanation: explanation || 'Automatically generated evidence item for analysis.',
+        source_category: source_category || 'OBSERVED_FACT'
       });
       return evidence_id;
     };
 
     // Original content
-    const originalEvId = add('ORIGINAL_CONTENT', extractedData.rawContent.slice(0, 500));
+    const originalEvId = add('ORIGINAL_CONTENT', extractedData.rawContent.slice(0, 500), 'The original raw content submitted for scanning.', 'OBSERVED_FACT');
 
     // Extracted URLs
-    const urlEvIds = extractedData.urls.map(u => add('URL', u.fullUrl));
+    const urlEvIds = extractedData.urls.map(u => add('URL', u.fullUrl, 'Web link extracted from the content.', 'EXTRACTED_ENTITY'));
 
     // Extracted VPAs
-    const vpaEvIds = extractedData.vpas.map(v => add('UPI_IDENTIFIER', v));
+    const vpaEvIds = extractedData.vpas.map(v => add('UPI_IDENTIFIER', v, 'UPI ID extracted from the content.', 'EXTRACTED_ENTITY'));
 
     // Extracted Referral Codes
-    const refEvIds = extractedData.referralCodes.map(r => add('EXTRACTED_ENTITY', 'REFERRAL_CODE:' + r));
+    const refEvIds = extractedData.referralCodes.map(r => add('EXTRACTED_ENTITY', 'REFERRAL_CODE:' + r, 'Referral code extracted from the content.', 'EXTRACTED_ENTITY'));
 
     // Threat Signals
-    const threatEvIds = threatAssessment.threats.map(t => add('RISK_SIGNAL', t.type + ':' + t.description));
+    const threatEvIds = threatAssessment.threats.map(t => add('RISK_SIGNAL', t.type + ':' + t.description, 'Detected threat signal based on internal rules.', 'DETERMINISTIC_RULE'));
 
     return {
       evidencePack: {

@@ -33,12 +33,16 @@
       {
         "evidence_id": "evid-5",
         "evidence_type": "ORIGINAL_CONTENT",
-        "data": "hash:a8f9c"
+        "data": "hash:a8f9c",
+        "explanation": "Default explanation",
+        "source_category": "OBSERVED_FACT"
       },
       {
         "evidence_id": "evid-6",
         "evidence_type": "EXTRACTED_ENTITY",
-        "data": "amount: 500 INR"
+        "data": "amount: 500 INR",
+        "explanation": "Default explanation",
+        "source_category": "OBSERVED_FACT"
       }
     ]
   }

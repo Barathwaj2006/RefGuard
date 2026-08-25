@@ -2,11 +2,15 @@ import { EvidencePack } from '../models/types';
 
 export type EvidenceType = 'ORIGINAL_CONTENT' | 'EXTRACTED_ENTITY' | 'URL' | 'UPI_IDENTIFIER' | 'RISK_SIGNAL';
 
+export type SourceCategory = 'OBSERVED_FACT' | 'EXTRACTED_ENTITY' | 'THREAT_INTELLIGENCE' | 'DETERMINISTIC_RULE' | 'CONTEXTUAL_AI_INTERPRETATION' | 'INFERRED_RELATIONSHIP';
+
 export interface InternalEvidence {
   id: string;
   type: EvidenceType;
   data: string;
   category: string; // e.g., 'SOURCE', 'URGENCY', 'PAYMENT', 'GEMINI', 'TRADING', 'SOCIAL_ENG', 'URL', 'UPI'
+  explanation: string;
+  source_category: SourceCategory;
 }
 
 export class EvidenceAggregator {
@@ -19,9 +23,9 @@ export class EvidenceAggregator {
     this.timestamp = timestamp;
   }
 
-  public addEvidence(type: EvidenceType, category: string, data: string): string {
+  public addEvidence(type: EvidenceType, category: string, data: string, explanation: string, source_category: SourceCategory): string {
     const id = `ev_${this.evidence.length + 1}_${Math.random().toString(36).substring(2, 7)}`;
-    this.evidence.push({ id, type, data, category });
+    this.evidence.push({ id, type, data, category, explanation, source_category });
     return id;
   }
 
@@ -44,7 +48,9 @@ export class EvidenceAggregator {
       items: this.evidence.map(e => ({
         evidence_id: e.id,
         evidence_type: e.type,
-        data: e.data
+        data: e.data,
+        explanation: e.explanation,
+        source_category: e.source_category
       }))
     };
   }

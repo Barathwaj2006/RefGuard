@@ -23,7 +23,9 @@
       {
         "evidence_id": "evid-qr-4",
         "evidence_type": "ORIGINAL_CONTENT",
-        "data": "hash:qrcode123"
+        "data": "hash:qrcode123",
+        "explanation": "Default explanation",
+        "source_category": "OBSERVED_FACT"
       }
     ]
   }

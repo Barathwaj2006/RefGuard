@@ -1,4 +1,4 @@
-﻿{
+{
   "scan_id": "scan-885",
   "timestamp": "2026-08-14T10:09:00Z",
   "risk_assessment": {
@@ -23,7 +23,9 @@
       {
         "evidence_id": "evid-10",
         "evidence_type": "URL",
-        "data": "http://fake-brand-login.com"
+        "data": "http://fake-brand-login.com",
+        "explanation": "Extracted fake brand login url.",
+        "source_category": "EXTRACTED_ENTITY"
       }
     ]
   }
