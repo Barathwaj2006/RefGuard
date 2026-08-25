@@ -1,6 +1,12 @@
 // RefGuard — Core Web Application Logic
 const HISTORY_STORAGE_KEY = 'refguard_scan_history_v1';
-const API_BASE = window.API_BASE_URL !== undefined ? window.API_BASE_URL : '';
+// --- API CONFIGURATION ---
+// When served by the backend (web): API_BASE is '' (relative URLs).
+// When running inside Capacitor (Android APK):
+//   - Development/emulator: set window.REFGUARD_API_URL = 'http://10.0.2.2:3000'
+//   - Production: set window.REFGUARD_API_URL = 'https://<YOUR-DEPLOYED-BACKEND>'
+// Set this BEFORE app.js loads, e.g. in a <script> tag in index.html.
+const API_BASE = window.REFGUARD_API_URL || '';
 let currentScanId = null;
 
 // Demo Test Scenarios
@@ -881,7 +887,7 @@ async function submitUserReport() {
   };
 
   try {
-    const res = await fetch('/api/v1/report', {
+    const res = await fetch(`${API_BASE}/api/v1/report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reportPayload)
