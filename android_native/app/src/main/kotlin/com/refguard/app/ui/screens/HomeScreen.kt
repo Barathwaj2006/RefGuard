@@ -105,7 +105,7 @@ fun HomeScreen(
                         Icon(Icons.Default.CloudQueue, null, tint = ColorWarning, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            " scans queued offline",
+                            "$offlineQueueSize scans queued offline",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = ColorWarning

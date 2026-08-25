@@ -142,7 +142,7 @@ fun ResultScreen(
                     color = palette.primary
                 )
                 Text(
-                    "Threat Score: /100",
+                    "Threat Score: ${result.riskScore}/100",
                     style = MaterialTheme.typography.bodyLarge,
                     color = palette.primary.copy(alpha = 0.8f)
                 )
@@ -186,8 +186,8 @@ fun ResultScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         if (result.mismatchStatus == MismatchStatus.DETECTED) {
-                            "They said you would receive ₹.\n\n" +
-                            "But this request actually asks you to PAY ₹.\n\n" +
+                            "They said you would receive ₹${result.mismatchAmount ?: "money"}.\n\n" +
+                            "But this request actually asks you to PAY ₹${result.mismatchAmount ?: "money"}.\n\n" +
                             "👉 DO NOT enter your UPI PIN. Entering your PIN always sends money, it never receives money."
                         } else if (result.riskLevel == RiskLevel.CRITICAL || result.riskLevel == RiskLevel.HIGH) {
                             "This message/link matches known fraud patterns.\n\n" +
@@ -243,10 +243,10 @@ fun ResultScreen(
                     Spacer(Modifier.height(10.dp))
 
                     result.recipientVpa?.let {
-                        Text("Recipient VPA: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Recipient VPA: $it", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     }
                     result.mismatchAmount?.let {
-                        Text("Amount: ₹", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Amount: ₹$it", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(Modifier.height(8.dp))
@@ -254,7 +254,7 @@ fun ResultScreen(
                     Spacer(Modifier.height(8.dp))
 
                     result.statedIntent?.let {
-                        Text("You were told: ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("You were told: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(
                         "Payment actually does: Outbound Debit (Money will leave your bank account)",
@@ -347,7 +347,7 @@ fun ResultScreen(
         // ── Scam Chain Stages ────────────────────────────
         if (result.scamChainNodes.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            SectionCard(title = "Reconstructed Threat Stages ( steps)", tint = ColorHigh) {
+            SectionCard(title = "Reconstructed Threat Stages (${result.scamChainNodes.size} steps)", tint = ColorHigh) {
                 result.scamChainNodes.forEachIndexed { index, node ->
                     Row(
                         modifier = Modifier.padding(vertical = 3.dp),
@@ -359,12 +359,12 @@ fun ResultScreen(
                             modifier = Modifier.size(22.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Text("", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ColorHigh)
+                                Text("${index + 1}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ColorHigh)
                             }
                         }
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "[] ",
+                            "[${node.node_type}] ${node.entity_reference ?: ""}",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -386,7 +386,7 @@ fun ResultScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Evidence Pack ( items)",
+                            "Evidence Pack (${result.evidenceItems.size} items)",
                             style = MaterialTheme.typography.labelLarge,
                             color = ColorBrand,
                             fontWeight = FontWeight.SemiBold
@@ -403,7 +403,7 @@ fun ResultScreen(
                         result.evidenceItems.forEach { item ->
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 Text(
-                                    "ID:  ()",
+                                    "ID: ${item.evidence_id} (${item.evidence_type})",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = ColorBrand
@@ -537,10 +537,10 @@ fun ResultScreen(
             onClick = {
                 val shareText = buildString {
                     append("🛡️ RefGuard Scam Advisory\n")
-                    append("Risk:  (/100)\n")
-                    append("Warning: \n")
-                    append("Action: \n\n")
-                    append("Why: \n")
+                    append("Risk: ${result.riskLevel} (${result.riskScore}/100)\n")
+                    append("Warning: ${result.detectedSummary}\n")
+                    append("Action: ${result.userInstruction}\n\n")
+                    append("Why: ${result.whyItMatters}\n")
                     append("\nVerified by RefGuard India UPI Protection Shield.")
                 }
                 val sendIntent = Intent().apply {
@@ -564,14 +564,14 @@ fun ResultScreen(
             onClick = {
                 val evidenceSummary = buildString {
                     append("🛡️ RefGuard Incident Investigation Report\n")
-                    append("Incident ID: \n")
-                    append("Timestamp: \n")
-                    append("Risk Severity:  (/100)\n")
-                    append("Summary: \n")
-                    if (result.recipientVpa != null) append("Target VPA: \n")
-                    if (result.mismatchAmount != null) append("Amount: ₹\n")
-                    if (result.signals.isNotEmpty()) append("Signals: \n")
-                    append("\nEvidence Pack Hash:  items attached.\n")
+                    append("Incident ID: ${result.scanId}\n")
+                    append("Timestamp: ${result.timestamp}\n")
+                    append("Risk Severity: ${result.riskLevel} (${result.riskScore}/100)\n")
+                    append("Summary: ${result.detectedSummary}\n")
+                    if (result.recipientVpa != null) append("Target VPA: ${result.recipientVpa}\n")
+                    if (result.mismatchAmount != null) append("Amount: ₹${result.mismatchAmount}\n")
+                    if (result.signals.isNotEmpty()) append("Signals: ${result.signals.joinToString(", ")}\n")
+                    append("\nEvidence Pack Hash: ${result.evidenceItems.size} items attached.\n")
                     append("Generated for submission to National Cybercrime Helpline 1930 / cybercrime.gov.in")
                 }
                 val sendIntent = Intent().apply {
@@ -723,12 +723,12 @@ private fun ReportDialog(
                     }
                     is ReportUiState.Success -> {
                         Text(
-                            "✓ Report submitted (ID: ). Thank you for helping protect the community.",
+                            "✓ Report submitted (ID: ${reportState.reportId}). Thank you for helping protect the community.",
                             color = ColorSafe
                         )
                     }
                     is ReportUiState.Error -> {
-                        Text("Failed: ", color = MaterialTheme.colorScheme.error)
+                        Text("Failed: ${reportState.message}", color = MaterialTheme.colorScheme.error)
                     }
                     else -> {
                         Text(

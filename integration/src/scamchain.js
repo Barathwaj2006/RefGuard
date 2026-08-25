@@ -9,11 +9,14 @@ class ScamChainBuilder {
     const edges = [];
     let nodeIdCounter = 1;
 
-    const makeNode = (type, entityRef, evRefs) => {
+    const makeNode = (type, entityRef, evRefs, state = 'OBSERVED', confidence = 1.0, provenance = 'extraction') => {
       const node_id = 'node_' + (nodeIdCounter++);
       nodes.push({
         node_id,
         node_type: type,
+        state,
+        confidence,
+        provenance,
         entity_reference: entityRef || undefined,
         evidence_references: evRefs && evRefs.length > 0 ? evRefs : undefined
       });
