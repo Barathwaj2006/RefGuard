@@ -12,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.1.0
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Run Full-System Integration & Contract Conformance Tests
         run: node integration/tests/runner.js
@@ -27,20 +27,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Make Gradlew Executable
-        run: chmod +x android/gradlew
+        run: chmod +x android_native/gradlew
 
       - name: Run Android Unit Tests
-        working-directory: ./android
+        working-directory: ./android_native
         run: ./gradlew test
