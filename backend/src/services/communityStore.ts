@@ -30,6 +30,8 @@ class CommunityReportStore {
 
   // Minimum independent reports required to block an unverified community indicator
   private static readonly CORROBORATION_THRESHOLD = 2;
+  private static readonly MAX_REPORTS = 10000;
+  private static readonly MAX_THREAT_RECORDS = 50000;
 
   // Protected ecosystem whitelists that cannot be blacklisted by user reports
   private static readonly PROTECTED_WHITELIST: RegExp[] = [
@@ -108,7 +110,7 @@ class CommunityReportStore {
       fs.writeFileSync(tmpFile, JSON.stringify({ reports: this.reports }, null, 2), 'utf8');
       fs.renameSync(tmpFile, this.storageFile);
     } catch (e) {
-      // Non-critical persistence error handling
+      console.warn('Failed to save community reports to disk:', e);
     }
   }
 
@@ -122,11 +124,14 @@ class CommunityReportStore {
       fs.writeFileSync(tmpFile, JSON.stringify({ feedbacks: this.feedbacks }, null, 2), 'utf8');
       fs.renameSync(tmpFile, this.feedbackFile);
     } catch (e) {
-      // Non-critical persistence error handling
+      console.warn('Failed to save feedback to disk:', e);
     }
   }
 
   private processReportInternal(report: ScamReport, persist: boolean): boolean {
+    if (this.reports.length >= CommunityReportStore.MAX_REPORTS) {
+      this.reports.shift(); // Remove oldest to bound memory
+    }
     this.reports.push(report);
     if (!report.reported_indicator) return false;
 
@@ -141,6 +146,22 @@ class CommunityReportStore {
     let record = this.threatRecords.get(ind);
 
     if (!record) {
+      if (this.threatRecords.size >= CommunityReportStore.MAX_THREAT_RECORDS) {
+        // Find and remove oldest community record
+        let oldestKey: string | null = null;
+        let oldestTime = Date.now();
+        for (const [k, v] of this.threatRecords.entries()) {
+          if (v.source === 'COMMUNITY') {
+             const t = new Date(v.lastReportedAt).getTime();
+             if (t < oldestTime) {
+                oldestTime = t;
+                oldestKey = k;
+             }
+          }
+        }
+        if (oldestKey) this.threatRecords.delete(oldestKey);
+      }
+
       record = {
         indicator: ind,
         source: 'COMMUNITY',

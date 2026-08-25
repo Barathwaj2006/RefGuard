@@ -6,6 +6,7 @@ import { getTrendingIntel, getRecentReports } from '../controllers/intelControll
 import { validateRequest, validateResponse } from '../middleware/validator';
 import { reportRateLimiter, scanRateLimiter } from '../middleware/rateLimiter';
 import { communityStore } from '../services/communityStore';
+import { sanitizeText } from '../services/extractors/piiSanitizer';
 
 const router = Router();
 
@@ -34,6 +35,15 @@ router.post('/report', reportRateLimiter, validateRequest('scam-report.json'), s
 // Verdict Feedback Loop (False Alarm / Confirmed Scam)
 router.post('/feedback', (req: Request, res: Response) => {
   const { scan_id, indicator, verdict, user_notes } = req.body;
+
+  if (indicator && typeof indicator === 'string' && indicator.length > 512) {
+    res.status(400).json({
+      error_code: 'INVALID_PAYLOAD',
+      message: 'Indicator length exceeds maximum limit.'
+    });
+    return;
+  }
+
   if (!scan_id || !verdict || !['CONFIRMED_FRAUD', 'FALSE_ALARM'].includes(verdict)) {
     res.status(400).json({
       error_code: 'INVALID_FEEDBACK_PAYLOAD',
@@ -46,7 +56,7 @@ router.post('/feedback', (req: Request, res: Response) => {
     scanId: scan_id,
     indicator,
     verdict,
-    userNotes: user_notes,
+    userNotes: user_notes ? sanitizeText(String(user_notes)).sanitizedText : undefined,
     timestamp: new Date().toISOString()
   });
 

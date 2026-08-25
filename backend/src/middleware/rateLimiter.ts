@@ -37,6 +37,21 @@ const scanBuckets = new Map<string, RequestBucket>();
 const SCAN_WINDOW_MS = 60 * 1000;
 const MAX_SCANS_PER_WINDOW = 60; // Max 60 scans per IP/minute
 
+// Periodic cleanup to prevent memory leaks from unused IPs
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, bucket] of ipBuckets.entries()) {
+    if (now > bucket.resetTime) {
+      ipBuckets.delete(ip);
+    }
+  }
+  for (const [ip, bucket] of scanBuckets.entries()) {
+    if (now > bucket.resetTime) {
+      scanBuckets.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000).unref(); // Run every 5 mins, don't block event loop
+
 export const scanRateLimiter = (req: Request, res: Response, next: NextFunction): void => {
   const ip = req.ip || req.socket.remoteAddress || 'unknown_ip';
   const now = Date.now();

@@ -4,8 +4,8 @@ import { ScanRequest, ScanResponse } from '../models/types';
 
 const analyzer = new AnalyzerService();
 
-// Match explicit credential leaks (e.g. My UPI PIN is 1234, password: xyz, cvv: 123)
-const RAW_CREDENTIAL_PATTERN = /\b(?:my\s+)?(?:upi\s+|atm\s+)?pin\s*(?:is|:|=)\s*\d{4,8}\b|\b(?:my\s+)?(?:password|passwd|pwd)\s*(?:is|:|=)\s*\S+|\bcvv\s*(?:is|:|=)?\s*\d{3,4}\b/i;
+// Match explicit credential leaks (e.g. My UPI PIN is 1234, password: xyz, cvv: 123, otp: 123456)
+const RAW_CREDENTIAL_PATTERN = /\b(?:my\s+)?(?:upi\s+|atm\s+)?pin\s*(?:is|:|=)\s*\d{4,8}\b|\b(?:my\s+)?(?:password|passwd|pwd)\s*(?:is|:|=)\s*\S+|\bcvv\s*(?:is|:|=)?\s*\d{3,4}\b|\botp\s*(?:is|:|=)?\s*\d{4,8}\b/i;
 
 export const scanContent = async (req: Request, res: Response, next: NextFunction) => {
   try {

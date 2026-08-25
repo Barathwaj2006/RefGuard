@@ -3,6 +3,7 @@ import apiRoutes from './routes/api';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+app.disable('x-powered-by');
 
 // Enable CORS for frontend and demo dashboard access
 app.use((req, res, next) => {
@@ -16,7 +17,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 import path from 'path';
 app.use(express.static(path.join(__dirname, '../../integration/demo/public')));
