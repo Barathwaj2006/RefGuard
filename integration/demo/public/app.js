@@ -173,11 +173,11 @@ function normalizeScanResponse(rawData) {
     
     // Adaptive Intelligence
     adaptiveIntel: {
-      archetype: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.scam_archetype : null,
+      archetype: rawData.adaptive_scam_intelligence ? (rawData.adaptive_scam_intelligence.archetype || rawData.adaptive_scam_intelligence.scam_archetype) : null,
       stage: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.current_stage : null,
       objective: (rawData.adaptive_scam_intelligence && rawData.adaptive_scam_intelligence.attacker_objective) 
                  || (mismatch.status === 'DETECTED' ? 'Get you to authorize a payment by making you believe you are receiving a refund or reward.' : risk.human_explanation),
-      nextStep: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.predicted_next_step : null,
+      nextStep: rawData.adaptive_scam_intelligence ? (rawData.adaptive_scam_intelligence.next_likely_step || rawData.adaptive_scam_intelligence.predicted_next_step) : null,
       userRisk: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.user_risk : null
     },
     
@@ -261,7 +261,10 @@ function renderScanResponse(data) {
       'urgency_indicator': { title: 'Urgency', desc: 'The message pressures you to act immediately without thinking.' },
       'authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
       'sms_authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
-      'digital_arrest_scam': { title: 'Digital Arrest Threat', desc: 'Uses fear tactics claiming illegal activity to demand money.' },
+      'digital_arrest_scam': { title: 'Digital Arrest Threat', desc: 'Impersonation of law enforcement combined with pressure to act immediately.' },
+      'payment_intent_mismatch': { title: 'Payment Intent Mismatch', desc: 'You were told you would receive money, but the payment request would debit your account.' },
+      'deceptive_reward_trigger': { title: 'Deceptive Reward', desc: 'Promises an unexpected reward or refund to trick you into paying.' },
+      'hinglish_cashback_scam': { title: 'Cashback Trap', desc: 'Common localized language pattern used in cashback scams.' },
       'financial_reward': { title: 'Fake Reward', desc: 'Promises an unexpected reward or refund to trick you into paying.' },
       'upi_fraud_pattern': { title: 'UPI Collect Fraud', desc: 'Disguises a payment request as a refund or prize receipt.' }
     };
@@ -339,7 +342,7 @@ function renderScanResponse(data) {
   const chainContainer = document.getElementById('adaptiveChainContainer');
   if (chainCard && chainContainer) {
     chainContainer.innerHTML = '';
-    if (model.chainNodes.length > 0) {
+    if (model.chainNodes.length > 0 && model.severity !== 'LOW') {
       chainCard.style.display = 'block';
       model.chainNodes.forEach((node, idx) => {
         // Consume explicit backend semantics for node status
@@ -365,9 +368,32 @@ function renderScanResponse(data) {
 
         const div = document.createElement('div');
         div.className = 'chain-node ' + cls;
-        div.innerHTML = '<div class="chain-dot"></div>' +
-          '<div class="chain-node-title">' + escapeHtml(node.entity_reference || node.node_id) + '</div>' +
-          '<div class="chain-node-desc">' + escapeHtml(node.node_type) + ' ' + icon + ' ' + status + '</div>';
+        
+        let confidenceHtml = '';
+        if (node.confidence !== undefined) {
+           confidenceHtml = `<span style="margin-left: 0.5rem; font-size: 0.8em; opacity: 0.8;">(${Math.round(node.confidence * 100)}% confidence)</span>`;
+        }
+        
+        let provenanceHtml = '';
+        if (node.provenance) {
+           provenanceHtml = `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.25rem;">Source: ${escapeHtml(node.provenance)}</div>`;
+        }
+        
+        let evidenceHtml = '';
+        if (node.evidence_references && node.evidence_references.length > 0) {
+           evidenceHtml = `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.1rem;">Evidence Ref: ${escapeHtml(node.evidence_references.join(', '))}</div>`;
+        }
+
+        div.innerHTML = `
+          <div class="chain-dot"></div>
+          <div class="chain-node-title" style="margin-bottom:0.2rem;">${escapeHtml(node.entity_reference || node.node_id)}</div>
+          <div class="chain-node-desc">
+            <strong>${icon} ${status}</strong> &mdash; ${escapeHtml(node.node_type)}
+            ${confidenceHtml}
+            ${provenanceHtml}
+            ${evidenceHtml}
+          </div>
+        `;
         chainContainer.appendChild(div);
       });
     } else {
