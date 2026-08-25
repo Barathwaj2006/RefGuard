@@ -27,6 +27,12 @@ export interface GeminiVerdict {
   confidence: number;
   /** Patterns the model detected */
   detected_patterns: string[];
+  /** Tactics used by the attacker in the content */
+  social_engineering_tactics: string[];
+  /** Whether there is a payment intent mismatch in the content */
+  intent_mismatch_detected: boolean;
+  /** Explanation for the payment intent mismatch */
+  intent_mismatch_explanation: string | null;
   /** Whether Gemini was actually used (false = fallback) */
   gemini_used: boolean;
 }
@@ -44,7 +50,6 @@ export interface GeminiEscalationInput {
 
 const GEMINI_TIMEOUT_MS = 8000;
 const MIN_ESCALATION_SCORE = 40;
-const MAX_ESCALATION_SCORE = 80;
 const MAX_ADJUSTMENT = 20;
 
 const SYSTEM_PROMPT = `You are RefGuard's fraud analysis reasoning engine. You analyze sanitized message content for financial fraud indicators specific to India's digital payment ecosystem (UPI, NEFT, IMPS).
@@ -63,7 +68,10 @@ Respond ONLY with valid JSON matching this exact structure:
   "risk_adjustment": <integer -20 to 20>,
   "reasoning": "<one paragraph explaining your assessment>",
   "confidence": <float 0.0 to 1.0>,
-  "detected_patterns": ["<pattern1>", "<pattern2>"]
+  "detected_patterns": ["<pattern1>", "<pattern2>"],
+  "social_engineering_tactics": ["<tactic1>", "<tactic2>"],
+  "intent_mismatch_detected": <boolean>,
+  "intent_mismatch_explanation": "<explanation or null>"
 }
 
 Rules:
@@ -73,6 +81,9 @@ Rules:
 - Zero = you agree with the deterministic assessment
 - confidence MUST be between 0.0 and 1.0
 - detected_patterns should list specific fraud indicators found (empty array if none)
+- social_engineering_tactics should list identified manipulation tactics (empty array if none)
+- intent_mismatch_detected is true if the stated intent (e.g., getting a refund, winning a prize) contradicts the underlying action (e.g., authorizing a UPI debit)
+- intent_mismatch_explanation must explain the mismatch if intent_mismatch_detected is true, otherwise null
 - Do NOT hallucinate patterns that aren't in the text
 - If the content is clearly benign, use a negative adjustment`;
 
@@ -80,7 +91,7 @@ Rules:
  * Determine whether the deterministic score warrants Gemini escalation.
  */
 export function shouldEscalateToGemini(deterministicScore: number): boolean {
-  return deterministicScore >= MIN_ESCALATION_SCORE && deterministicScore <= MAX_ESCALATION_SCORE;
+  return deterministicScore >= MIN_ESCALATION_SCORE;
 }
 
 /**
@@ -95,6 +106,9 @@ export async function analyzeWithGemini(input: GeminiEscalationInput): Promise<G
     reasoning: 'Gemini reasoning unavailable; deterministic score retained.',
     confidence: 0,
     detected_patterns: [],
+    social_engineering_tactics: [],
+    intent_mismatch_detected: false,
+    intent_mismatch_explanation: null,
     gemini_used: false,
   };
 
@@ -176,11 +190,26 @@ Respond with JSON only.`;
       ? parsed.detected_patterns.filter((p: unknown) => typeof p === 'string').slice(0, 10)
       : [];
 
+    const tactics = Array.isArray(parsed.social_engineering_tactics)
+      ? parsed.social_engineering_tactics.filter((p: unknown) => typeof p === 'string').slice(0, 10)
+      : [];
+
+    const mismatchDetected = typeof parsed.intent_mismatch_detected === 'boolean'
+      ? parsed.intent_mismatch_detected
+      : false;
+
+    const mismatchExplanation = typeof parsed.intent_mismatch_explanation === 'string'
+      ? parsed.intent_mismatch_explanation.slice(0, 500)
+      : null;
+
     return {
       risk_adjustment: adjustment,
       reasoning,
       confidence,
       detected_patterns: patterns,
+      social_engineering_tactics: tactics,
+      intent_mismatch_detected: mismatchDetected,
+      intent_mismatch_explanation: mismatchExplanation,
       gemini_used: true,
     };
 

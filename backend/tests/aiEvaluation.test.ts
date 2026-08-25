@@ -26,12 +26,12 @@ jest.mock('@google/genai', () => {
               return { text: 'This is not JSON!' };
             }
             if (prompt.includes('invalid_score')) {
-              return { text: '```json\n{"risk_adjustment": 999, "reasoning": "bad score", "confidence": 1.5, "detected_patterns": ["x"]}\n```' };
+              return { text: '```json\n{"risk_adjustment": 999, "reasoning": "bad score", "confidence": 1.5, "detected_patterns": ["x"], "social_engineering_tactics": [], "intent_mismatch_detected": false, "intent_mismatch_explanation": null}\n```' };
             }
             
             // Default mock success response
             return {
-              text: '```json\n{"risk_adjustment": 15, "reasoning": "Looks highly suspicious based on patterns.", "confidence": 0.9, "detected_patterns": ["urgency", "fake_authority"]}\n```'
+              text: '```json\n{"risk_adjustment": 15, "reasoning": "Looks highly suspicious based on patterns.", "confidence": 0.9, "detected_patterns": ["urgency", "fake_authority"], "social_engineering_tactics": ["urgency"], "intent_mismatch_detected": false, "intent_mismatch_explanation": null}\n```'
             };
           })
         }

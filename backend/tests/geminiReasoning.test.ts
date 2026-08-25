@@ -13,12 +13,13 @@ describe('Gemini Reasoning Service', () => {
     process.env = originalEnv;
   });
 
-  it('should escalate only for scores between 40 and 80', () => {
+  it('should escalate for scores 40 and above', () => {
     expect(shouldEscalateToGemini(39)).toBe(false);
     expect(shouldEscalateToGemini(40)).toBe(true);
     expect(shouldEscalateToGemini(60)).toBe(true);
     expect(shouldEscalateToGemini(80)).toBe(true);
-    expect(shouldEscalateToGemini(81)).toBe(false);
+    expect(shouldEscalateToGemini(81)).toBe(true);
+    expect(shouldEscalateToGemini(100)).toBe(true);
   });
 
   it('should fallback gracefully when GEMINI_API_KEY is not set', async () => {

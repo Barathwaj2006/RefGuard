@@ -22,10 +22,10 @@ jest.mock('@google/genai', () => {
               return { text: 'Not a JSON block' };
             }
             if (params.contents.includes('INVALID_SCORE_TEST')) {
-              return { text: '```json\n{"risk_adjustment": 999, "reasoning": "bad bounds", "confidence": 1.0}\n```' };
+              return { text: '```json\n{"risk_adjustment": 999, "reasoning": "bad bounds", "confidence": 1.0, "social_engineering_tactics": [], "intent_mismatch_detected": false, "intent_mismatch_explanation": null}\n```' };
             }
             return {
-              text: '```json\n{"risk_adjustment": 10, "reasoning": "mock reasoning", "confidence": 0.8, "detected_patterns": ["mock_pattern"]}\n```'
+              text: '```json\n{"risk_adjustment": 10, "reasoning": "mock reasoning", "confidence": 0.8, "detected_patterns": ["mock_pattern"], "social_engineering_tactics": [], "intent_mismatch_detected": false, "intent_mismatch_explanation": null}\n```'
             };
           })
         }
@@ -85,7 +85,7 @@ describe('AI/ML Implementation Verification', () => {
     it('should determine escalation properly', () => {
       expect(shouldEscalateToGemini(10)).toBe(false); // benign
       expect(shouldEscalateToGemini(50)).toBe(true);  // ambiguous
-      expect(shouldEscalateToGemini(95)).toBe(false); // critical
+      expect(shouldEscalateToGemini(95)).toBe(true);  // high confidence threats should also escalate now
     });
 
     it('should handle standard structured output correctly', async () => {

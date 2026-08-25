@@ -128,7 +128,7 @@ export class AnalyzerService {
     const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund)\b/i.test(text);
 
     // Mismatch Detection
-    const isMismatch = hasRewardClaims && entities.isCollectRequest;
+    let isMismatch = hasRewardClaims && entities.isCollectRequest;
 
     if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
     if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
@@ -279,6 +279,12 @@ export class AnalyzerService {
         signals.push(...geminiVerdict.detected_patterns.map(p => 'gemini_' + p.toLowerCase().replace(/\s+/g, '_')));
         signals.push('gemini_reasoning_applied');
         evidenceAggregator.addEvidence('RISK_SIGNAL', 'GEMINI', `Gemini Reasoning: ${geminiVerdict.reasoning}`);
+
+        // Allow AI to supplement deterministic mismatch logic
+        if (!isMismatch && geminiVerdict.intent_mismatch_detected) {
+          isMismatch = true;
+          evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', `AI Payment Intent Mismatch: ${geminiVerdict.intent_mismatch_explanation || 'Detected mismatch between stated intent and underlying action.'}`);
+        }
       }
     }
 
@@ -308,13 +314,15 @@ export class AnalyzerService {
             : isUpiScam
               ? 'Social Engineering / Impersonation Fraud Detected'
               : 'Known Scam Signature Identified',
-        why_it_matters: isMismatch
-          ? `You were told you are receiving money/prize, but this UPI request will DEBIT${amountStr} from your account.`
-          : isTradingScam
-            ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
-            : isUpiScam
-              ? 'This matches a known highly-prevalent scam template (e.g. digital arrest, fake electricity bill, or customs seizure) designed to steal your money.'
-              : 'This identifier matches confirmed fraud signatures reported by the community.',
+        why_it_matters: geminiVerdict?.gemini_used
+          ? `AI Context: ${geminiVerdict.reasoning}`
+          : isMismatch
+            ? `You were told you are receiving money/prize, but this UPI request will DEBIT${amountStr} from your account.`
+            : isTradingScam
+              ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
+              : isUpiScam
+                ? 'This matches a known highly-prevalent scam template (e.g. digital arrest, fake electricity bill, or customs seizure) designed to steal your money.'
+                : 'This identifier matches confirmed fraud signatures reported by the community.',
         user_instruction: isTradingScam
           ? 'DO NOT deposit money, share KYC documents, or join any trading group promoted here. Report this to SEBI/cybercrime.'
           : isUpiScam
@@ -328,9 +336,11 @@ export class AnalyzerService {
         detected_summary: isTradingRelated
           ? 'Suspicious Trading/Investment Pattern Detected'
           : 'High Risk Phishing Pattern Detected',
-        why_it_matters: isTradingRelated
-          ? 'This content contains indicators of potential investment fraud such as guaranteed returns, unregistered advisors, or suspicious trading platforms.'
-          : 'Suspicious elements were found that resemble credential-harvesting or scam links.',
+        why_it_matters: geminiVerdict?.gemini_used
+          ? `AI Context: ${geminiVerdict.reasoning}`
+          : isTradingRelated
+            ? 'This content contains indicators of potential investment fraud such as guaranteed returns, unregistered advisors, or suspicious trading platforms.'
+            : 'Suspicious elements were found that resemble credential-harvesting or scam links.',
         user_instruction: isTradingRelated
           ? 'Verify any investment advice through SEBI-registered channels only. Never deposit money to unverified platforms.'
           : 'Do not share OTPs, click unknown links, or send funds.'
@@ -340,7 +350,7 @@ export class AnalyzerService {
         action: 'WARN_CAUTION',
         detected_summary: 'Suspicious Indicators Found',
         why_it_matters: geminiVerdict?.gemini_used
-          ? `AI analysis: ${geminiVerdict.reasoning.slice(0, 200)}`
+          ? `AI analysis: ${geminiVerdict.reasoning}`
           : 'The message contains psychological urgency or unverified claims.',
         user_instruction: 'Verify the identity of the sender through official channels before proceeding.'
       };
@@ -364,7 +374,7 @@ export class AnalyzerService {
       confidence,
       signals,
       evidence_references: evidenceAggregator.getAllEvidenceIds(),
-      human_explanation: decision.why_it_matters,
+      human_explanation: geminiVerdict?.gemini_used ? geminiVerdict.reasoning : decision.why_it_matters,
       recommended_action: decision.user_instruction
     };
 
@@ -425,7 +435,9 @@ export class AnalyzerService {
       let confidence_intel = 0.5;
       const reporting_path = 'https://cybercrime.gov.in/';
       const observed_evidence: string[] = evidenceAggregator.getAllEvidenceIds();
-      const inferred_intent: string[] = [];
+      const inferred_intent: string[] = geminiVerdict?.gemini_used && geminiVerdict.social_engineering_tactics.length > 0
+        ? [...geminiVerdict.social_engineering_tactics]
+        : [];
       const predicted_next_steps: string[] = [];
 
       if (tradingSignals.hasTradingFraudSignals) {
