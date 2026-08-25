@@ -422,11 +422,15 @@ export class AnalyzerService {
       let recommended_action = 'Ignore and block the sender.';
       let confidence_intel = 0.5;
       let reporting_path = 'https://cybercrime.gov.in/';
+      let observed_evidence: string[] = evidenceAggregator.getAllEvidenceIds();
+      let inferred_intent: string[] = [];
+      let predicted_next_steps: string[] = [];
 
       if (tradingSignals.hasTradingFraudSignals) {
         archetype = 'Trading/Investment Fraud';
         stages_sequence = ['Initial Contact', 'Fake Platform Onboarding', 'Small Payout (Bait)', 'Large Deposit Request', 'Account Freeze'];
         total_stages = 5;
+        inferred_intent.push('Lure victim into fake trading platform');
         
         if (tradingSignals.depositPaymentRequest && tradingSignals.cryptoWalletAddress) {
            current_stage = 'Large Deposit Request';
@@ -435,6 +439,7 @@ export class AnalyzerService {
            previous_likely_stage = 'Small Payout (Bait)';
            next_likely_stage = 'Account Freeze';
            next_likely_step = 'They will claim you need to pay taxes or fees to withdraw your funds, but you will never get them back.';
+           predicted_next_steps.push('Attacker will freeze account and demand tax payment.');
            confidence_intel = 0.9;
         } else if (tradingSignals.tradingTipGroup || tradingSignals.fakeBrokerReference) {
            current_stage = 'Initial Contact / Fake Platform Onboarding';
@@ -443,6 +448,7 @@ export class AnalyzerService {
            previous_likely_stage = 'Initial Contact';
            next_likely_stage = 'Small Payout (Bait)';
            next_likely_step = 'They will ask you to create an account on their platform and make a small deposit, promising high returns.';
+           predicted_next_steps.push('Attacker will ask for a small initial deposit.');
            confidence_intel = 0.8;
         }
         attacker_objective = 'Steal large sums of money through fake investment platforms.';
@@ -459,6 +465,8 @@ export class AnalyzerService {
            previous_likely_stage = 'Fake Official Interrogation';
            next_likely_stage = 'Coerced Payment';
            next_likely_step = 'They will demand a "security deposit" or "fine" to avoid arrest, usually via UPI or bank transfer.';
+           inferred_intent.push('Coerce victim using fear of authority');
+           predicted_next_steps.push('Attacker will demand immediate transfer to a "safe" account.');
            attacker_objective = 'Coerce victim into transferring funds under threat of arrest.';
            user_risk = 'Critical. High psychological pressure leading to rapid financial loss.';
            recommended_action = 'Hang up immediately. Police will never arrest you over a phone call or Skype/WhatsApp video call.';
@@ -473,6 +481,8 @@ export class AnalyzerService {
            previous_likely_stage = null;
            next_likely_stage = 'Call to "Helpdesk"';
            next_likely_step = 'If you call the number, they will ask you to install a screen-sharing app to "update your bill".';
+           inferred_intent.push('Trick victim into calling fake helpdesk');
+           predicted_next_steps.push('Attacker will instruct victim to download a remote access app.');
            attacker_objective = 'Gain remote access to your phone and steal banking credentials.';
            user_risk = 'High. Potential for complete bank account drain.';
            recommended_action = 'Do not call the number. Check your electricity bill on the official website or app.';
@@ -487,6 +497,8 @@ export class AnalyzerService {
            previous_likely_stage = 'Initial Message';
            next_likely_stage = 'Payment Request';
            next_likely_step = 'They will send a UPI collect request or ask for your UPI PIN.';
+           inferred_intent.push('Induce panic to force quick action');
+           predicted_next_steps.push('Attacker will send a UPI collect request.');
            attacker_objective = 'Steal funds via UPI transaction.';
            user_risk = 'High.';
            recommended_action = 'Do not enter your UPI PIN. Do not approve unknown collect requests.';
@@ -502,6 +514,8 @@ export class AnalyzerService {
         previous_likely_stage = 'Link Clicks/App Open';
         next_likely_stage = 'Funds Deducted';
         next_likely_step = 'Entering your PIN will authorize a deduction from your account, not a credit.';
+        inferred_intent.push('Deceive user into authorizing debit');
+        predicted_next_steps.push('Victim enters PIN and funds are deducted.');
         attacker_objective = 'Trick user into authorizing a debit while believing it is a credit.';
         user_risk = 'Critical. Immediate financial loss if PIN is entered.';
         recommended_action = 'CANCEL the transaction. You NEVER need a UPI PIN to receive money.';
@@ -516,6 +530,8 @@ export class AnalyzerService {
         previous_likely_stage = 'Fabricate Urgency';
         next_likely_stage = 'Account Takeover';
         next_likely_step = 'Once you share the OTP, they will log into your account and change passwords or transfer funds.';
+        inferred_intent.push('Steal MFA token');
+        predicted_next_steps.push('Attacker logs into victim account and changes password.');
         attacker_objective = 'Steal access to user account (bank, email, social media).';
         user_risk = 'High. Risk of immediate account compromise.';
         recommended_action = 'NEVER share an OTP with anyone. No legitimate organization will ask for your OTP.';
@@ -529,7 +545,9 @@ export class AnalyzerService {
         stage_index,
         total_stages,
         stages_sequence,
-        evidence_detected: evidenceAggregator.getAllEvidenceIds(),
+        observed_evidence,
+        inferred_intent,
+        predicted_next_steps,
         previous_likely_stage,
         next_likely_stage,
         next_likely_step,

@@ -171,4 +171,27 @@ describe('AI/ML Reasoning Layer Evaluation Fixtures', () => {
     expect(verdict.risk_adjustment).toBe(20);
     expect(verdict.confidence).toBe(1); // 1.5 clamped to 1
   });
+
+  // 13. End-to-end Gemini missing API key fallback
+  it('should return scan response successfully when Gemini is unavailable (no API key)', async () => {
+    delete process.env.GEMINI_API_KEY;
+    const req = { 
+      content_id: 'no-key-test', 
+      content_type: 'TEXT' as const, 
+      content_value: 'Urgent: Your account is suspended. Click here to verify.', 
+      timestamp: new Date().toISOString(), 
+      sender_id: '123' 
+    };
+    
+    // The message is suspicious and gets a medium score, triggering Gemini escalation.
+    // Since API key is missing, it should gracefully fall back.
+    const result = await analyzer.analyze(req);
+    
+    expect(result).toBeDefined();
+    expect(result.risk_assessment.risk_severity).toBe('MEDIUM');
+    // Ensure 'gemini_reasoning_applied' is not in the signals
+    expect(result.risk_assessment.signals).not.toContain('gemini_reasoning_applied');
+    expect(result.adaptive_scam_intelligence).toBeDefined();
+    expect(result.adaptive_scam_intelligence?.provenance).toBe('deterministic_engine');
+  });
 });

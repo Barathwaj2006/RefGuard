@@ -68,7 +68,9 @@ export interface AdaptiveScamIntelligence {
   stage_index: number;
   total_stages: number;
   stages_sequence: string[];
-  evidence_detected: string[];
+  observed_evidence: string[];
+  inferred_intent: string[];
+  predicted_next_steps: string[];
   previous_likely_stage: string | null;
   next_likely_stage: string | null;
   next_likely_step: string | null;
