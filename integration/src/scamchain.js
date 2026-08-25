@@ -11,7 +11,7 @@ class ScamChainBuilder {
 
     const makeNode = (type, entityRef, evRefs) => {
       const node_id = 'node_' + (nodeIdCounter++);
-      nodes.push({
+      nodes.push({state: 'OBSERVED', confidence: 1.0, provenance: 'PIPELINE_DERIVATION',
         node_id,
         node_type: type,
         entity_reference: entityRef || undefined,
