@@ -9,7 +9,9 @@
     "stage_index": { "type": "integer" },
     "total_stages": { "type": "integer" },
     "stages_sequence": { "type": "array", "items": { "type": "string" } },
-    "evidence_detected": { "type": "array", "items": { "type": "string" } },
+    "observed_evidence": { "type": "array", "items": { "type": "string" } },
+    "inferred_intent": { "type": "array", "items": { "type": "string" } },
+    "predicted_next_steps": { "type": "array", "items": { "type": "string" } },
     "previous_likely_stage": { "type": ["string", "null"] },
     "next_likely_stage": { "type": ["string", "null"] },
     "next_likely_step": { "type": ["string", "null"] },
@@ -23,7 +25,7 @@
   },
   "required": [
     "archetype", "current_stage", "stage_title", "stage_index", "total_stages", 
-    "stages_sequence", "evidence_detected", "attacker_objective", "user_risk", 
+    "stages_sequence", "observed_evidence", "inferred_intent", "predicted_next_steps", "attacker_objective", "user_risk", 
     "recommended_action", "confidence", "reporting_path", "evidence_backed_status", 
     "provenance"
   ],
