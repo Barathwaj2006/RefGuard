@@ -18,6 +18,9 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+import path from 'path';
+app.use(express.static(path.join(__dirname, '../../integration/demo/public')));
+
 // Root Health Check
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'UP', service: 'RefGuard' });
