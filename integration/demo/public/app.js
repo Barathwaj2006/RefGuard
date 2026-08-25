@@ -85,12 +85,6 @@ async function executeScan() {
     setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Checking payment intent...'; }, 600);
     setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Analyzing heuristics...'; }, 1200);
   }
-  const loadingText = document.getElementById('loadingText');
-  if (loadingText) {
-    loadingText.innerText = 'Scanning for threats...';
-    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Checking payment intent...'; }, 600);
-    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Analyzing heuristics...'; }, 1200);
-  }
 
   const scanBtn = document.getElementById('scanBtn');
   if (scanBtn) scanBtn.disabled = true;
@@ -126,7 +120,12 @@ async function executeScan() {
     if (errorState) {
       errorState.style.display = 'block';
       const msg = document.getElementById('errorMessage');
-      if (msg) msg.innerText = err.message || 'Scan request failed.';
+      if (msg) {
+        let text = err.message || 'Scan request failed.';
+        if (text.includes('Failed to fetch')) text = 'Cannot connect to the protection engine. Please check your internet connection.';
+        if (text.includes('JSON')) text = 'Received an invalid response from the protection engine.';
+        msg.innerText = text;
+      }
     }
     showToast('Scan failed: ' + err.message, 'error');
   } finally {
@@ -572,8 +571,8 @@ async function loadIntel() {
   const trendingList = document.getElementById('trendingList');
   const reportsList = document.getElementById('reportsList');
 
-  if (trendingList) trendingList.innerHTML = '<li>Loading trending signatures...</li>';
-  if (reportsList) reportsList.innerHTML = '<li>Loading recent reports...</li>';
+  if (trendingList) trendingList.innerHTML = '<div class="intel-card"><p>Loading trending signatures...</p></div>';
+  if (reportsList) reportsList.innerHTML = '<div class="intel-card"><p>Loading recent reports...</p></div>';
 
   try {
     const [trendRes, reportRes] = await Promise.all([
@@ -588,18 +587,17 @@ async function loadIntel() {
         const items = data.trending_indicators || [];
         if (items.length > 0) {
           items.forEach(ind => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-              <span class="intel-indicator">${escapeHtml(ind.indicator)}</span>
-              <span class="intel-meta">Severity: <strong>${escapeHtml(ind.severity || 'CRITICAL')}</strong> | Sightings: ${ind.sightings || ind.reportCount || 1}</span>
-            `;
-            trendingList.appendChild(li);
+            const div = document.createElement('div');
+            div.className = 'intel-card';
+            div.innerHTML = '<h4 style="color: var(--color-critical);">' + escapeHtml(ind.indicator) + '</h4>' +
+                             '<p>Severity: <strong>' + escapeHtml(ind.severity || 'CRITICAL') + '</strong> | Sightings: ' + (ind.sightings || ind.reportCount || 1) + '</p>';
+            trendingList.appendChild(div);
           });
         } else {
-          trendingList.innerHTML = '<li>No trending threats found in registry.</li>';
+          trendingList.innerHTML = '<div class="intel-card"><p>No trending threats found in registry.</p></div>';
         }
       } else {
-        trendingList.innerHTML = '<li>Threat intelligence endpoint unavailable.</li>';
+        trendingList.innerHTML = '<div class="intel-card"><p>Threat intelligence endpoint unavailable.</p></div>';
       }
     }
 
@@ -610,25 +608,24 @@ async function loadIntel() {
         const reports = data.recent_reports || data.reports || [];
         if (reports.length > 0) {
           reports.forEach(rep => {
-            const li = document.createElement('li');
+            const div = document.createElement('div');
+            div.className = 'intel-card';
             const dateStr = rep.submission_timestamp ? new Date(rep.submission_timestamp).toLocaleString() : 'Recent';
-            li.innerHTML = `
-              <span class="intel-indicator">${escapeHtml(rep.reported_indicator || 'Redacted')}</span>
-              <span class="intel-meta">Category: <strong>${escapeHtml(rep.report_category || 'UPI_FRAUD')}</strong> | ${escapeHtml(dateStr)}</span>
-            `;
-            reportsList.appendChild(li);
+            div.innerHTML = '<h4>' + escapeHtml(rep.reported_indicator || 'Redacted') + '</h4>' +
+                             '<p>Category: <strong>' + escapeHtml(rep.report_category || 'UPI_FRAUD') + '</strong> | ' + escapeHtml(dateStr) + '</p>';
+            reportsList.appendChild(div);
           });
         } else {
-          reportsList.innerHTML = '<li>No community reports filed yet.</li>';
+          reportsList.innerHTML = '<div class="intel-card"><p>No community reports filed yet.</p></div>';
         }
       } else {
-        reportsList.innerHTML = '<li>Community reports endpoint unavailable.</li>';
+        reportsList.innerHTML = '<div class="intel-card"><p>Community reports endpoint unavailable.</p></div>';
       }
     }
 
   } catch (err) {
-    if (trendingList) trendingList.innerHTML = '<li style="color: var(--color-critical);">Failed to load trending threats.</li>';
-    if (reportsList) reportsList.innerHTML = '<li style="color: var(--color-critical);">Failed to load recent reports.</li>';
+    if (trendingList) trendingList.innerHTML = '<div class="intel-card"><p style="color: var(--color-critical);">Failed to load trending threats.</p></div>';
+    if (reportsList) reportsList.innerHTML = '<div class="intel-card"><p style="color: var(--color-critical);">Failed to load recent reports.</p></div>';
     showToast('Failed to load global intelligence feed', 'error');
   }
 }
