@@ -17,7 +17,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Run Full-System Integration & Contract Conformance Tests
         run: node integration/tests/runner.js
@@ -41,7 +41,7 @@ jobs:
       - name: Set up Node.js for Capacitor
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Make Gradlew Executable and Sync Capacitor
         run: |
