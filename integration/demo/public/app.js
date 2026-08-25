@@ -70,12 +70,14 @@ async function executeScan() {
     return;
   }
 
-  const emptyState = document.getElementById('emptyState');
+  const desktopEmptyState = document.getElementById('desktopEmptyState');
   const loadingState = document.getElementById('loadingState');
   const errorState = document.getElementById('errorState');
   const resultContent = document.getElementById('resultContent');
+  const resultsPanel = document.getElementById('resultsPanel');
 
-  if (emptyState) emptyState.style.display = 'none';
+  if (desktopEmptyState) desktopEmptyState.style.display = 'none';
+  if (resultsPanel) resultsPanel.style.display = 'block';
   if (resultContent) resultContent.style.display = 'none';
   if (errorState) errorState.style.display = 'none';
   if (loadingState) loadingState.style.display = 'block';
@@ -133,20 +135,70 @@ async function executeScan() {
   }
 }
 
+
+// ==========================================
+// FRONTEND DATA ADAPTER (Workstream P)
+// ==========================================
+function normalizeScanResponse(rawData) {
+  const risk = rawData.risk_assessment || {};
+  const decision = rawData.protection_decision || {};
+  const mismatch = rawData.payment_intent_mismatch || {};
+  const scamChain = rawData.scam_chain || {};
+  const evidencePack = rawData.evidence_pack || {};
+
+  return {
+    scanId: rawData.scan_id || 'unknown',
+    timestamp: rawData.timestamp || new Date().toISOString(),
+    
+    // Verdict
+    severity: risk.risk_severity || 'LOW',
+    score: risk.risk_score !== undefined ? risk.risk_score : 0,
+    confidence: risk.confidence || 0,
+    
+    // Explanation
+    title: decision.detected_summary || risk.human_explanation || (risk.risk_severity === 'LOW' ? 'No malicious intent detected.' : 'Suspicious activity detected.'),
+    explanation: decision.why_it_matters || risk.human_explanation || '',
+    action: decision.user_instruction || risk.recommended_action || '',
+    
+    // Signals
+    signals: risk.signals || [],
+    
+    // Payment Mismatch
+    mismatch: {
+      detected: mismatch.status === 'DETECTED',
+      statedIntent: mismatch.stated_intent || '',
+      actualAction: mismatch.actual_payment_action || '',
+      direction: mismatch.payment_direction || ''
+    },
+    
+    // Adaptive Intelligence
+    adaptiveIntel: {
+      archetype: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.scam_archetype : null,
+      stage: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.current_stage : null,
+      objective: (rawData.adaptive_scam_intelligence && rawData.adaptive_scam_intelligence.attacker_objective) 
+                 || (mismatch.status === 'DETECTED' ? 'Get you to authorize a payment by making you believe you are receiving a refund or reward.' : risk.human_explanation),
+      nextStep: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.predicted_next_step : null,
+      userRisk: rawData.adaptive_scam_intelligence ? rawData.adaptive_scam_intelligence.user_risk : null
+    },
+    
+    // Scam Chain
+    chainNodes: scamChain.nodes || [],
+    
+    // Evidence
+    evidenceItems: evidencePack.items || [],
+    
+    // Raw (for debugging or history)
+    raw: rawData
+  };
+}
+
 // Render Response View
 function renderScanResponse(data) {
-  currentScanId = data.scan_id;
+  const model = normalizeScanResponse(data);
+  currentScanId = model.scanId;
+  
   const resultContent = document.getElementById('resultContent');
   if (resultContent) resultContent.style.display = 'block';
-
-  const risk = data.risk_assessment || {};
-  const decision = data.protection_decision || {};
-  const mismatch = data.payment_intent_mismatch || {};
-  const scamChain = data.scam_chain || {};
-  const evidencePack = data.evidence_pack || {};
-
-  const severity = risk.risk_severity || 'LOW';
-  const score = risk.risk_score !== undefined ? risk.risk_score : 0;
 
   // Verdict Hero
   const banner = document.getElementById('riskBanner');
@@ -155,65 +207,81 @@ function renderScanResponse(data) {
   const decisionTitle = document.getElementById('decisionTitle');
   const scoreVal = document.getElementById('riskScoreVal');
 
-  if (banner) banner.className = 'verdict-hero ' + severity.toLowerCase();
-  if (scoreVal) scoreVal.innerText = score;
+  if (banner) banner.className = 'verdict-hero ' + model.severity.toLowerCase();
+  if (scoreVal) scoreVal.innerText = model.score;
   
   if (severityTag) {
-    if (severity === 'CRITICAL') severityTag.innerText = 'CRITICAL SCAM RISK';
-    else if (severity === 'HIGH') severityTag.innerText = 'HIGH RISK';
-    else if (severity === 'MEDIUM') severityTag.innerText = '⚠ NEEDS CAUTION';
+    if (model.severity === 'CRITICAL') severityTag.innerText = 'CRITICAL SCAM RISK';
+    else if (model.severity === 'HIGH') severityTag.innerText = 'HIGH RISK';
+    else if (model.severity === 'MEDIUM') severityTag.innerText = '⚠ NEEDS CAUTION';
     else severityTag.innerText = '✓ LOOKS SAFE';
   }
   
   if (verdictIcon) {
-    if (severity === 'CRITICAL') verdictIcon.innerText = '🚨';
-    else if (severity === 'HIGH') verdictIcon.innerText = '⚠️';
-    else if (severity === 'MEDIUM') verdictIcon.innerText = '👀';
+    if (model.severity === 'CRITICAL') verdictIcon.innerText = '🚨';
+    else if (model.severity === 'HIGH') verdictIcon.innerText = '⚠️';
+    else if (model.severity === 'MEDIUM') verdictIcon.innerText = '👀';
     else verdictIcon.innerText = '✅';
   }
 
   if (decisionTitle) {
-    decisionTitle.innerText = decision.detected_summary || risk.human_explanation || (severity === 'LOW' ? 'No malicious intent detected.' : 'Suspicious activity detected.');
+    decisionTitle.innerText = model.title;
   }
 
-  // AI Explanation & Mismatch
+  // AI Explanation & Signals
   const explanationCard = document.getElementById('explanationCard');
   const detectedSummary = document.getElementById('detectedSummary');
   const whyItMatters = document.getElementById('whyItMatters');
+  const dynamicSignalsContainer = document.getElementById('dynamicSignalsContainer');
   
   if (explanationCard) {
-    explanationCard.style.display = (severity === 'LOW') ? 'none' : 'block';
+    explanationCard.style.display = (model.severity === 'LOW') ? 'none' : 'block';
   }
-  if (detectedSummary) detectedSummary.innerText = decision.why_it_matters || risk.human_explanation || '';
-  if (whyItMatters) whyItMatters.innerText = decision.user_instruction || risk.recommended_action || '';
+  
+  if (detectedSummary) detectedSummary.innerText = model.explanation;
+  if (whyItMatters) whyItMatters.innerText = model.action;
+
+  if (dynamicSignalsContainer) {
+    dynamicSignalsContainer.innerHTML = '';
+    const friendlySignalMap = {
+      'urgency_indicator': { title: 'Urgency', desc: 'The message pressures you to act immediately without thinking.' },
+      'authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
+      'sms_authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
+      'digital_arrest_scam': { title: 'Digital Arrest Threat', desc: 'Uses fear tactics claiming illegal activity to demand money.' },
+      'financial_reward': { title: 'Fake Reward', desc: 'Promises an unexpected reward or refund to trick you into paying.' },
+      'upi_fraud_pattern': { title: 'UPI Collect Fraud', desc: 'Disguises a payment request as a refund or prize receipt.' }
+    };
+
+    model.signals.forEach(sig => {
+      if (friendlySignalMap[sig]) {
+        const div = document.createElement('div');
+        div.className = 'signal-item';
+        div.innerHTML = `<div class="signal-title">⚠ ${friendlySignalMap[sig].title}</div>
+                         <div class="signal-desc">${friendlySignalMap[sig].desc}</div>`;
+        dynamicSignalsContainer.appendChild(div);
+      }
+    });
+  }
 
   const mismatchCard = document.getElementById('mismatchCard');
   if (mismatchCard) {
-    if (mismatch.status === 'DETECTED') {
+    if (model.mismatch.detected) {
       mismatchCard.style.display = 'block';
-      document.getElementById('statedIntent').innerText = mismatch.stated_intent || 'RECEIVE FUNDS';
-      document.getElementById('actualPayment').innerText = mismatch.actual_payment_action || 'OUTBOUND DEBIT';
-      document.getElementById('paymentDirection').innerText = mismatch.payment_direction || 'OUTBOUND_DEBIT';
+      document.getElementById('statedIntent').innerText = model.mismatch.statedIntent || 'RECEIVE FUNDS';
+      document.getElementById('actualPayment').innerText = model.mismatch.actualAction || 'OUTBOUND DEBIT';
+      document.getElementById('paymentDirection').innerText = model.mismatch.direction || 'OUTBOUND_DEBIT';
     } else {
       mismatchCard.style.display = 'none';
     }
   }
 
-
   // Attacker Objective
   const objectiveCard = document.getElementById('objectiveCard');
   const objectiveDesc = document.getElementById('attackerObjectiveDesc');
   if (objectiveCard && objectiveDesc) {
-    if (severity === 'CRITICAL' || severity === 'HIGH') {
+    if ((model.severity === 'CRITICAL' || model.severity === 'HIGH') && model.adaptiveIntel.objective) {
       objectiveCard.style.display = 'block';
-      // Attempt to extract objective from explanation or summary
-      let objText = risk.human_explanation || decision.detected_summary || 'Convince you to authorize a fraudulent payment.';
-      
-      // If it's a mismatch, the objective is usually tricking the payment direction
-      if (mismatch && mismatch.status === 'DETECTED') {
-        objText = 'Get you to authorize a payment by making you believe you are receiving a refund or reward.';
-      }
-      objectiveDesc.innerText = objText;
+      objectiveDesc.innerText = model.adaptiveIntel.objective;
     } else {
       objectiveCard.style.display = 'none';
     }
@@ -222,18 +290,19 @@ function renderScanResponse(data) {
   // Next Likely Step
   const nextStepCard = document.getElementById('nextStepCard');
   const nextStepDesc = document.getElementById('nextStepDesc');
-  let predictedNext = null;
-  const nodes = scamChain.nodes || [];
-  if (nodes.length > 2) {
-      // Index 2+ are considered predictions in the current frontend logic
-      predictedNext = nodes[2];
-  }
   
   if (nextStepCard && nextStepDesc) {
-    if (predictedNext) {
-      nextStepCard.style.display = 'block';
+    // If backend provides a predicted next step, use it, else synthesize from scam chain
+    let nextText = model.adaptiveIntel.nextStep;
+    if (!nextText && model.chainNodes.length > 2) {
+      const predictedNext = model.chainNodes[2];
       let typeText = predictedNext.node_type ? predictedNext.node_type.replace(/_/g, ' ') : 'ACTION';
-      nextStepDesc.innerText = 'The attacker will likely try to execute a ' + typeText + ' (' + (predictedNext.entity_reference || predictedNext.node_id) + '). Do not proceed.';
+      nextText = 'The attacker will likely try to execute a ' + typeText + ' (' + (predictedNext.entity_reference || predictedNext.node_id) + '). Do not proceed.';
+    }
+
+    if (nextText && (model.severity === 'CRITICAL' || model.severity === 'HIGH')) {
+      nextStepCard.style.display = 'block';
+      nextStepDesc.innerText = nextText;
     } else {
       nextStepCard.style.display = 'none';
     }
@@ -244,16 +313,30 @@ function renderScanResponse(data) {
   const chainContainer = document.getElementById('adaptiveChainContainer');
   if (chainCard && chainContainer) {
     chainContainer.innerHTML = '';
-    const nodes = scamChain.nodes || [];
-    if (nodes.length > 0) {
+    if (model.chainNodes.length > 0) {
       chainCard.style.display = 'block';
-      nodes.forEach((node, idx) => {
-        const isDetected = idx < 2 || node.node_type === 'MESSAGE' || node.node_type === 'UPI_REQUEST';
+      model.chainNodes.forEach((node, idx) => {
+        // Distinguish OBSERVED vs INFERRED vs PREDICTED
+        // Index 0 is typically OBSERVED. Index 1 INFERRED. Index 2+ PREDICTED.
+        let status = 'OBSERVED';
+        let icon = '✓';
+        let cls = 'detected';
+        
+        if (idx === 1) {
+          status = 'INFERRED';
+          icon = '◉';
+          cls = 'inferred';
+        } else if (idx > 1) {
+          status = 'PREDICTED';
+          icon = '→';
+          cls = 'predicted';
+        }
+
         const div = document.createElement('div');
-        div.className = 'chain-node ' + (isDetected ? 'detected' : 'predicted');
+        div.className = 'chain-node ' + cls;
         div.innerHTML = '<div class="chain-dot"></div>' +
           '<div class="chain-node-title">' + escapeHtml(node.entity_reference || node.node_id) + '</div>' +
-          '<div class="chain-node-desc">' + escapeHtml(node.node_type) + (isDetected ? ' ✓ Detected' : ' → Likely next') + '</div>';
+          '<div class="chain-node-desc">' + escapeHtml(node.node_type) + ' ' + icon + ' ' + status + '</div>';
         chainContainer.appendChild(div);
       });
     } else {
@@ -266,10 +349,9 @@ function renderScanResponse(data) {
   const evidenceContainer = document.getElementById('evidenceContainer');
   if (evidenceCard && evidenceContainer) {
     evidenceContainer.innerHTML = '';
-    const items = evidencePack.items || [];
-    if (items.length > 0) {
+    if (model.evidenceItems.length > 0) {
       evidenceCard.style.display = 'block';
-      items.forEach(item => {
+      model.evidenceItems.forEach(item => {
         const div = document.createElement('div');
         div.style.marginBottom = '0.5rem';
         div.innerHTML = '<strong>' + escapeHtml(item.evidence_type) + ':</strong> ' + escapeHtml(item.data || '');
@@ -281,9 +363,8 @@ function renderScanResponse(data) {
   }
 
   // Trigger Incident
-  fetchIncidentRecommendation(data);
+  fetchIncidentRecommendation(data); // Pass raw data here or we can refactor incident later
 }
-
 async function fetchIncidentRecommendation(scanResponse) {
   const card = document.getElementById('incidentCard');
   const loading = document.getElementById('incidentLoading');
@@ -489,10 +570,11 @@ function saveToHistory(payload, response) {
     const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
     if (stored) history = JSON.parse(stored);
 
+    let cleanVal = (payload.content_value || '').replace(/\b\d{4,6}\b/g, '[REDACTED PIN/OTP]');
     const historyEntry = {
       id: response.scan_id,
       timestamp: new Date().toISOString(),
-      payloadSummary: (payload.content_value || '').substring(0, 60),
+      payloadSummary: cleanVal.substring(0, 50) + (cleanVal.length > 50 ? '...' : ''),
       severity: response.risk_assessment?.risk_severity || 'LOW',
       score: response.risk_assessment?.risk_score || 0,
       summary: response.protection_decision?.detected_summary || 'Scan Completed',
@@ -562,11 +644,13 @@ function viewHistoryItem(item) {
   if (!item || !item.fullResponse) return;
   switchTab('scanner');
 
-  const emptyState = document.getElementById('emptyState');
+  const desktopEmptyState = document.getElementById('desktopEmptyState');
+  const resultsPanel = document.getElementById('resultsPanel');
   const loadingState = document.getElementById('loadingState');
   const errorState = document.getElementById('errorState');
 
-  if (emptyState) emptyState.style.display = 'none';
+  if (desktopEmptyState) desktopEmptyState.style.display = 'none';
+  if (resultsPanel) resultsPanel.style.display = 'block';
   if (loadingState) loadingState.style.display = 'none';
   if (errorState) errorState.style.display = 'none';
 
@@ -737,4 +821,28 @@ async function submitUserReport() {
       btn.innerText = 'SUBMIT REPORT';
     }
   }
+}
+
+function clearScanner() {
+  const valueArea = document.getElementById('contentValueArea');
+  if (valueArea) {
+    valueArea.value = '';
+    valueArea.focus();
+  }
+}
+
+function resetScanner() {
+  clearScanner();
+  const emptyState = document.getElementById('emptyState');
+  const resultContent = document.getElementById('resultContent');
+  const errorState = document.getElementById('errorState');
+  
+  const resultsPanel = document.getElementById('resultsPanel');
+  if (resultsPanel) resultsPanel.style.display = 'none';
+  const desktopEmptyState = document.getElementById('desktopEmptyState');
+  if (desktopEmptyState) desktopEmptyState.style.display = 'none';
+  if (resultContent) resultContent.style.display = 'none';
+  if (errorState) errorState.style.display = 'none';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }

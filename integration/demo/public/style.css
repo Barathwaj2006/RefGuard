@@ -410,7 +410,7 @@ textarea {
   top: 4px;
 }
 
-.chain-node.predicted .chain-dot {
+.chain-node.inferred .chain-dot { background: var(--color-medium); } .chain-node.inferred .chain-node-desc { color: var(--color-medium); } .chain-node.predicted .chain-dot {
   border-color: var(--text-muted);
   border-style: dashed;
   background: transparent;
