@@ -12,6 +12,7 @@ import {
 import { communityStore } from './communityStore';
 import { extractTradingFraudSignals } from './extractors/tradingFraudExtractor';
 import { extractUpiFraudSignals } from './extractors/upiFraudExtractor';
+import { extractPaymentMismatch } from './extractors/paymentMismatchExtractor';
 import { sanitizeText } from './extractors/piiSanitizer';
 import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
 import { EvidenceAggregator } from './evidenceAggregator';
@@ -125,15 +126,19 @@ export class AnalyzerService {
     const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
     const hasSuspiciousTLD = entities.url ? /\.(tk|xyz|top|work|click|gq|ml|cf)\b/i.test(entities.url) : false;
     const isLegitimateMerchant = entities.vpa ? /(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
-    const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund)\b/i.test(text);
 
-    // Mismatch Detection
-    const isMismatch = hasRewardClaims && entities.isCollectRequest;
+    // --- Payment Intent Mismatch Detection ---
+    const mismatchResult = extractPaymentMismatch(text, entities.isCollectRequest);
+    const isMismatch = mismatchResult.isMismatch;
 
     if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
     if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
-    if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims');
-    if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)');
+    if (mismatchResult.statedIntent !== 'STANDARD_PAYMENT') {
+      evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'STATED_INTENT', `Stated Intent: ${mismatchResult.statedIntent}`);
+    }
+    if (isMismatch) {
+      evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', `Payment Intent Mismatch (${mismatchResult.statedIntent} vs ${mismatchResult.actualAction})`);
+    }
 
     if (tradingSignals.hasTradingFraudSignals) {
       evidenceAggregator.addEvidence('RISK_SIGNAL', 'TRADING', `Trading Fraud Signals: ${tradingSignals.matchedKeywords.join(', ')}`);
@@ -309,7 +314,9 @@ export class AnalyzerService {
               ? 'Social Engineering / Impersonation Fraud Detected'
               : 'Known Scam Signature Identified',
         why_it_matters: isMismatch
-          ? `You were told you are receiving money/prize, but this UPI request will DEBIT${amountStr} from your account.`
+          ? (mismatchResult.statedIntent === 'ACCOUNT_VERIFICATION'
+            ? `You were told this is to verify your account, but this action will actually DEBIT${amountStr} from your account.`
+            : `You were told you are receiving money/prize/refund, but this action will actually DEBIT${amountStr} from your account.`)
           : isTradingScam
             ? 'This message contains multiple investment fraud signals including fake returns, unauthorized broker references, or fraudulent platform links.'
             : isUpiScam
@@ -371,14 +378,14 @@ export class AnalyzerService {
     // Mismatch Object
     const paymentIntentMismatch: PaymentIntentMismatch = {
       status: isMismatch ? 'DETECTED' : 'NOT_DETECTED',
-      stated_intent: hasRewardClaims ? 'RECEIVE_FUNDS_OR_PRIZE' : 'STANDARD_PAYMENT',
-      actual_payment_action: entities.isCollectRequest ? 'OUTBOUND_DEBIT_COLLECT' : 'NONE',
+      stated_intent: mismatchResult.statedIntent,
+      actual_payment_action: mismatchResult.actualAction,
       payment_direction: entities.isCollectRequest ? 'OUTBOUND_DEBIT' : 'NONE',
       amount: entities.amount,
       recipient_vpa: entities.vpa,
-      confidence: isMismatch ? 0.95 : 0.8,
+      confidence: mismatchResult.confidence,
       provenance: 'rule_engine',
-      evidence: evidenceAggregator.getEvidenceIdsByCategories(['PAYMENT', 'REWARD', 'INTENT_MISMATCH'])
+      evidence: evidenceAggregator.getEvidenceIdsByCategories(['PAYMENT', 'INTENT_MISMATCH', 'STATED_INTENT'])
     };
 
     // Scam Chain DAG
@@ -550,8 +557,12 @@ export class AnalyzerService {
            confidence_intel = 0.8;
         }
       } else if (isMismatch) {
-        archetype = 'Payment Intent Mismatch (Refund/Prize Scam)';
-        stages_sequence = ['Notification of Prize/Refund', 'Link Clicks/App Open', 'UPI PIN Entry', 'Funds Deducted'];
+        archetype = mismatchResult.statedIntent === 'ACCOUNT_VERIFICATION'
+          ? 'Payment Intent Mismatch (Verification Scam)'
+          : 'Payment Intent Mismatch (Refund/Prize Scam)';
+        stages_sequence = mismatchResult.statedIntent === 'ACCOUNT_VERIFICATION'
+          ? ['Fake Verification Notice', 'Link Clicks/App Open', 'UPI PIN Entry', 'Funds Deducted']
+          : ['Notification of Prize/Refund', 'Link Clicks/App Open', 'UPI PIN Entry', 'Funds Deducted'];
         total_stages = 4;
         current_stage = 'UPI PIN Entry';
         stage_title = 'PIN Entry';
