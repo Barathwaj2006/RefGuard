@@ -47,8 +47,8 @@ const DIGITAL_ARREST_PATTERNS = [
 
 // Telecom / KYC (SIM Block, 5G upgrade, etc.)
 const TELECOM_KYC_PATTERNS = [
-  /\b(?:jio|airtel|vi|bsnl|vodafone)\s*(?:sim|number)\s*(?:will\s*be\s*)?(?:blocked|deactivated|suspended)\b/i,
-  /\b(?:update|complete)\s*(?:kyc|e-kyc|document)\s*(?:within|in|before)\s*\d+\s*(?:hours|hrs|mins|minutes)\b/i,
+  /\b(?:jio|airtel|vi|bsnl|vodafone).*?(?:sim|number|service|account).*?(?:blocked|deactivated|suspended)\b/i,
+  /\b(?:update|complete|pending)\s*(?:kyc|e-kyc|document).*?(?:blocked|deactivated|suspended|download)\b/i,
   /\b(?:upgrade\s*to\s*5g|claim\s*free\s*data)\s*(?:click|link|download)\b/i,
   /\b(?:forward\s*this|dial|call)\s*(?:\*\d+#?|\*401\*[0-9]+)\b/i // Call forwarding scam
 ];

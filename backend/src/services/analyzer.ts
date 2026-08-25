@@ -384,19 +384,21 @@ export class AnalyzerService {
     // Scam Chain DAG
     const scamChain: ScamChain = {
       nodes: [
-        { node_id: 'node_msg', node_type: 'MESSAGE', entity_reference: `${normalizedSource} Message`, evidence_references: evidenceAggregator.getEvidenceIdsByCategories(['ORIGINAL', 'SOURCE']) },
-        ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, entity_reference: entities.url, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('URL') }] : []),
-        ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, entity_reference: entities.vpa, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('UPI') }] : []),
-        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, entity_reference: 'UPI Debit', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('PAYMENT') }] : []),
-        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, entity_reference: 'Trading Fraud Signal', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('TRADING') }] : []),
-        ...(upiSignals.hasUpiFraudSignals ? [{ node_id: 'node_social_eng', node_type: 'MESSAGE' as const, entity_reference: 'Social Engineering Pattern', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : [])
+        { node_id: 'node_msg', node_type: 'MESSAGE', state: 'OBSERVED', confidence: 1.0, provenance: 'extraction', entity_reference: `${normalizedSource} Message`, evidence_references: evidenceAggregator.getEvidenceIdsByCategories(['ORIGINAL', 'SOURCE']) },
+        ...(entities.url ? [{ node_id: 'node_url', node_type: 'SHORT_LINK' as const, state: 'OBSERVED' as const, confidence: 1.0, provenance: 'extraction', entity_reference: entities.url, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('URL') }] : []),
+        ...(entities.vpa ? [{ node_id: 'node_upi', node_type: 'UPI_REQUEST' as const, state: 'OBSERVED' as const, confidence: 1.0, provenance: 'extraction', entity_reference: entities.vpa, evidence_references: evidenceAggregator.getEvidenceIdsByCategory('UPI') }] : []),
+        ...(entities.isCollectRequest ? [{ node_id: 'node_pay', node_type: 'PAYMENT_ACTION' as const, state: 'OBSERVED' as const, confidence: 0.95, provenance: 'intent_analysis', entity_reference: 'UPI Debit', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('PAYMENT') }] : []),
+        ...(tradingSignals.hasTradingFraudSignals ? [{ node_id: 'node_trading', node_type: 'REFERRAL' as const, state: 'INFERRED' as const, confidence: 0.85, provenance: 'trading_fraud_extractor', entity_reference: 'Trading Fraud Signal', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('TRADING') }] : []),
+        ...(upiSignals.hasUpiFraudSignals ? [{ node_id: 'node_social_eng', node_type: 'MESSAGE' as const, state: 'INFERRED' as const, confidence: 0.90, provenance: 'upi_fraud_extractor', entity_reference: 'Social Engineering Pattern', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : []),
+        ...(entities.hasOtpSolicitation ? [{ node_id: 'node_account_takeover', node_type: 'ACCOUNT_TAKEOVER' as const, state: 'PREDICTED' as const, confidence: 0.75, provenance: 'threat_model', entity_reference: 'Account Compromise', evidence_references: [] }] : [])
       ],
       edges: [
         ...(entities.url ? [{ from_node: 'node_msg', to_node: 'node_url', relationship: 'CONTAINS_LINK', confidence: 0.95, provenance: 'extraction', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('URL') }] : []),
         ...(entities.vpa ? [{ from_node: entities.url ? 'node_url' : 'node_msg', to_node: 'node_upi', relationship: 'INITIATES_UPI', confidence: 0.9, provenance: 'extraction', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('UPI') }] : []),
         ...(entities.isCollectRequest ? [{ from_node: 'node_upi', to_node: 'node_pay', relationship: 'TRIGGERS_DEBIT', confidence: 0.95, provenance: 'intent_analysis', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('PAYMENT') }] : []),
         ...(tradingSignals.hasTradingFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_trading', relationship: 'PROMOTES_TRADING_FRAUD', confidence: 0.85, provenance: 'trading_fraud_extractor', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('TRADING') }] : []),
-        ...(upiSignals.hasUpiFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_social_eng', relationship: 'EMPLOYS_SOCIAL_ENGINEERING', confidence: 0.90, provenance: 'upi_fraud_extractor', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : [])
+        ...(upiSignals.hasUpiFraudSignals ? [{ from_node: 'node_msg', to_node: 'node_social_eng', relationship: 'EMPLOYS_SOCIAL_ENGINEERING', confidence: 0.90, provenance: 'upi_fraud_extractor', evidence_references: evidenceAggregator.getEvidenceIdsByCategory('SOCIAL_ENG') }] : []),
+        ...(entities.hasOtpSolicitation ? [{ from_node: 'node_msg', to_node: 'node_account_takeover', relationship: 'INTENDS_TO_COMPROMISE', confidence: 0.80, provenance: 'threat_model', evidence_references: [] }] : [])
       ]
     };
 
@@ -523,14 +525,25 @@ export class AnalyzerService {
            archetype = 'UPI / Payment Fraud';
            stages_sequence = ['Initial Message', 'Urgency/Fear Tactic', 'Payment Request', 'Funds Stolen'];
            total_stages = 4;
-           current_stage = 'Urgency/Fear Tactic';
-           stage_title = 'Urgency Tactic';
-           stage_index = 2;
-           previous_likely_stage = 'Initial Message';
-           next_likely_stage = 'Payment Request';
-           next_likely_step = 'They will send a UPI collect request or ask for your UPI PIN.';
-           inferred_intent.push('Induce panic to force quick action');
-           predicted_next_steps.push('Attacker will send a UPI collect request.');
+           if (entities.isCollectRequest) {
+             current_stage = 'Payment Request';
+             stage_title = 'Payment Request';
+             stage_index = 3;
+             previous_likely_stage = 'Urgency/Fear Tactic';
+             next_likely_stage = 'Funds Stolen';
+             next_likely_step = 'If you approve the request, your funds will be immediately deducted.';
+             inferred_intent.push('Initiate unauthorized debit');
+             predicted_next_steps.push('Victim approves request and funds are stolen.');
+           } else {
+             current_stage = 'Urgency/Fear Tactic';
+             stage_title = 'Urgency Tactic';
+             stage_index = 2;
+             previous_likely_stage = 'Initial Message';
+             next_likely_stage = 'Payment Request';
+             next_likely_step = 'They will send a UPI collect request or ask for your UPI PIN.';
+             inferred_intent.push('Induce panic to force quick action');
+             predicted_next_steps.push('Attacker will send a UPI collect request.');
+           }
            attacker_objective = 'Steal funds via UPI transaction.';
            user_risk = 'High.';
            recommended_action = 'Do not enter your UPI PIN. Do not approve unknown collect requests.';

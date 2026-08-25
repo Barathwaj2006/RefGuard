@@ -93,4 +93,44 @@ describe('Adaptive Risk-Evidence Aggregation', () => {
     expect(res.body.evidence_pack).toBeDefined();
     expect(res.body.evidence_pack.items.length).toBeGreaterThanOrEqual(1); // At least ORIGINAL_CONTENT
   });
+
+  it('should guarantee evidence graph integrity (no dangling references)', async () => {
+    const payload = {
+      content_type: 'TEXT',
+      content_value: 'Urgent: Please pay electricity bill to avoid disconnection. upi://pay?pa=scammer@ybl&am=5000',
+      source_context: 'com.android.mms',
+      timestamp: new Date().toISOString()
+    };
+
+    const res = await request(app)
+      .post('/api/v1/scan')
+      .send(payload)
+      .expect(200);
+
+    const evidenceIds = new Set(res.body.evidence_pack.items.map((i: any) => i.evidence_id));
+    
+    // Check risk assessment
+    res.body.risk_assessment.evidence_references?.forEach((ref: string) => {
+      expect(evidenceIds.has(ref)).toBe(true);
+    });
+
+    // Check scam chain nodes
+    res.body.scam_chain?.nodes?.forEach((node: any) => {
+      node.evidence_references?.forEach((ref: string) => {
+        expect(evidenceIds.has(ref)).toBe(true);
+      });
+    });
+
+    // Check scam chain edges
+    res.body.scam_chain?.edges?.forEach((edge: any) => {
+      edge.evidence_references?.forEach((ref: string) => {
+        expect(evidenceIds.has(ref)).toBe(true);
+      });
+    });
+
+    // Check adaptive scam intelligence
+    res.body.adaptive_scam_intelligence?.observed_evidence?.forEach((ref: string) => {
+      expect(evidenceIds.has(ref)).toBe(true);
+    });
+  });
 });

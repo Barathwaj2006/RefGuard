@@ -37,7 +37,10 @@ export interface PaymentIntentMismatch {
 export interface ScamChain {
   nodes: Array<{
     node_id: string;
-    node_type: 'MESSAGE' | 'REFERRAL' | 'SHORT_LINK' | 'REDIRECT' | 'LANDING_PAGE' | 'UPI_REQUEST' | 'PAYMENT_ACTION';
+    node_type: 'MESSAGE' | 'REFERRAL' | 'SHORT_LINK' | 'REDIRECT' | 'LANDING_PAGE' | 'UPI_REQUEST' | 'PAYMENT_ACTION' | 'ACCOUNT_TAKEOVER';
+    state: 'OBSERVED' | 'INFERRED' | 'PREDICTED';
+    confidence: number;
+    provenance: string;
     entity_reference?: string;
     evidence_references?: string[];
   }>;
