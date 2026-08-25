@@ -24,7 +24,7 @@
   <main class="container">
     
     <!-- SCANNER VIEW -->
-    <div id="workspaceGrid" class="scanner-container">
+    <div id="workspaceGrid" class="scanner-container" style="display: flex;">
       
       <section class="presets-section" id="presetsSection">
         <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Quick Test Scenarios</h3>
@@ -205,7 +205,7 @@
     </div>
 
     <!-- HISTORY VIEW -->
-    <div class="scanner-container hidden" id="historyView">
+    <div class="scanner-container" id="historyView" style="display: none;">
       <div class="input-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h2>Scan History</h2>
         <button class="secondary-btn" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="clearHistory()">Clear</button>
@@ -214,7 +214,7 @@
     </div>
 
     <!-- INTEL VIEW -->
-    <div class="scanner-container hidden" id="intelView">
+    <div class="scanner-container" id="intelView" style="display: none;">
       <div class="input-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h2>Scams Trending Now</h2>
         <button class="secondary-btn" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="loadIntel()">Refresh</button>

@@ -85,6 +85,12 @@ async function executeScan() {
     setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Checking payment intent...'; }, 600);
     setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Analyzing heuristics...'; }, 1200);
   }
+  const loadingText = document.getElementById('loadingText');
+  if (loadingText) {
+    loadingText.innerText = 'Scanning for threats...';
+    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Checking payment intent...'; }, 600);
+    setTimeout(() => { if (loadingState.style.display === 'block') loadingText.innerText = 'Analyzing heuristics...'; }, 1200);
+  }
 
   const scanBtn = document.getElementById('scanBtn');
   if (scanBtn) scanBtn.disabled = true;
@@ -418,7 +424,7 @@ function switchTab(tab) {
   if (tab === 'scanner') {
     if (navScanner) navScanner.classList.add('active');
     if (presetsSection) presetsSection.style.display = 'block';
-    if (workspaceGrid) workspaceGrid.style.display = 'grid';
+    if (workspaceGrid) workspaceGrid.style.display = 'flex';
   } else if (tab === 'history') {
     if (navHistory) navHistory.classList.add('active');
     if (historyView) historyView.style.display = 'block';
