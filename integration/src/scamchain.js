@@ -9,11 +9,14 @@ class ScamChainBuilder {
     const edges = [];
     let nodeIdCounter = 1;
 
-    const makeNode = (type, entityRef, evRefs) => {
+    const makeNode = (type, entityRef, evRefs, state = 'OBSERVED', confidence = 1.0, provenance = 'SYSTEM') => {
       const node_id = 'node_' + (nodeIdCounter++);
       nodes.push({
         node_id,
         node_type: type,
+        state,
+        confidence,
+        provenance,
         entity_reference: entityRef || undefined,
         evidence_references: evRefs && evRefs.length > 0 ? evRefs : undefined
       });
@@ -32,12 +35,12 @@ class ScamChainBuilder {
     };
 
     // Node 1: Entry Message / Content
-    const rootNode = makeNode('MESSAGE', extractedData.contentType, [evidenceIds.original]);
+    const rootNode = makeNode('MESSAGE', extractedData.contentType, [evidenceIds.original], 'OBSERVED', 1.0, 'extraction');
     let prevNode = rootNode;
 
     // Node 2: Referral Code if present
     if (extractedData.referralCodes.length > 0) {
-      const refNode = makeNode('REFERRAL', extractedData.referralCodes[0], evidenceIds.referrals);
+      const refNode = makeNode('REFERRAL', extractedData.referralCodes[0], evidenceIds.referrals, 'OBSERVED', 1.0, 'extraction');
       makeEdge(prevNode, refNode, 'CONTAINS_REFERRAL_CODE', 0.98, 'STATIC_EXTRACTION', evidenceIds.referrals);
       prevNode = refNode;
     }
@@ -46,7 +49,7 @@ class ScamChainBuilder {
     if (extractedData.urls.length > 0) {
       const u = extractedData.urls[0];
       const urlType = u.isShortLink ? 'SHORT_LINK' : 'LANDING_PAGE';
-      const urlNode = makeNode(urlType, u.fullUrl, evidenceIds.urls);
+      const urlNode = makeNode(urlType, u.fullUrl, evidenceIds.urls, 'OBSERVED', 1.0, 'extraction');
       makeEdge(prevNode, urlNode, u.isShortLink ? 'EXPANDS_TO' : 'DIRECTS_USER_TO', 0.95, 'URL_ANALYSIS', evidenceIds.urls);
       prevNode = urlNode;
     }
@@ -54,13 +57,13 @@ class ScamChainBuilder {
     // Node 4: UPI Collect / Payment Request
     if (extractedData.vpas.length > 0 || extractedData.upi) {
       const vpa = extractedData.vpas[0] || (extractedData.upi ? extractedData.upi.pa : 'UPI_COLLECT');
-      const upiNode = makeNode('UPI_REQUEST', vpa, evidenceIds.vpas);
+      const upiNode = makeNode('UPI_REQUEST', vpa, evidenceIds.vpas, 'OBSERVED', 1.0, 'extraction');
       makeEdge(prevNode, upiNode, 'TRIGGERS_PAYMENT_COLLECT', 0.92, 'UPI_PROTOCOL_TRACING', evidenceIds.vpas);
       prevNode = upiNode;
 
       // Node 5: Payment Action (Outbound Debit)
       if (mismatch.status === 'DETECTED' || mismatch.payment_direction === 'OUTBOUND_DEBIT') {
-        const actionNode = makeNode('PAYMENT_ACTION', 'OUTBOUND_DEBIT:' + (mismatch.amount || 'VARIABLE'), evidenceIds.threats);
+        const actionNode = makeNode('PAYMENT_ACTION', 'OUTBOUND_DEBIT:' + (mismatch.amount || 'VARIABLE'), evidenceIds.threats, 'PREDICTED', 0.95, 'intent_analysis');
         makeEdge(prevNode, actionNode, 'EXECUTES_UNAUTHORIZED_DEBIT', 0.96, 'INTENT_MISMATCH_DETECTION', evidenceIds.threats);
       }
     }
