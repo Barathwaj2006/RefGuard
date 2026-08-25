@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RiskAssessment",
   "description": "Composite risk score and explainable assessment details",

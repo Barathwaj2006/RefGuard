@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "PaymentIntentMismatch",
   "description": "Analysis comparing stated intent against actual payment mechanism action",
