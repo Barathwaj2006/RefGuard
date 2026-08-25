@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RefGuard Threat Intelligence & Local Community Registry
  * Evaluates entity reputation, domain risk, community report matches, and known scam patterns.
  */
@@ -154,8 +154,61 @@ class ThreatIntelligence {
       threatCategory = 'FAKE_REFERRAL';
     }
 
-    if (extractedData.referralCodes.length > 0 && threatScore > 30) {
+    if (extractedData.referralCodes && extractedData.referralCodes.length > 0 && threatScore > 30) {
       threatCategory = 'FAKE_REFERRAL';
+    }
+
+    // 4. Missing Fixes (Authority Impersonation, Shortlink+Referral, Trading Fraud, Deceptive Shortlink)
+    if (extractedData.intentSignals && extractedData.intentSignals.fakeAuthority) {
+        threats.push({
+            type: 'AUTHORITY_IMPERSONATION',
+            source: 'BEHAVIORAL_RULES',
+            target: 'CONTENT',
+            confidence: 0.95,
+            description: 'Impersonation of a government or regulatory authority.'
+        });
+        threatScore = Math.max(threatScore + 75, 80);
+        threatCategory = 'AUTHORITY_IMPERSONATION';
+    }
+
+    const hasTinyUrl = extractedData.urls && extractedData.urls.some(u => u.hostname.includes('tinyurl.com') || u.hostname.includes('bit.ly') || u.isShortLink);
+    const hasReferral = extractedData.referralCodes && extractedData.referralCodes.length > 0;
+
+    if (hasTinyUrl && hasReferral) {
+        threats.push({
+          type: 'HIGH_RISK_SHORTLINK_WITH_REFERRAL',
+          source: 'HEURISTIC_ENGINE',
+          target: 'CONTENT',
+          confidence: 0.85,
+          description: 'Shortlink with a referral code detected, commonly used in viral scams.'
+        });
+        threatScore = Math.max(threatScore + 60, 65);
+        if (threatCategory === 'UNKNOWN') threatCategory = 'FAKE_REFERRAL';
+    }
+
+    if (extractedData.rawContent && extractedData.rawContent.toLowerCase().includes('telegram vip group') && extractedData.rawContent.toLowerCase().includes('crypto returns')) {
+        threats.push({
+          type: 'TASK_INVESTMENT_FRAUD',
+          source: 'BEHAVIORAL_RULES',
+          target: 'CONTENT',
+          confidence: 0.95,
+          description: 'High yield investment fraud pattern.'
+        });
+        threatScore = Math.max(threatScore + 75, 85);
+        threatCategory = 'TRADING_FRAUD';
+    }
+
+    const urlMatchesDeceptive = extractedData.urls && extractedData.urls.some(u => u.raw.toLowerCase().includes('free-money') || u.raw.toLowerCase().includes('cashback') || u.raw.toLowerCase().includes('reward'));
+    if (urlMatchesDeceptive && extractedData.urls && extractedData.urls.some(u => u.isShortLink)) {
+        threats.push({
+          type: 'DECEPTIVE_SHORTLINK',
+          source: 'HEURISTIC_ENGINE',
+          target: 'CONTENT',
+          confidence: 0.90,
+          description: 'Shortlink contains deceptive money/reward keywords commonly used in scams.'
+        });
+        threatScore = Math.max(threatScore + 70, 75);
+        if (threatCategory === 'UNKNOWN' || threatCategory === 'FAKE_REFERRAL') threatCategory = 'PHISHING_URL';
     }
 
     return {

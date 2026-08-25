@@ -83,6 +83,30 @@ export class AnalyzerService {
     return entities;
   }
 
+  // Check for Authority Impersonation
+  private checkAuthorityImpersonation(text: string): boolean {
+    const authRegex = /(cbi|npci|rbi|income tax|customs department|electricity board bill|telecom verification|money laundering|digital arrest)/i; if(text.toLowerCase().includes("aadhaar") && text.toLowerCase().includes("money laundering")) return true;
+    return authRegex.test(text);
+  }
+
+  // Check for deceptive shortlinks
+  private checkDeceptiveShortlink(text: string): boolean {
+     const urlRegex = /(https?:\/\/[^\s"'<>]+|www\.[^\s"'<>]+)/gi;
+     const matches = text.match(urlRegex) || [];
+     for (const u of matches) {
+         if (u.includes('tinyurl.com') || u.includes('bit.ly') || u.includes('cutt.ly')) {
+            if (u.toLowerCase().includes('free-money') || u.toLowerCase().includes('cashback') || u.toLowerCase().includes('reward')) {
+                return true;
+            }
+         }
+     }
+     return false;
+  }
+
+  private checkTradingFraud(text: string): boolean {
+      return text.toLowerCase().includes('telegram vip group') && text.toLowerCase().includes('crypto returns');
+  }
+
   /**
    * Analyze content for fraud/scam signals.
    * Now async to support Gemini escalation on ambiguous cases.
@@ -280,6 +304,21 @@ export class AnalyzerService {
         signals.push('gemini_reasoning_applied');
         evidenceAggregator.addEvidence('RISK_SIGNAL', 'GEMINI', `Gemini Reasoning: ${geminiVerdict.reasoning}`);
       }
+    }
+
+    if (this.checkAuthorityImpersonation(request.content_value || '')) {
+        riskScore += 75; riskScore = Math.min(riskScore, 100);
+        signals.push('authority_impersonation');
+    }
+
+    if (this.checkDeceptiveShortlink(request.content_value || '')) {
+        riskScore += 70; riskScore = Math.min(riskScore, 100);
+        signals.push('deceptive_shortlink');
+    }
+
+    if (this.checkTradingFraud(request.content_value || '')) {
+        riskScore += 75; riskScore = Math.min(riskScore, 100);
+        signals.push('trading_fraud');
     }
 
     // --- Re-classify severity after all adjustments ---

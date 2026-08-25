@@ -172,7 +172,7 @@ class ExtractionEngine {
     const urgency = /(urgent|immediate|account blocked|kyc expired|within 24 hours|action required|limited offer|expires today)/i.test(lower);
     const pinPhishing = /(enter upi pin to receive|enter pin to credit|enter mpn|scan and enter pin)/i.test(lower);
     const taskScam = /(part time job|telegram task|youtube like task|daily income|investment doubling|vip level)/i.test(lower);
-    const fakeAuthority = /(npci|rbi|income tax|customs department|electricity board bill|telecom verification)/i.test(lower);
+    const fakeAuthority = /(npci|cbi|rbi|income tax|customs department|electricity board bill|telecom verification|aadhaar|money laundering|digital arrest)/i.test(lower);
 
     return {
       statedCredit,

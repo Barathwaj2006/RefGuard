@@ -332,6 +332,384 @@
       "moderation_status": "PENDING",
       "confidence": 0.9,
       "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:33:45.617Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:33:45.639Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:33:48.600Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:33:48.601Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:39:30.982Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:39:31.001Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:39:32.174Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:39:32.175Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:51:46.977Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:51:46.996Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:51:48.897Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:51:48.898Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:52:36.954Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:52:36.976Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:52:37.736Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:52:37.737Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:53:27.313Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:53:27.334Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:53:28.487Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:53:28.488Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:54:15.983Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:54:16.000Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:54:17.137Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:54:17.138Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:56:04.662Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:56:04.678Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:56:05.752Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:56:05.753Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T15:56:54.738Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T15:56:54.754Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T15:56:55.886Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T15:56:55.886Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-25T16:00:38.626Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-25T16:00:38.641Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rpt-1",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money",
+      "submission_timestamp": "2026-08-25T16:00:39.743Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test"
+    },
+    {
+      "report_id": "rpt-2",
+      "reported_indicator": "test-scam@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "Asked for money again",
+      "submission_timestamp": "2026-08-25T16:00:39.743Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "test2"
     }
   ]
 }
