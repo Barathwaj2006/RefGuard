@@ -207,6 +207,19 @@ function renderScanResponse(data) {
   const resultContent = document.getElementById('resultContent');
   if (resultContent) resultContent.style.display = 'block';
 
+  // What did I submit?
+  const origCard = document.getElementById('originalContentCard');
+  const origDisplay = document.getElementById('originalContentDisplay');
+  if (origCard && origDisplay) {
+    const origEv = model.evidenceItems.find(e => e.evidence_type === 'ORIGINAL_CONTENT');
+    if (origEv && origEv.data) {
+      origDisplay.innerText = origEv.data;
+      origCard.style.display = 'block';
+    } else {
+      origCard.style.display = 'none';
+    }
+  }
+
   // Verdict Hero
   const banner = document.getElementById('riskBanner');
   const verdictIcon = document.getElementById('verdictIcon');
@@ -299,6 +312,12 @@ function renderScanResponse(data) {
     }
   }
 
+  const dangerSection = document.getElementById('dangerSection');
+  let hasDangerSection = false;
+  if (explanationCard && explanationCard.style.display !== 'none') {
+    hasDangerSection = true;
+  }
+
   // Unified Adaptive Intelligence Card
   const adaptiveIntelCard = document.getElementById('adaptiveIntelCard');
   
@@ -339,9 +358,14 @@ function renderScanResponse(data) {
 
     if (hasIntel && (model.severity === 'CRITICAL' || model.severity === 'HIGH' || model.severity === 'MEDIUM')) {
       adaptiveIntelCard.style.display = 'block';
+      hasDangerSection = true;
     } else {
       adaptiveIntelCard.style.display = 'none';
     }
+  }
+
+  if (dangerSection) {
+      dangerSection.style.display = hasDangerSection ? 'block' : 'none';
   }
 
   // Scam Chain

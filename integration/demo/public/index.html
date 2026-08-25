@@ -80,6 +80,14 @@
         <!-- Result Content Container -->
         <div id="resultContent" style="display: none;" aria-live="polite">
           
+          <!-- WHAT DID I SUBMIT? -->
+          <div id="originalContentCard" class="result-card" style="display: none;">
+            <h3 class="card-title" style="margin-bottom: 0;">📝 WHAT DID I SUBMIT?</h3>
+            <div id="originalContentDisplay" style="margin-top: 1rem; padding: 1rem; background: var(--surface-off); border-radius: var(--radius-md); font-family: monospace; white-space: pre-wrap; word-break: break-all; color: var(--text-muted);"></div>
+          </div>
+
+          <h3 class="section-heading" style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--bg-navy); text-align: center;">WHAT DID REF GUARD FIND?</h3>
+
           <!-- Verdict Hero -->
           <div id="riskBanner" class="verdict-hero">
             <div class="verdict-icon" id="verdictIcon">🛡️</div>
@@ -97,22 +105,45 @@
             <div id="heroImmediateAction" class="immediate-action" style="display: none;"></div>
           </div>
           
-          <!-- Explanations (AI Analysis) -->
-          <div id="explanationCard" class="result-card" style="display: none;">
-            <h3 class="card-title">✨ WHY REFGUARD FLAGGED THIS</h3>
-            <div id="dynamicSignalsContainer"></div>
-          </div>
-
+          <!-- HOW ARE THESE THINGS CONNECTED? -->
           <!-- Scam Chain -->
           <div id="scamChainCard" class="result-card" style="display: none;">
-            <h3 class="card-title">🔍 WHAT IS HAPPENING?</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; font-weight: 600;">Scam Chain</p>
-            <div id="adaptiveChainContainer" class="chain-container"></div>
+            <h3 class="card-title">🔗 HOW ARE THESE THINGS CONNECTED?</h3>
+            <div id="adaptiveChainContainer" class="chain-container" style="margin-top: 1rem;"></div>
           </div>
 
-          <!-- Adaptive Intelligence -->
-          <div id="adaptiveIntelCard" class="result-card" style="display: none;">
-            <h3 class="card-title">🎯 THREAT PROFILE</h3>
+          <!-- WHAT IS THE USER TRYING TO DO? & WHAT WILL THE PAYMENT ACTUALLY DO? -->
+          <!-- Payment Intent Mismatch -->
+          <div id="mismatchCard" class="result-card mismatch-card" style="display: none;">
+            <h3 class="card-title" style="color: var(--color-critical);">🚨 PAYMENT INTENT MISMATCH</h3>
+            <div class="mismatch-grid" style="margin-top: 1rem;">
+              <div class="mismatch-item stated">
+                <div class="mismatch-label">WHAT IS THE USER TRYING TO DO?</div>
+                <div class="mismatch-value" id="statedIntent"></div>
+              </div>
+              <div class="mismatch-icon">vs</div>
+              <div class="mismatch-item actual">
+                <div class="mismatch-label">WHAT WILL THE PAYMENT ACTUALLY DO?</div>
+                <div class="mismatch-value" id="actualPayment"></div>
+              </div>
+            </div>
+            <div class="mismatch-direction">
+              Direction: <strong id="paymentDirection"></strong>
+            </div>
+          </div>
+
+          <div id="dangerSection" style="display: none;">
+            <h3 class="section-heading" style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--bg-navy); text-align: center;">WHY IS THIS DANGEROUS?</h3>
+
+            <!-- Explanations (AI Analysis) -->
+            <div id="explanationCard" class="result-card" style="display: none;">
+              <h3 class="card-title">✨ SIGNALS DETECTED</h3>
+              <div id="dynamicSignalsContainer"></div>
+            </div>
+
+            <!-- Adaptive Intelligence -->
+            <div id="adaptiveIntelCard" class="result-card" style="display: none;">
+              <h3 class="card-title">🎯 THREAT PROFILE</h3>
             <div class="intel-grid">
               <div class="intel-item" id="aiScamTypeBox">
                 <div class="intel-icon" style="color:var(--color-critical); background:var(--color-critical-bg);">🎭</div>
@@ -158,7 +189,9 @@
               </div>
             </div>
           </div>
+          </div>
 
+          <h3 class="section-heading" style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--bg-navy); text-align: center;">WHAT SHOULD I DO NOW?</h3>
           <!-- Protect & Recover (Incident Response) -->
           <div id="incidentCard" class="result-card" style="display: none;">
             <h3 class="card-title">🛡️ PROTECT YOURSELF NOW</h3>
