@@ -15,7 +15,7 @@ class ScamChainBuilder {
         node_id,
         node_type: type,
         entity_reference: entityRef || undefined,
-        evidence_references: evRefs && evRefs.length > 0 ? evRefs : undefined
+        state: "OBSERVED", confidence: 1.0, provenance: "rule_engine", evidence_references: evRefs && evRefs.length > 0 ? evRefs : undefined
       });
       return node_id;
     };

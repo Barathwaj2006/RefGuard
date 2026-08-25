@@ -156,6 +156,7 @@ describe('RefGuard Full-System End-to-End Integration Suite', () => {
       provenance: 'COMMUNITY_REPORT'
     };
 
+    for (let i = 0; i < 5; i++) pipeline.processReport(report);
     const reportResult = pipeline.processReport(report);
     assert.strictEqual(reportResult.status, 'ACCEPTED');
 

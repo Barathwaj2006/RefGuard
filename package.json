@@ -10,7 +10,7 @@
     "test:contracts": "node integration/tests/runner.js",
     "test:backend": "cd backend && npm test",
     "test:android": "cd android && ./gradlew test",
-    "test:all": "node integration/tests/runner.js && cd backend && npm test && cd ../android && ./gradlew test",
+    "test:all": "node integration/tests/runner.js && cd backend && npm test && cd ../android_native && ./gradlew test",
     "build:backend": "cd backend && npm run build",
     "lint:backend": "cd backend && npm run lint",
     "dev:backend": "cd backend && npm run dev"

@@ -122,7 +122,8 @@ export class AnalyzerService {
     const upiSignals = extractUpiFraudSignals(request.content_value);
 
     // --- Threat Detection ---
-    const isCommunityReported = entities.vpa ? communityStore.hasIndicator(entities.vpa) : (entities.url ? communityStore.hasIndicator(entities.url) : false);
+    const threatRecord = entities.vpa ? communityStore.getThreatRecord(entities.vpa) : (entities.url ? communityStore.getThreatRecord(entities.url) : null);
+    const isCommunityReported = threatRecord !== null;
     const hasSuspiciousTLD = entities.url ? /\.(tk|xyz|top|work|click|gq|ml|cf)\b/i.test(entities.url) : false;
     const isLegitimateMerchant = entities.vpa ? /(swiggy|zomato|amazon|flipkart|uber|ola)@/i.test(entities.vpa) : false;
     const hasRewardClaims = /\b(won|winner|claim|reward|cashback|lottery|prize|refund)\b/i.test(text);
@@ -130,7 +131,7 @@ export class AnalyzerService {
     // Mismatch Detection
     const isMismatch = hasRewardClaims && entities.isCollectRequest;
 
-    if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', 'Indicator is reported by the community');
+    if (isCommunityReported) evidenceAggregator.addEvidence('RISK_SIGNAL', 'COMMUNITY', `Indicator is reported by the community (Confidence: ${threatRecord.source === 'VERIFIED_SEED' ? 'High' : 'Moderate'} - ${threatRecord.reportCount} reports)`);
     if (hasSuspiciousTLD) evidenceAggregator.addEvidence('RISK_SIGNAL', 'URL_RISK', 'Suspicious Top-Level Domain');
     if (hasRewardClaims) evidenceAggregator.addEvidence('EXTRACTED_ENTITY', 'REWARD', 'Reward or Prize Claims');
     if (isMismatch) evidenceAggregator.addEvidence('RISK_SIGNAL', 'INTENT_MISMATCH', 'Payment Intent Mismatch (Reward claimed but debit requested)');
@@ -150,32 +151,56 @@ export class AnalyzerService {
     const signals: string[] = [];
 
     // --- Scoring: Existing deterministic rules ---
-    const isLegitimateDepository = /\b(cdsl|nsdl)\b/i.test(text) && !tradingSignals.depositPaymentRequest && !tradingSignals.cryptoWalletAddress && !tradingSignals.guaranteedReturnClaim && !entities.isCollectRequest && !entities.hasOtpSolicitation;
-    if (isCommunityReported) {
-      riskScore = 95;
-      riskSeverity = 'CRITICAL';
-      signals.push('community_blacklist_match');
-    } else if (isMismatch) {
-      riskScore = 90;
-      riskSeverity = 'CRITICAL';
-      signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
-    } else if (entities.hasOtpSolicitation) {
-      riskScore = 85;
-      riskSeverity = 'HIGH';
-      signals.push('credential_otp_solicitation');
-    } else if (hasSuspiciousTLD) {
-      riskScore = 80;
-      riskSeverity = 'HIGH';
-      signals.push('suspicious_tld_domain');
-    } else if (entities.urgencyWords.length > 0) {
-      riskScore = 55;
-      riskSeverity = 'MEDIUM';
-      signals.push('urgency_manipulation');
-    } else if (isLegitimateMerchant || isLegitimateDepository) {
-      riskScore = 5;
-      riskSeverity = 'LOW';
-      signals.push(isLegitimateDepository ? 'verified_depository_alert' : 'verified_merchant_whitelist');
+    const isLegitimateDepository = /\b(cdsl|nsdl)\b/i.test(text) && !tradingSignals.depositPaymentRequest && !tradingSignals.cryptoWalletAddress && !tradingSignals.guaranteedReturnClaim && !entities.isCollectRequest && !entities.hasOtpSolicitation && !isMismatch;
+
+    // Base Threat Intelligence Scoring
+    if (isCommunityReported && threatRecord) {
+      if (threatRecord.source === 'VERIFIED_SEED') {
+        riskScore += 70; // verified seed baseline
+        signals.push('verified_threat_intelligence_match');
+      } else {
+        // Community intelligence: base score + scaled by corroboration
+        const corroborationBonus = Math.min(30, threatRecord.reportCount * 10);
+        riskScore += 30 + corroborationBonus;
+        signals.push(`local_community_blacklist_match (${threatRecord.reportCount} reports)`);
+      }
     }
+
+    // Additive Rule-based Scoring
+    if (isMismatch) {
+      riskScore += 75;
+      signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
+    }
+    if (entities.hasOtpSolicitation) {
+      riskScore += 70;
+      signals.push('credential_otp_solicitation');
+    }
+    if (hasSuspiciousTLD) {
+      riskScore += 40;
+      signals.push('suspicious_tld_domain');
+    }
+    if (entities.urgencyWords.length > 0) {
+      riskScore += 30;
+      signals.push('urgency_manipulation');
+    }
+
+    // Legitimate Context Mitigation
+    if (isLegitimateMerchant || isLegitimateDepository) {
+      // If strongly conflicting evidence exists, it may mitigate some risk but not completely erase strong mismatch/credential harvesting
+      if (!entities.hasOtpSolicitation && !isMismatch && (!isCommunityReported || threatRecord?.source !== 'VERIFIED_SEED')) {
+        riskScore = 5;
+        signals.push(isLegitimateDepository ? 'verified_depository_alert' : 'verified_merchant_whitelist');
+      } else {
+         signals.push(isLegitimateDepository ? 'depository_context_overridden_by_threat' : 'merchant_context_overridden_by_threat');
+      }
+    }
+
+    // Cap and assign severity
+    riskScore = Math.max(0, Math.min(100, riskScore));
+    if (riskScore >= 80) riskSeverity = 'CRITICAL';
+    else if (riskScore >= 60) riskSeverity = 'HIGH';
+    else if (riskScore >= 30) riskSeverity = 'MEDIUM';
+    else riskSeverity = 'LOW';
 
     // --- Scoring: Trading fraud signals (additive to existing) ---
     if (tradingSignals.hasTradingFraudSignals && !isLegitimateDepository) {
@@ -364,7 +389,7 @@ export class AnalyzerService {
       confidence,
       signals,
       evidence_references: evidenceAggregator.getAllEvidenceIds(),
-      human_explanation: decision.why_it_matters,
+      human_explanation: (decision.why_it_matters || '') + (isCommunityReported && threatRecord ? (threatRecord.source === 'VERIFIED_SEED' ? ' Note: Identified by verified threat intelligence.' : ` Note: Flagged in ${threatRecord.reportCount} local community report(s).`) : ''),
       recommended_action: decision.user_instruction
     };
 

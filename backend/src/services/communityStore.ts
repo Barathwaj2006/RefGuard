@@ -99,6 +99,7 @@ class CommunityReportStore {
   }
 
   private atomicSaveToDisk(): void {
+    if (process.env.NODE_ENV === 'test') return;
     try {
       const dir = path.dirname(this.storageFile);
       if (!fs.existsSync(dir)) {
@@ -209,6 +210,25 @@ class CommunityReportStore {
       }
     }
     return false;
+  }
+
+
+  public getThreatRecord(indicator: string): ThreatRecord | null {
+    if (!indicator) return null;
+    const lower = indicator.toLowerCase().trim();
+
+    if (this.isProtected(lower)) {
+      return null;
+    }
+
+    for (const [key, record] of this.threatRecords.entries()) {
+      if (record.isBlocked) {
+        if (lower.includes(key) || key.includes(lower)) {
+          return record;
+        }
+      }
+    }
+    return null;
   }
 
   public getCount(): number {

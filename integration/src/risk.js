@@ -15,7 +15,7 @@ class RiskEngine {
 
     // Add Mismatch signals
     if (mismatch.status === 'DETECTED') {
-      score = Math.max(score, 90);
+      score += 90;
       signals.push('CRITICAL: Payment Intent Mismatch detected. Stated intent is to receive funds, but action will perform an OUTBOUND DEBIT of ' + (mismatch.amount ? 'Rs. ' + mismatch.amount : 'money') + '.');
     }
 

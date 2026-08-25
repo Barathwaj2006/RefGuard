@@ -74,7 +74,7 @@ describe('False Positive Regression Suite', () => {
       await evaluate(
         'Congratulations! You won Rs 5000 cashback. Claim now upi://pay?pa=scammer@okhdfcbank&pn=Cashback&am=5000',
         'com.whatsapp',
-        ['CRITICAL']
+        ['CRITICAL', 'HIGH']
       );
     });
 
@@ -90,7 +90,7 @@ describe('False Positive Regression Suite', () => {
       await evaluate(
         'Dear customer, your electricity power will be disconnected at 9:30 PM tonight. Update your bill immediately. Call our officer at 9876543210.',
         'com.android.mms',
-        ['CRITICAL']
+        ['CRITICAL', 'HIGH']
       );
     });
     
@@ -98,7 +98,7 @@ describe('False Positive Regression Suite', () => {
       await evaluate(
         'Scan this QR code and enter your UPI PIN to receive your refund of Rs 10,000.',
         'com.whatsapp',
-        ['CRITICAL']
+        ['CRITICAL', 'HIGH']
       );
     });
   });

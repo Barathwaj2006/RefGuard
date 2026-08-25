@@ -35,6 +35,8 @@ class ThreatIntelligence {
     ]);
 
     this.communityReports = [];
+    this.communityVpaCounts = new Map();
+    this.communityDomainCounts = new Map();
   }
 
   addCommunityReport(report) {
@@ -42,12 +44,14 @@ class ThreatIntelligence {
     const textToScan = ((report.reported_indicator || '') + ' ' + (report.description || '')).toLowerCase();
     const vpaMatches = textToScan.match(/[a-zA-Z0-9.\-_]+@[a-zA-Z]+/g) || [];
     for (const v of vpaMatches) {
-      this.knownBadVpas.add(v.trim());
+      const vpa = v.trim();
+      this.communityVpaCounts.set(vpa, (this.communityVpaCounts.get(vpa) || 0) + 1);
     }
     const domainMatches = textToScan.match(/[a-zA-Z0-9.\-_]+\.[a-zA-Z]{2,}/g) || [];
     for (const d of domainMatches) {
       if (!d.includes('@')) {
-        this.knownBadDomains.add(d.trim());
+        const domain = d.trim();
+        this.communityDomainCounts.set(domain, (this.communityDomainCounts.get(domain) || 0) + 1);
       }
     }
   }
@@ -69,6 +73,18 @@ class ThreatIntelligence {
           description: 'Domain ' + domainHost + ' is a known active phishing / scam domain.'
         });
         threatScore += 80;
+        threatCategory = 'PHISHING_URL';
+      } else if (this.communityDomainCounts.has(domainHost)) {
+        const count = this.communityDomainCounts.get(domainHost);
+        const isHighConfidence = count >= 3;
+        threats.push({
+          type: 'REPORTED_SUSPICIOUS_DOMAIN',
+          source: 'COMMUNITY_REGISTRY',
+          target: domainHost,
+          confidence: isHighConfidence ? 0.85 : 0.60,
+          description: `Domain ${domainHost} has been flagged in ${count} local community report(s) (${isHighConfidence ? 'Moderate' : 'Low'} confidence, requires corroboration).`
+        });
+        threatScore += isHighConfidence ? 80 : 40;
         threatCategory = 'PHISHING_URL';
       } else if (/\.(xyz|top|club|work|click|online|shop)$/i.test(domainHost)) {
         threats.push({
@@ -106,6 +122,18 @@ class ThreatIntelligence {
           description: 'UPI ID ' + vpa + ' has been flagged in community scam reports.'
         });
         threatScore += 85;
+        threatCategory = 'UNAUTHORIZED_COLLECT';
+      } else if (this.communityVpaCounts.has(vpa)) {
+        const count = this.communityVpaCounts.get(vpa);
+        const isHighConfidence = count >= 3;
+        threats.push({
+          type: 'REPORTED_FRAUDULENT_VPA',
+          source: 'COMMUNITY_REGISTRY',
+          target: vpa,
+          confidence: isHighConfidence ? 0.85 : 0.60,
+          description: `UPI ID ${vpa} has been flagged in ${count} local community report(s) (${isHighConfidence ? 'Moderate' : 'Low'} confidence, requires corroboration).`
+        });
+        threatScore += isHighConfidence ? 85 : 45;
         threatCategory = 'UNAUTHORIZED_COLLECT';
       } else if (this.trustedMerchants.has(vpa)) {
         threats.push({
