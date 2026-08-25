@@ -6,7 +6,8 @@ import {
   ProtectionDecision,
   PaymentIntentMismatch,
   ScamChain,
-  EvidencePack
+  EvidencePack,
+  AdaptiveScamIntelligence
 } from '../models/types';
 import { communityStore } from './communityStore';
 import { extractTradingFraudSignals } from './extractors/tradingFraudExtractor';
@@ -404,6 +405,144 @@ export class AnalyzerService {
       ? evidenceAggregator.buildEvidencePack() 
       : { incident_id: 'inc_' + scanId.slice(0, 8), timestamp, items: [] };
 
+    // Adaptive Scam-Chain Intelligence
+    let adaptiveScamIntelligence: AdaptiveScamIntelligence | undefined = undefined;
+    if (riskScore >= 40) {
+      let archetype = 'General Scams';
+      let current_stage = 'Initial Contact';
+      let stage_title = 'Initial Contact';
+      let stage_index = 1;
+      let total_stages = 4;
+      let stages_sequence = ['Initial Contact', 'Build Trust', 'Extract Funds', 'Disappear'];
+      let previous_likely_stage: string | null = null;
+      let next_likely_stage: string | null = 'Build Trust';
+      let next_likely_step: string | null = 'The attacker may try to establish a rapport or offer a fake opportunity.';
+      let attacker_objective = 'Financial Gain';
+      let user_risk = 'Low if ignored. High if engaged.';
+      let recommended_action = 'Ignore and block the sender.';
+      let confidence_intel = 0.5;
+      let reporting_path = 'https://cybercrime.gov.in/';
+
+      if (tradingSignals.hasTradingFraudSignals) {
+        archetype = 'Trading/Investment Fraud';
+        stages_sequence = ['Initial Contact', 'Fake Platform Onboarding', 'Small Payout (Bait)', 'Large Deposit Request', 'Account Freeze'];
+        total_stages = 5;
+        
+        if (tradingSignals.depositPaymentRequest && tradingSignals.cryptoWalletAddress) {
+           current_stage = 'Large Deposit Request';
+           stage_title = 'Deposit Request';
+           stage_index = 4;
+           previous_likely_stage = 'Small Payout (Bait)';
+           next_likely_stage = 'Account Freeze';
+           next_likely_step = 'They will claim you need to pay taxes or fees to withdraw your funds, but you will never get them back.';
+           confidence_intel = 0.9;
+        } else if (tradingSignals.tradingTipGroup || tradingSignals.fakeBrokerReference) {
+           current_stage = 'Initial Contact / Fake Platform Onboarding';
+           stage_title = 'Onboarding';
+           stage_index = 2;
+           previous_likely_stage = 'Initial Contact';
+           next_likely_stage = 'Small Payout (Bait)';
+           next_likely_step = 'They will ask you to create an account on their platform and make a small deposit, promising high returns.';
+           confidence_intel = 0.8;
+        }
+        attacker_objective = 'Steal large sums of money through fake investment platforms.';
+        user_risk = 'Extremely High. Victims often lose their life savings.';
+        recommended_action = 'Do not invest. Report to SEBI and Cybercrime.';
+      } else if (upiSignals.hasUpiFraudSignals) {
+        if (upiSignals.digitalArrestScam) {
+           archetype = 'Digital Arrest / Authority Impersonation';
+           stages_sequence = ['Robocall/Message', 'Fake Official Interrogation', 'Isolation & Intimidation', 'Coerced Payment', 'Ongoing Extortion'];
+           total_stages = 5;
+           current_stage = 'Isolation & Intimidation';
+           stage_title = 'Intimidation';
+           stage_index = 3;
+           previous_likely_stage = 'Fake Official Interrogation';
+           next_likely_stage = 'Coerced Payment';
+           next_likely_step = 'They will demand a "security deposit" or "fine" to avoid arrest, usually via UPI or bank transfer.';
+           attacker_objective = 'Coerce victim into transferring funds under threat of arrest.';
+           user_risk = 'Critical. High psychological pressure leading to rapid financial loss.';
+           recommended_action = 'Hang up immediately. Police will never arrest you over a phone call or Skype/WhatsApp video call.';
+           confidence_intel = 0.95;
+        } else if (upiSignals.electricityBillScam) {
+           archetype = 'Utility Disconnection Scam';
+           stages_sequence = ['Fake SMS', 'Call to "Helpdesk"', 'Remote Access App Install', 'Bank Credential Theft', 'Unauthorized Transfer'];
+           total_stages = 5;
+           current_stage = 'Fake SMS';
+           stage_title = 'Fake SMS';
+           stage_index = 1;
+           previous_likely_stage = null;
+           next_likely_stage = 'Call to "Helpdesk"';
+           next_likely_step = 'If you call the number, they will ask you to install a screen-sharing app to "update your bill".';
+           attacker_objective = 'Gain remote access to your phone and steal banking credentials.';
+           user_risk = 'High. Potential for complete bank account drain.';
+           recommended_action = 'Do not call the number. Check your electricity bill on the official website or app.';
+           confidence_intel = 0.9;
+        } else {
+           archetype = 'UPI / Payment Fraud';
+           stages_sequence = ['Initial Message', 'Urgency/Fear Tactic', 'Payment Request', 'Funds Stolen'];
+           total_stages = 4;
+           current_stage = 'Urgency/Fear Tactic';
+           stage_title = 'Urgency Tactic';
+           stage_index = 2;
+           previous_likely_stage = 'Initial Message';
+           next_likely_stage = 'Payment Request';
+           next_likely_step = 'They will send a UPI collect request or ask for your UPI PIN.';
+           attacker_objective = 'Steal funds via UPI transaction.';
+           user_risk = 'High.';
+           recommended_action = 'Do not enter your UPI PIN. Do not approve unknown collect requests.';
+           confidence_intel = 0.8;
+        }
+      } else if (isMismatch) {
+        archetype = 'Payment Intent Mismatch (Refund/Prize Scam)';
+        stages_sequence = ['Notification of Prize/Refund', 'Link Clicks/App Open', 'UPI PIN Entry', 'Funds Deducted'];
+        total_stages = 4;
+        current_stage = 'UPI PIN Entry';
+        stage_title = 'PIN Entry';
+        stage_index = 3;
+        previous_likely_stage = 'Link Clicks/App Open';
+        next_likely_stage = 'Funds Deducted';
+        next_likely_step = 'Entering your PIN will authorize a deduction from your account, not a credit.';
+        attacker_objective = 'Trick user into authorizing a debit while believing it is a credit.';
+        user_risk = 'Critical. Immediate financial loss if PIN is entered.';
+        recommended_action = 'CANCEL the transaction. You NEVER need a UPI PIN to receive money.';
+        confidence_intel = 0.95;
+      } else if (entities.hasOtpSolicitation) {
+        archetype = 'Credential Harvesting / OTP Scam';
+        stages_sequence = ['Initial Contact', 'Fabricate Urgency', 'Request OTP', 'Account Takeover'];
+        total_stages = 4;
+        current_stage = 'Request OTP';
+        stage_title = 'Request OTP';
+        stage_index = 3;
+        previous_likely_stage = 'Fabricate Urgency';
+        next_likely_stage = 'Account Takeover';
+        next_likely_step = 'Once you share the OTP, they will log into your account and change passwords or transfer funds.';
+        attacker_objective = 'Steal access to user account (bank, email, social media).';
+        user_risk = 'High. Risk of immediate account compromise.';
+        recommended_action = 'NEVER share an OTP with anyone. No legitimate organization will ask for your OTP.';
+        confidence_intel = 0.9;
+      }
+
+      adaptiveScamIntelligence = {
+        archetype,
+        current_stage,
+        stage_title,
+        stage_index,
+        total_stages,
+        stages_sequence,
+        evidence_detected: evidenceAggregator.getAllEvidenceIds(),
+        previous_likely_stage,
+        next_likely_stage,
+        next_likely_step,
+        attacker_objective,
+        user_risk,
+        recommended_action,
+        confidence: confidence_intel,
+        reporting_path,
+        evidence_backed_status: true,
+        provenance: geminiVerdict?.gemini_used ? 'gemini_and_deterministic' : 'deterministic_engine'
+      };
+    }
+
     return {
       scan_id: scanId,
       timestamp,
@@ -411,7 +550,8 @@ export class AnalyzerService {
       protection_decision: decision,
       payment_intent_mismatch: paymentIntentMismatch,
       scam_chain: scamChain,
-      evidence_pack: evidencePack
+      evidence_pack: evidencePack,
+      adaptive_scam_intelligence: adaptiveScamIntelligence
     };
   }
 }

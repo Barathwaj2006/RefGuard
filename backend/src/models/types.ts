@@ -61,6 +61,26 @@ export interface EvidencePack {
   }>;
 }
 
+export interface AdaptiveScamIntelligence {
+  archetype: string;
+  current_stage: string;
+  stage_title: string;
+  stage_index: number;
+  total_stages: number;
+  stages_sequence: string[];
+  evidence_detected: string[];
+  previous_likely_stage: string | null;
+  next_likely_stage: string | null;
+  next_likely_step: string | null;
+  attacker_objective: string;
+  user_risk: string;
+  recommended_action: string;
+  confidence: number;
+  reporting_path: string;
+  evidence_backed_status: boolean;
+  provenance: string;
+}
+
 export interface ScanResponse {
   scan_id: string;
   timestamp: string;
@@ -69,6 +89,7 @@ export interface ScanResponse {
   payment_intent_mismatch?: PaymentIntentMismatch;
   scam_chain?: ScamChain;
   evidence_pack?: EvidencePack;
+  adaptive_scam_intelligence?: AdaptiveScamIntelligence;
 }
 
 export interface ScamReport {

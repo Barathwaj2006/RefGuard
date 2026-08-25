@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AdaptiveScamIntelligence",
+  "type": "object",
+  "properties": {
+    "archetype": { "type": "string" },
+    "current_stage": { "type": "string" },
+    "stage_title": { "type": "string" },
+    "stage_index": { "type": "integer" },
+    "total_stages": { "type": "integer" },
+    "stages_sequence": { "type": "array", "items": { "type": "string" } },
+    "evidence_detected": { "type": "array", "items": { "type": "string" } },
+    "previous_likely_stage": { "type": ["string", "null"] },
+    "next_likely_stage": { "type": ["string", "null"] },
+    "next_likely_step": { "type": ["string", "null"] },
+    "attacker_objective": { "type": "string" },
+    "user_risk": { "type": "string" },
+    "recommended_action": { "type": "string" },
+    "confidence": { "type": "number" },
+    "reporting_path": { "type": "string" },
+    "evidence_backed_status": { "type": "boolean" },
+    "provenance": { "type": "string" }
+  },
+  "required": [
+    "archetype", "current_stage", "stage_title", "stage_index", "total_stages", 
+    "stages_sequence", "evidence_detected", "attacker_objective", "user_risk", 
+    "recommended_action", "confidence", "reporting_path", "evidence_backed_status", 
+    "provenance"
+  ],
+  "additionalProperties": false
+}
