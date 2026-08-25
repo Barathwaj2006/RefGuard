@@ -16,6 +16,8 @@ export interface UpiFraudSignals {
   telecomKycScam: boolean;
   refundCashbackScam: boolean; // Hinglish focus
   familyEmergencyScam: boolean; // e.g. "accident, send money to hospital"
+  fakeCustomerSupportScam: boolean;
+  qrScam: boolean;
 
   matchedKeywords: string[];
   signalCount: number;
@@ -23,7 +25,7 @@ export interface UpiFraudSignals {
 
 // Electricity Bill (often Hindi/Hinglish/English mix)
 const ELECTRICITY_PATTERNS = [
-  /\b(?:electricity|bijli)\s*(?:power|bill)?\s*(?:will\s*be\s*disconnected|cut|kat\s*jayegi|pending|due)\b/i,
+  /\b(?:electricity|bijli)\s*(?:power|bill)?\s*(?:will\s*be\s*disconnected|disconnect(?:ion)?|cut|kat\s*jayegi|pending|due)\b/i,
   /\b(?:update|pay|clear)\s*(?:previous\s*month|last\s*month)\s*bill\b/i,
   /\b(?:call|contact)\s*(?:electricity|bijli)\s*(?:officer|board|department|office)\b/i
 ];
@@ -64,6 +66,19 @@ const EMERGENCY_PATTERNS = [
   /\b(?:dost|bhai|friend)\b.*?\b(?:accident|hospital|emergency)\b.*?\b(?:paise|money|gpay|phonepe)\b/i
 ];
 
+// Fake Customer Support
+const CUSTOMER_SUPPORT_PATTERNS = [
+  /\b(?:customer\s*care|support|helpdesk|toll\s*free)\b.*?\b(?:anydesk|teamviewer|quicksupport)\b/i,
+  /\b(?:call\s*customer\s*care)\b.*?\b(?:refund|complaint)\b/i,
+  /\b(?:dial\s*this\s*number\s*for\s*refund)\b/i
+];
+
+// QR Scam
+const QR_PATTERNS = [
+  /\b(?:scan\s*(?:this\s*)?qr\s*(?:code)?)\s*(?:to\s*receive|for\s*refund|for\s*cashback)\b/i,
+  /\b(?:receive\s*payment|payment\s*receive)\b.*?\b(?:scan|qr)\b/i
+];
+
 export function extractUpiFraudSignals(text: string): UpiFraudSignals {
   const signals: UpiFraudSignals = {
     hasUpiFraudSignals: false,
@@ -73,72 +88,61 @@ export function extractUpiFraudSignals(text: string): UpiFraudSignals {
     telecomKycScam: false,
     refundCashbackScam: false,
     familyEmergencyScam: false,
+    fakeCustomerSupportScam: false,
+    qrScam: false,
     matchedKeywords: [],
     signalCount: 0
   };
 
-  // Electricity
-  for (const pattern of ELECTRICITY_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.electricityBillScam = true;
-      signals.matchedKeywords.push('electricity_bill_scam');
-      break;
-    }
+  if (ELECTRICITY_PATTERNS.some(p => p.test(text))) {
+    signals.electricityBillScam = true;
+    signals.matchedKeywords.push('electricity_bill_scam');
   }
 
-  // Customs / Courier
-  for (const pattern of CUSTOMS_COURIER_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.customsParcelScam = true;
-      signals.matchedKeywords.push('customs_courier_scam');
-      break;
-    }
+  if (CUSTOMS_COURIER_PATTERNS.some(p => p.test(text))) {
+    signals.customsParcelScam = true;
+    signals.matchedKeywords.push('customs_courier_scam');
   }
 
-  // Digital Arrest
-  for (const pattern of DIGITAL_ARREST_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.digitalArrestScam = true;
-      signals.matchedKeywords.push('digital_arrest_scam');
-      break;
-    }
+  if (DIGITAL_ARREST_PATTERNS.some(p => p.test(text))) {
+    signals.digitalArrestScam = true;
+    signals.matchedKeywords.push('digital_arrest_scam');
   }
 
-  // Telecom / KYC
-  for (const pattern of TELECOM_KYC_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.telecomKycScam = true;
-      signals.matchedKeywords.push('telecom_kyc_scam');
-      break;
-    }
+  if (TELECOM_KYC_PATTERNS.some(p => p.test(text))) {
+    signals.telecomKycScam = true;
+    signals.matchedKeywords.push('telecom_kyc_scam');
   }
 
-  // Refund / Cashback
-  for (const pattern of REFUND_CASHBACK_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.refundCashbackScam = true;
-      signals.matchedKeywords.push('hinglish_cashback_scam');
-      break;
-    }
+  if (REFUND_CASHBACK_PATTERNS.some(p => p.test(text))) {
+    signals.refundCashbackScam = true;
+    signals.matchedKeywords.push('hinglish_cashback_scam');
   }
 
-  // Emergency
-  for (const pattern of EMERGENCY_PATTERNS) {
-    if (pattern.test(text)) {
-      signals.familyEmergencyScam = true;
-      signals.matchedKeywords.push('emergency_imposter_scam');
-      break;
-    }
+  if (EMERGENCY_PATTERNS.some(p => p.test(text))) {
+    signals.familyEmergencyScam = true;
+    signals.matchedKeywords.push('emergency_imposter_scam');
   }
 
-  // Calculate signal count
+  if (CUSTOMER_SUPPORT_PATTERNS.some(p => p.test(text))) {
+    signals.fakeCustomerSupportScam = true;
+    signals.matchedKeywords.push('fake_customer_support_scam');
+  }
+
+  if (QR_PATTERNS.some(p => p.test(text))) {
+    signals.qrScam = true;
+    signals.matchedKeywords.push('qr_receive_money_scam');
+  }
+
   const booleanSignals = [
     signals.electricityBillScam,
     signals.customsParcelScam,
     signals.digitalArrestScam,
     signals.telecomKycScam,
     signals.refundCashbackScam,
-    signals.familyEmergencyScam
+    signals.familyEmergencyScam,
+    signals.fakeCustomerSupportScam,
+    signals.qrScam
   ];
 
   signals.signalCount = booleanSignals.filter(Boolean).length;

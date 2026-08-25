@@ -223,12 +223,12 @@ export class AnalyzerService {
     if (upiSignals.hasUpiFraudSignals) {
       signals.push(...upiSignals.matchedKeywords);
 
-      if (upiSignals.digitalArrestScam || upiSignals.customsParcelScam) {
+      if (upiSignals.digitalArrestScam || upiSignals.customsParcelScam || upiSignals.fakeCustomerSupportScam) {
         riskScore = Math.max(riskScore, 95);
         riskSeverity = 'CRITICAL';
       }
 
-      if (upiSignals.electricityBillScam || upiSignals.telecomKycScam || upiSignals.refundCashbackScam) {
+      if (upiSignals.electricityBillScam || upiSignals.telecomKycScam || upiSignals.refundCashbackScam || upiSignals.qrScam) {
         if (entities.vpa || entities.url || entities.isCollectRequest) {
           riskScore = Math.max(riskScore, 90);
           riskSeverity = 'CRITICAL';
@@ -421,10 +421,10 @@ export class AnalyzerService {
       let user_risk = 'Low if ignored. High if engaged.';
       let recommended_action = 'Ignore and block the sender.';
       let confidence_intel = 0.5;
-      let reporting_path = 'https://cybercrime.gov.in/';
-      let observed_evidence: string[] = evidenceAggregator.getAllEvidenceIds();
-      let inferred_intent: string[] = [];
-      let predicted_next_steps: string[] = [];
+      const reporting_path = 'https://cybercrime.gov.in/';
+      const observed_evidence: string[] = evidenceAggregator.getAllEvidenceIds();
+      const inferred_intent: string[] = [];
+      const predicted_next_steps: string[] = [];
 
       if (tradingSignals.hasTradingFraudSignals) {
         archetype = 'Trading/Investment Fraud';
@@ -487,7 +487,39 @@ export class AnalyzerService {
            user_risk = 'High. Potential for complete bank account drain.';
            recommended_action = 'Do not call the number. Check your electricity bill on the official website or app.';
            confidence_intel = 0.9;
-        } else {
+        } else if (upiSignals.fakeCustomerSupportScam) {
+           archetype = 'Fake Customer Support / Remote Access Scam';
+           stages_sequence = ['Fake Helpline Number', 'Call Initiation', 'Remote Access App Install', 'Bank Credential Theft', 'Unauthorized Transfer'];
+           total_stages = 5;
+           current_stage = 'Call Initiation';
+           stage_title = 'Call Initiation';
+           stage_index = 2;
+           previous_likely_stage = 'Fake Helpline Number';
+           next_likely_stage = 'Remote Access App Install';
+           next_likely_step = 'They will instruct you to download a screen-sharing app like AnyDesk or TeamViewer.';
+           inferred_intent.push('Trick victim into granting device access');
+           predicted_next_steps.push('Attacker will ask to install a remote desktop application.');
+           attacker_objective = 'Gain remote access to your device to steal banking credentials.';
+           user_risk = 'Critical. Full device compromise potential.';
+           recommended_action = 'Do not call the number. Never install screen-sharing apps for customer support.';
+           confidence_intel = 0.9;
+         } else if (upiSignals.qrScam) {
+           archetype = 'QR Code Receive Money Scam';
+           stages_sequence = ['Fake Offer/Refund', 'QR Code Sent', 'Scan & PIN Entry', 'Funds Stolen'];
+           total_stages = 4;
+           current_stage = 'QR Code Sent';
+           stage_title = 'QR Code Sent';
+           stage_index = 2;
+           previous_likely_stage = 'Fake Offer/Refund';
+           next_likely_stage = 'Scan & PIN Entry';
+           next_likely_step = 'They will ask you to scan the QR code and enter your PIN to "receive" the money.';
+           inferred_intent.push('Deceive user into authorizing debit via QR');
+           predicted_next_steps.push('Victim scans QR and enters PIN, authorizing a payment.');
+           attacker_objective = 'Trick user into authorizing a payment under the guise of receiving funds.';
+           user_risk = 'Critical. Direct financial loss upon PIN entry.';
+           recommended_action = 'DO NOT scan the QR code. You NEVER need to scan a QR code or enter a PIN to receive money.';
+           confidence_intel = 0.95;
+         } else {
            archetype = 'UPI / Payment Fraud';
            stages_sequence = ['Initial Message', 'Urgency/Fear Tactic', 'Payment Request', 'Funds Stolen'];
            total_stages = 4;

@@ -4,7 +4,7 @@ import { submitReport } from '../controllers/reportController';
 import { getIncidentRecommendation } from '../controllers/incidentController';
 import { getTrendingIntel, getRecentReports } from '../controllers/intelController';
 import { validateRequest, validateResponse } from '../middleware/validator';
-import { reportRateLimiter } from '../middleware/rateLimiter';
+import { reportRateLimiter, scanRateLimiter } from '../middleware/rateLimiter';
 import { communityStore } from '../services/communityStore';
 
 const router = Router();
@@ -23,10 +23,10 @@ router.get('/health', (_req: Request, res: Response) => {
 });
 
 // Scan Ingress
-router.post('/scan', validateRequest('scan-request.json'), validateResponse('scan-response.json'), scanContent);
+router.post('/scan', scanRateLimiter, validateRequest('scan-request.json'), validateResponse('scan-response.json'), scanContent);
 
 // Incident Response Recommendation
-router.post('/incident/recommendation', getIncidentRecommendation);
+router.post('/incident/recommendation', scanRateLimiter, getIncidentRecommendation);
 
 // Community Report Ingestion with Abuse Prevention & Rate Limiting
 router.post('/report', reportRateLimiter, validateRequest('scam-report.json'), submitReport);

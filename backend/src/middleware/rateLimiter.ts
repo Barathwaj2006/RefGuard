@@ -32,3 +32,31 @@ export const reportRateLimiter = (req: Request, res: Response, next: NextFunctio
 
   next();
 };
+
+const scanBuckets = new Map<string, RequestBucket>();
+const SCAN_WINDOW_MS = 60 * 1000;
+const MAX_SCANS_PER_WINDOW = 60; // Max 60 scans per IP/minute
+
+export const scanRateLimiter = (req: Request, res: Response, next: NextFunction): void => {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown_ip';
+  const now = Date.now();
+
+  let bucket = scanBuckets.get(ip);
+  if (!bucket || now > bucket.resetTime) {
+    bucket = { count: 1, resetTime: now + SCAN_WINDOW_MS };
+    scanBuckets.set(ip, bucket);
+    return next();
+  }
+
+  bucket.count++;
+  if (bucket.count > MAX_SCANS_PER_WINDOW) {
+    res.status(429).json({
+      error_code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many scan requests from this client. Please wait before submitting more.',
+      details: { retry_after_seconds: Math.ceil((bucket.resetTime - now) / 1000) }
+    });
+    return;
+  }
+
+  next();
+};

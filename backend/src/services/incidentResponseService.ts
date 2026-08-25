@@ -36,8 +36,8 @@ export class IncidentResponseService {
 
     const hasTrading = signals.some(s => s.includes('trading') || s.includes('crypto') || s.includes('broker') || s.includes('investment') || s.includes('sebi'));
     const hasImpersonation = signals.some(s => s.includes('digital_arrest') || s.includes('customs') || s.includes('authority_impersonation') || s.includes('police'));
-    const hasKyc = signals.some(s => s.includes('kyc') || s.includes('otp') || s.includes('credential'));
-    const hasUpi = signals.some(s => s.includes('upi') || s.includes('payment_intent_mismatch') || s.includes('imposter_emergency') || s.includes('electricity'));
+    const hasKyc = signals.some(s => s.includes('kyc') || s.includes('otp') || s.includes('credential') || s.includes('customer_support'));
+    const hasUpi = signals.some(s => s.includes('upi') || s.includes('payment_intent_mismatch') || s.includes('imposter_emergency') || s.includes('electricity') || s.includes('qr_receive'));
 
     if (hasImpersonation) {
       category = 'AUTHORITY_IMPERSONATION';
