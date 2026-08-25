@@ -41,6 +41,9 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
+      - name: Run Capacitor Update
+        run: npm install -g @capacitor/cli && mkdir -p android/app/src/main/assets && echo "[]" > android/app/src/main/assets/capacitor.plugins.json && npx cap update android
+
       - name: Run Android Unit Tests
         working-directory: ./android
         run: ./gradlew test
