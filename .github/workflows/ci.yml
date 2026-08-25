@@ -1,4 +1,4 @@
-﻿name: RefGuard Full-System CI
+name: RefGuard Full-System CI
 
 on:
   push:
@@ -18,6 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install dependencies
+        run: npm install && cd backend && npm install
 
       - name: Run Full-System Integration & Contract Conformance Tests
         run: node integration/tests/runner.js
@@ -39,8 +42,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Make Gradlew Executable
-        run: chmod +x android/gradlew
+        run: chmod +x android_native/gradlew
 
       - name: Run Android Unit Tests
-        working-directory: ./android
+        working-directory: ./android_native
         run: ./gradlew test
