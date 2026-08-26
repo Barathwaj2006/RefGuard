@@ -1,0 +1,10 @@
+{
+  "name": "RefGuard",
+  "description": "RefGuard: Real-Time Payment Scam Protection and UPI Fraud Detection",
+  "requestFramePermissions": [
+    "CAMERA"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

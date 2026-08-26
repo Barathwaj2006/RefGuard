@@ -44,21 +44,6 @@ fun ResultScreen(
     var isSimpleMode by remember { mutableStateOf(false) }
     var evidenceExpanded by remember { mutableStateOf(false) }
     var feedbackRecorded by remember { mutableStateOf(false) }
-    var ttsInstance: android.speech.tts.TextToSpeech? by remember { mutableStateOf(null) }
-    var isTtsActive by remember { mutableStateOf(false) }
-
-    DisposableEffect(context) {
-        val tts = android.speech.tts.TextToSpeech(context) { status ->
-            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                // Initialized successfully
-            }
-        }
-        ttsInstance = tts
-        onDispose {
-            tts.stop()
-            tts.shutdown()
-        }
-    }
 
     val hasPaymentData = result.recipientVpa != null || result.mismatchAmount != null || result.mismatchStatus == MismatchStatus.DETECTED
 
@@ -799,4 +784,3 @@ fun riskPalette(level: RiskLevel): RiskPalette = when (level) {
     RiskLevel.CRITICAL -> RiskPalette("CRITICAL — SCAM", ColorCritical, ColorCriticalContainer, Icons.Default.Dangerous)
     RiskLevel.UNKNOWN -> RiskPalette("Unknown", Color.Gray, Color.LightGray, Icons.AutoMirrored.Filled.HelpOutline)
 }
-

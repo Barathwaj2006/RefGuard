@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">RefGuard</string>
+    <string name="scan_button">धोखाधड़ी की जांच करें</string>
+    <string name="paste_from_clipboard">क्लिपबोर्ड से पेस्ट करें</string>
+    <string name="scan_qr">QR कोड स्कैन करें</string>
+    <string name="import_image">स्क्रीनशॉट चुनें</string>
+    <string name="report_scam">समुदाय को रिपोर्ट करें</string>
+    <string name="retry">पुनः प्रयास करें</string>
+    <string name="scan_another">अन्य स्कैन करें</string>
+    <string name="stop_transaction">आगे न बढ़ें — लेन-देन रोकें</string>
+    <string name="helpline_guide">राष्ट्रीय साइबर अपराध हेल्पलाइन: 1930 पर कॉल करें</string>
+    <string name="pin_warning">UPI पिन डालने से हमेशा पैसे कटते हैं, कभी मिलते नहीं हैं।</string>
+</resources>

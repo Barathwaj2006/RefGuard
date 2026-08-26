@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.time.Instant
-import java.util.UUID
 
 /**
  * UI states for the scan screen.
@@ -110,7 +109,7 @@ class ScanViewModel(
                     is com.refguard.platform.models.IngressError.UnsupportedContent ->
                         "Image is too large or unsupported. Try a different image."
                     is com.refguard.platform.models.IngressError.MalformedContent ->
-                        "Content could not be read: "
+                        "Content could not be read: ${(ingressResult.error as? com.refguard.platform.models.IngressError.MalformedContent)?.reason ?: ""}"
                 }
                 _scanState.value = ScanUiState.Error(msg, isMalformed = true)
             }
@@ -143,7 +142,7 @@ class ScanViewModel(
                     }
                     response.code() == 400 -> {
                         _scanState.value = ScanUiState.Error(
-                            message = "Invalid content (). Please check what you're scanning.",
+                            message = "Invalid content (${response.message()}). Please check what you're scanning.",
                             isMalformed = true
                         )
                     }
@@ -254,7 +253,7 @@ class ScanViewModel(
             _reportState.value = ReportUiState.Submitting
             try {
                 val report = ScamReportDto(
-                    report_id = "rep_",
+                    report_id = "rep_" + java.util.UUID.randomUUID().toString().take(8),
                     reported_indicator = reportedIndicator,
                     report_category = category,
                     description = description.take(500),
@@ -268,10 +267,10 @@ class ScanViewModel(
                 if (response.isSuccessful && response.body() != null) {
                     _reportState.value = ReportUiState.Success(response.body()!!.report_id)
                 } else {
-                    _reportState.value = ReportUiState.Error("Failed to submit report ().")
+                    _reportState.value = ReportUiState.Error("Failed to submit report (${response.code()}).")
                 }
             } catch (e: Exception) {
-                _reportState.value = ReportUiState.Error("Could not reach server: ")
+                _reportState.value = ReportUiState.Error("Could not reach server: ${e.message}")
             }
         }
     }
