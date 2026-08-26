@@ -199,7 +199,7 @@ function normalizeScanResponse(rawData) {
   };
 }
 
-// Render Response View
+// Render Response View (6-Step Judge Flow)
 function renderScanResponse(data) {
   const model = normalizeScanResponse(data);
   currentScanId = model.scanId;
@@ -207,7 +207,20 @@ function renderScanResponse(data) {
   const resultContent = document.getElementById('resultContent');
   if (resultContent) resultContent.style.display = 'block';
 
-  // Verdict Hero
+  // --- STEP 1: WHAT DID I PROVIDE? ---
+  const typeSelect = document.getElementById('contentTypeSelect');
+  const contextSelect = document.getElementById('sourceContextSelect');
+  const valueArea = document.getElementById('contentValueArea');
+
+  const providedTypeEl = document.getElementById('providedType');
+  const providedContextEl = document.getElementById('providedContext');
+  const providedValueEl = document.getElementById('providedValue');
+
+  if (providedTypeEl) providedTypeEl.innerText = typeSelect ? typeSelect.value : 'TEXT';
+  if (providedContextEl) providedContextEl.innerText = contextSelect ? contextSelect.value : 'Unknown';
+  if (providedValueEl) providedValueEl.innerText = valueArea ? (valueArea.value || 'No content entered') : 'No content entered';
+
+  // --- STEP 2: WHAT DID REFGUARD FIND? ---
   const banner = document.getElementById('riskBanner');
   const verdictIcon = document.getElementById('verdictIcon');
   const severityTag = document.getElementById('severityTag');
@@ -219,17 +232,6 @@ function renderScanResponse(data) {
 
   const confVal = document.getElementById('riskConfidenceVal');
   if (confVal) confVal.innerText = Math.round((model.confidence || 0) * 100);
-  
-  const heroAction = document.getElementById('heroImmediateAction');
-  if (heroAction) {
-    if (model.action && model.severity !== 'LOW') {
-      heroAction.innerText = 'Action: ' + model.action;
-      heroAction.style.display = 'block';
-    } else {
-      heroAction.style.display = 'none';
-    }
-  }
-
   
   if (severityTag) {
     if (model.severity === 'CRITICAL') severityTag.innerText = 'CRITICAL RISK';
@@ -249,23 +251,11 @@ function renderScanResponse(data) {
     decisionTitle.innerText = model.title;
   }
 
-  // AI Explanation & Signals
-  const explanationCard = document.getElementById('explanationCard');
-  const detectedSummary = document.getElementById('detectedSummary');
-  const whyItMatters = document.getElementById('whyItMatters');
   const dynamicSignalsContainer = document.getElementById('dynamicSignalsContainer');
-  
-  if (explanationCard) {
-    explanationCard.style.display = (model.severity === 'LOW') ? 'none' : 'block';
-  }
-  
-  if (detectedSummary) detectedSummary.innerText = model.explanation;
-  if (whyItMatters) whyItMatters.innerText = model.action;
-
   if (dynamicSignalsContainer) {
     dynamicSignalsContainer.innerHTML = '';
     const friendlySignalMap = {
-      'urgency_indicator': { title: 'Urgency', desc: 'The message pressures you to act immediately without thinking.' },
+      'urgency_indicator': { title: 'Urgency Indicator', desc: 'The message pressures you to act immediately without thinking.' },
       'authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
       'sms_authority_impersonation': { title: 'Authority Impersonation', desc: 'The sender claims to represent an official organization.' },
       'digital_arrest_scam': { title: 'Digital Arrest Threat', desc: 'Impersonation of law enforcement combined with pressure to act immediately.' },
@@ -276,85 +266,32 @@ function renderScanResponse(data) {
       'upi_fraud_pattern': { title: 'UPI Collect Fraud', desc: 'Disguises a payment request as a refund or prize receipt.' }
     };
 
-    model.signals.forEach(sig => {
-      if (friendlySignalMap[sig]) {
+    if (model.signals.length === 0) {
+      dynamicSignalsContainer.innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted);">No suspicious signals triggered.</div>';
+    } else {
+      model.signals.forEach(sig => {
+        const info = friendlySignalMap[sig] || { title: sig.replace(/_/g, ' '), desc: 'Flagged signal in risk analysis.' };
         const div = document.createElement('div');
         div.className = 'signal-item';
-        div.innerHTML = `<div class="signal-title">⚠ ${friendlySignalMap[sig].title}</div>
-                         <div class="signal-desc">${friendlySignalMap[sig].desc}</div>`;
+        div.style.marginBottom = '0.5rem';
+        div.style.padding = '0.6rem 0.8rem';
+        div.style.background = 'var(--surface-off)';
+        div.style.borderRadius = 'var(--radius-md)';
+        div.style.border = '1px solid var(--surface-border)';
+        div.innerHTML = `<div class="signal-title" style="font-weight:700; color:var(--text-dark);">⚠ ${escapeHtml(info.title)}</div>
+                         <div class="signal-desc" style="font-size:0.85rem; color:var(--text-muted);">${escapeHtml(info.desc)}</div>`;
         dynamicSignalsContainer.appendChild(div);
-      }
-    });
-  }
-
-  const mismatchCard = document.getElementById('mismatchCard');
-  if (mismatchCard) {
-    if (model.mismatch.detected) {
-      mismatchCard.style.display = 'block';
-      document.getElementById('statedIntent').innerText = model.mismatch.statedIntent || 'RECEIVE FUNDS';
-      document.getElementById('actualPayment').innerText = model.mismatch.actualAction || 'OUTBOUND DEBIT';
-      document.getElementById('paymentDirection').innerText = model.mismatch.direction || 'OUTBOUND_DEBIT';
-    } else {
-      mismatchCard.style.display = 'none';
+      });
     }
   }
 
-  // Unified Adaptive Intelligence Card
-  const adaptiveIntelCard = document.getElementById('adaptiveIntelCard');
-  
-  if (adaptiveIntelCard) {
-    // Determine visibility based on available fields and severity
-    let hasIntel = false;
-    
-    // Objective / Next Step synthesis
-    let nextText = model.adaptiveIntel.nextStep;
-    if (!nextText && model.chainNodes.length > 2) {
-      const predictedNext = model.chainNodes[2];
-      let typeText = predictedNext.node_type ? predictedNext.node_type.replace(/_/g, ' ') : 'ACTION';
-      nextText = 'The attacker will likely try to execute a ' + typeText + ' (' + (predictedNext.entity_reference || predictedNext.node_id) + '). Do not proceed.';
-    }
-
-    const fields = [
-      { id: 'aiScamType', boxId: 'aiScamTypeBox', val: model.adaptiveIntel.archetype },
-      { id: 'aiCurrentStage', boxId: 'aiCurrentStageBox', val: model.adaptiveIntel.stage },
-      { id: 'aiObjective', boxId: 'aiObjectiveBox', val: model.adaptiveIntel.objective },
-      { id: 'aiUserRisk', boxId: 'aiUserRiskBox', val: model.adaptiveIntel.userRisk },
-      { id: 'aiNextStep', boxId: 'aiNextStepBox', val: nextText },
-      { id: 'aiRecommendedAction', boxId: 'aiRecommendedActionBox', val: model.action } // Reuse the action
-    ];
-
-    fields.forEach(f => {
-      const el = document.getElementById(f.id);
-      const box = document.getElementById(f.boxId);
-      if (el && box) {
-        if (f.val) {
-          el.innerText = f.val;
-          box.style.display = 'block';
-          hasIntel = true;
-        } else {
-          box.style.display = 'none';
-        }
-      }
-    });
-
-    if (hasIntel && (model.severity === 'CRITICAL' || model.severity === 'HIGH' || model.severity === 'MEDIUM')) {
-      adaptiveIntelCard.style.display = 'block';
-    } else {
-      adaptiveIntelCard.style.display = 'none';
-    }
-  }
-
-  // Scam Chain
-  const chainCard = document.getElementById('scamChainCard');
+  // --- STEP 3: HOW ARE THESE THINGS CONNECTED? ---
   const chainContainer = document.getElementById('adaptiveChainContainer');
-  if (chainCard && chainContainer) {
+  if (chainContainer) {
     chainContainer.innerHTML = '';
-    if (model.chainNodes.length > 0 && model.severity !== 'LOW') {
-      chainCard.style.display = 'block';
-      model.chainNodes.forEach((node, idx) => {
-        // Consume explicit backend semantics for node status
+    if (model.chainNodes.length > 0) {
+      model.chainNodes.forEach((node) => {
         const rawStatus = (node.status || node.state || node.node_status || node.observation_status || '').toUpperCase();
-        
         let status = 'UNVERIFIED';
         let icon = '⁈';
         let cls = 'inferred';
@@ -362,7 +299,7 @@ function renderScanResponse(data) {
         if (rawStatus === 'OBSERVED') {
           status = 'OBSERVED';
           icon = '✓';
-          cls = 'detected';
+          cls = 'observed';
         } else if (rawStatus === 'INFERRED') {
           status = 'INFERRED';
           icon = '◉';
@@ -376,20 +313,9 @@ function renderScanResponse(data) {
         const div = document.createElement('div');
         div.className = 'chain-node ' + cls;
         
-        let confidenceHtml = '';
-        if (node.confidence !== undefined) {
-           confidenceHtml = `<span style="margin-left: 0.5rem; font-size: 0.8em; opacity: 0.8;">(${Math.round(node.confidence * 100)}% confidence)</span>`;
-        }
-        
-        let provenanceHtml = '';
-        if (node.provenance) {
-           provenanceHtml = `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.25rem;">Source: ${escapeHtml(node.provenance)}</div>`;
-        }
-        
-        let evidenceHtml = '';
-        if (node.evidence_references && node.evidence_references.length > 0) {
-           evidenceHtml = `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.1rem;">Evidence Ref: ${escapeHtml(node.evidence_references.join(', '))}</div>`;
-        }
+        let confidenceHtml = node.confidence !== undefined ? `<span style="margin-left: 0.5rem; font-size: 0.8em; opacity: 0.8;">(${Math.round(node.confidence * 100)}% confidence)</span>` : '';
+        let provenanceHtml = node.provenance ? `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.25rem;">Source: ${escapeHtml(node.provenance)}</div>` : '';
+        let evidenceHtml = (node.evidence_references && node.evidence_references.length > 0) ? `<div style="font-size: 0.8em; color: var(--text-muted); margin-top: 0.1rem;">Evidence Ref: ${escapeHtml(node.evidence_references.join(', '))}</div>` : '';
 
         div.innerHTML = `
           <div class="chain-dot"></div>
@@ -404,11 +330,104 @@ function renderScanResponse(data) {
         chainContainer.appendChild(div);
       });
     } else {
-      chainCard.style.display = 'none';
+      chainContainer.innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted);">No threat graph nodes created for this scan.</div>';
     }
   }
 
-  // Evidence
+  // TRACEABILITY PIPELINE: SIGNAL → EVIDENCE → RELATIONSHIP → RISK → ACTION
+  const traceabilityContainer = document.getElementById('traceabilityContainer');
+  if (traceabilityContainer) {
+    const signalText = model.signals.length > 0 ? model.signals.join(', ') : 'None';
+    const evidenceText = model.evidenceItems.length > 0 ? model.evidenceItems.map(e => `${e.evidence_type}: ${e.data}`).join(' | ') : 'Input Payload';
+    const relText = model.chainNodes.length > 0 ? model.chainNodes.map(n => n.node_type || n.node_id).join(' → ') : 'Direct Observation';
+    const riskText = `${model.severity} (Score: ${model.score}/100, Confidence: ${Math.round((model.confidence || 0) * 100)}%)`;
+    const actionText = model.action || 'Stay Vigilant';
+
+    traceabilityContainer.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; background: var(--surface-off); padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--surface-border); font-size: 0.85rem;">
+        <div><strong style="color:var(--accent-electric);">SIGNAL:</strong> ${escapeHtml(signalText)}</div>
+        <div><strong style="color:var(--bg-navy);">↓ EVIDENCE:</strong> ${escapeHtml(evidenceText)}</div>
+        <div><strong style="color:var(--color-ai);">↓ RELATIONSHIP:</strong> ${escapeHtml(relText)}</div>
+        <div><strong style="color:var(--color-critical);">↓ RISK:</strong> ${escapeHtml(riskText)}</div>
+        <div><strong style="color:var(--color-low);">↓ ACTION:</strong> ${escapeHtml(actionText)}</div>
+      </div>
+    `;
+  }
+
+  // --- STEP 4: WHAT IS THE USER TRYING TO DO / WHAT WILL THE PAYMENT DO? ---
+  const statedIntentEl = document.getElementById('statedIntent');
+  const actualPaymentEl = document.getElementById('actualPayment');
+  const paymentDirectionEl = document.getElementById('paymentDirection');
+  const mismatchAlert = document.getElementById('mismatchAlert');
+
+  if (statedIntentEl) statedIntentEl.innerText = model.mismatch.statedIntent || (model.mismatch.detected ? 'RECEIVE FUNDS' : 'STANDARD TRANSACTION');
+  if (actualPaymentEl) actualPaymentEl.innerText = model.mismatch.actualAction || (model.mismatch.detected ? 'OUTBOUND DEBIT' : 'REGULAR PAYMENT');
+  if (paymentDirectionEl) paymentDirectionEl.innerText = model.mismatch.direction || (model.mismatch.detected ? 'OUTBOUND_DEBIT' : 'NO_MISMATCH');
+
+  if (mismatchAlert) {
+    if (model.mismatch.detected) {
+      mismatchAlert.style.background = 'var(--color-critical-bg)';
+      mismatchAlert.style.color = 'var(--color-critical)';
+      mismatchAlert.innerHTML = `⚠ <strong>Payment Intent Mismatch Detected!</strong> You were expecting to receive funds, but this action will <strong>DEBIT</strong> money from your account.`;
+      mismatchAlert.style.display = 'block';
+    } else {
+      mismatchAlert.style.background = 'var(--color-low-bg)';
+      mismatchAlert.style.color = 'var(--color-low)';
+      mismatchAlert.innerHTML = `✓ No payment intent mismatch detected. Stated intent matches transaction direction.`;
+      mismatchAlert.style.display = 'block';
+    }
+  }
+
+  // --- STEP 5: WHY IS THIS DANGEROUS? ---
+  const detectedSummary = document.getElementById('detectedSummary');
+  const whyItMatters = document.getElementById('whyItMatters');
+  if (detectedSummary) detectedSummary.innerText = model.explanation || model.title;
+  if (whyItMatters) whyItMatters.innerText = model.action || 'No additional threat context.';
+
+  const adaptiveIntelCard = document.getElementById('adaptiveIntelCard');
+  if (adaptiveIntelCard) {
+    let nextText = model.adaptiveIntel.nextStep;
+    if (!nextText && model.chainNodes.length > 2) {
+      const predictedNext = model.chainNodes[2];
+      let typeText = predictedNext.node_type ? predictedNext.node_type.replace(/_/g, ' ') : 'ACTION';
+      nextText = 'The attacker will likely try to execute a ' + typeText + ' (' + (predictedNext.entity_reference || predictedNext.node_id) + '). Do not proceed.';
+    }
+
+    const fields = [
+      { id: 'aiScamType', boxId: 'aiScamTypeBox', val: model.adaptiveIntel.archetype },
+      { id: 'aiCurrentStage', boxId: 'aiCurrentStageBox', val: model.adaptiveIntel.stage },
+      { id: 'aiObjective', boxId: 'aiObjectiveBox', val: model.adaptiveIntel.objective },
+      { id: 'aiUserRisk', boxId: 'aiUserRiskBox', val: model.adaptiveIntel.userRisk },
+      { id: 'aiNextStep', boxId: 'aiNextStepBox', val: nextText },
+      { id: 'aiRecommendedAction', boxId: 'aiRecommendedActionBox', val: model.action }
+    ];
+
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      const box = document.getElementById(f.boxId);
+      if (el && box) {
+        if (f.val) {
+          el.innerText = f.val;
+          box.style.display = 'block';
+        } else {
+          box.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  // --- STEP 6: WHAT SHOULD I DO NOW? ---
+  const heroAction = document.getElementById('heroImmediateAction');
+  if (heroAction) {
+    if (model.action && model.severity !== 'LOW') {
+      heroAction.innerText = 'Immediate Action Required: ' + model.action;
+      heroAction.style.display = 'block';
+    } else {
+      heroAction.style.display = 'none';
+    }
+  }
+
+  // Evidence Pack details
   const evidenceCard = document.getElementById('evidenceCard');
   const evidenceContainer = document.getElementById('evidenceContainer');
   if (evidenceCard && evidenceContainer) {
@@ -426,8 +445,8 @@ function renderScanResponse(data) {
     }
   }
 
-  // Trigger Incident
-  fetchIncidentRecommendation(data); // Pass raw data here or we can refactor incident later
+  // Trigger Incident Recommendation
+  fetchIncidentRecommendation(data);
 }
 async function fetchIncidentRecommendation(scanResponse) {
   const card = document.getElementById('incidentCard');

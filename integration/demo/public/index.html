@@ -77,128 +77,189 @@
           <button class="primary-btn" onclick="executeScan()" style="margin-top: 1.5rem; width: auto; margin-inline: auto; padding: 0.75rem 2rem;">Try Again</button>
         </div>
 
-        <!-- Result Content Container -->
+        <!-- Result Content Container (6-Step Judge Flow) -->
         <div id="resultContent" style="display: none;" aria-live="polite">
           
-          <!-- Verdict Hero -->
-          <div id="riskBanner" class="verdict-hero">
-            <div class="verdict-icon" id="verdictIcon">🛡️</div>
-            <h2 class="verdict-title" id="severityTag">ANALYZING</h2>
-            <div class="score-row">
-              <div class="score-block">
-                <span class="score-label">Risk Score</span>
-                <span class="score-value"><span id="riskScoreVal">0</span><span style="font-size:1.2rem;opacity:0.5;">/100</span></span>
+          <!-- Step 1: WHAT DID I PROVIDE? -->
+          <div id="step1ProvidedCard" class="result-card">
+            <h3 class="card-title">1. WHAT DID I PROVIDE?</h3>
+            <div class="intel-grid" style="margin-bottom: 0.75rem;">
+              <div class="intel-item">
+                <div class="intel-content">
+                  <div class="intel-label">Input Type</div>
+                  <div class="intel-value" id="providedType">TEXT</div>
+                </div>
               </div>
-              <div class="score-block" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 2rem;">
-                <span class="score-label">Confidence</span>
-                <span class="score-value"><span id="riskConfidenceVal">0</span><span style="font-size:1.2rem;opacity:0.5;">%</span></span>
+              <div class="intel-item">
+                <div class="intel-content">
+                  <div class="intel-label">Source Context</div>
+                  <div class="intel-value" id="providedContext">Unknown</div>
+                </div>
               </div>
             </div>
-            <div id="heroImmediateAction" class="immediate-action" style="display: none;"></div>
+            <div style="padding: 0.75rem; background: var(--surface-off); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; word-break: break-all; border: 1px solid var(--surface-border);" id="providedValue"></div>
           </div>
-          
-          <!-- Explanations (AI Analysis) -->
-          <div id="explanationCard" class="result-card" style="display: none;">
-            <h3 class="card-title">✨ WHY REFGUARD FLAGGED THIS</h3>
+
+          <!-- Step 2: WHAT DID REFGUARD FIND? -->
+          <div id="step2FoundCard" class="result-card">
+            <h3 class="card-title">2. WHAT DID REFGUARD FIND?</h3>
+            <div id="riskBanner" class="verdict-hero" style="margin-bottom: 1rem; padding: 1.5rem;">
+              <div class="verdict-icon" id="verdictIcon">🛡️</div>
+              <h2 class="verdict-title" id="severityTag">ANALYZING</h2>
+              <div class="score-row">
+                <div class="score-block">
+                  <span class="score-label">Risk Score</span>
+                  <span class="score-value"><span id="riskScoreVal">0</span><span style="font-size:1.2rem;opacity:0.5;">/100</span></span>
+                </div>
+                <div class="score-block" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 2rem;">
+                  <span class="score-label">Confidence</span>
+                  <span class="score-value"><span id="riskConfidenceVal">0</span><span style="font-size:1.2rem;opacity:0.5;">%</span></span>
+                </div>
+              </div>
+              <div id="decisionTitle" style="font-weight:700; font-size:1.1rem; margin-top:0.5rem;"></div>
+            </div>
             <div id="dynamicSignalsContainer"></div>
           </div>
 
-          <!-- Scam Chain -->
-          <div id="scamChainCard" class="result-card" style="display: none;">
-            <h3 class="card-title">🔍 WHAT IS HAPPENING?</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; font-weight: 600;">Scam Chain</p>
+          <!-- Step 3: HOW ARE THESE THINGS CONNECTED? -->
+          <div id="step3ConnectedCard" class="result-card">
+            <h3 class="card-title">3. HOW ARE THESE THINGS CONNECTED?</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; font-weight: 600;">Scam Chain &amp; Threat Graph</p>
             <div id="adaptiveChainContainer" class="chain-container"></div>
+
+            <!-- Traceability: SIGNAL → EVIDENCE → RELATIONSHIP → RISK → ACTION -->
+            <div id="traceabilitySection" style="margin-top: 1.5rem; border-top: 1px solid var(--surface-border); padding-top: 1rem;">
+              <div style="font-weight: 800; font-size: 0.8rem; color: var(--bg-navy); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                🔗 Traceability: SIGNAL → EVIDENCE → RELATIONSHIP → RISK → ACTION
+              </div>
+              <div id="traceabilityContainer"></div>
+            </div>
           </div>
 
-          <!-- Adaptive Intelligence -->
-          <div id="adaptiveIntelCard" class="result-card" style="display: none;">
-            <h3 class="card-title">🎯 THREAT PROFILE</h3>
-            <div class="intel-grid">
-              <div class="intel-item" id="aiScamTypeBox">
-                <div class="intel-icon" style="color:var(--color-critical); background:var(--color-critical-bg);">🎭</div>
-                <div class="intel-content">
-                  <div class="intel-label">Scam Type</div>
-                  <div class="intel-value" id="aiScamType"></div>
+          <!-- Step 4: WHAT IS THE USER TRYING TO DO / WHAT WILL THE PAYMENT DO? -->
+          <div id="step4PaymentCard" class="result-card">
+            <h3 class="card-title">4. WHAT IS THE USER TRYING TO DO / WHAT WILL THE PAYMENT DO?</h3>
+            <div id="mismatchCard">
+              <div class="intel-grid">
+                <div class="intel-item">
+                  <div class="intel-content">
+                    <div class="intel-label">Stated Intent (What you were told)</div>
+                    <div class="intel-value" id="statedIntent">RECEIVE FUNDS</div>
+                  </div>
+                </div>
+                <div class="intel-item">
+                  <div class="intel-content">
+                    <div class="intel-label">Actual Payment Action</div>
+                    <div class="intel-value" id="actualPayment">OUTBOUND DEBIT</div>
+                  </div>
                 </div>
               </div>
-              <div class="intel-item" id="aiStageBox">
-                <div class="intel-icon" style="color:var(--accent-electric); background:rgba(0,102,255,0.1);">⏱️</div>
-                <div class="intel-content">
-                  <div class="intel-label">Current Stage</div>
-                  <div class="intel-value" id="aiStage"></div>
-                </div>
+              <div id="mismatchAlert" style="margin-top: 0.75rem; padding: 0.75rem; background: var(--color-critical-bg); color: var(--color-critical); border-radius: var(--radius-md); font-weight: 700; font-size: 0.9rem;">
+                ⚠ Payment Intent Mismatch: Direction is <span id="paymentDirection">OUTBOUND_DEBIT</span>.
               </div>
-              <div class="intel-item" id="aiObjectiveBox">
-                <div class="intel-icon" style="color:var(--text-dark); background:var(--surface-border);">🎯</div>
-                <div class="intel-content">
-                  <div class="intel-label">Attacker Objective</div>
-                  <div class="intel-value" id="aiObjective"></div>
+            </div>
+          </div>
+
+          <!-- Step 5: WHY IS THIS DANGEROUS? -->
+          <div id="step5DangerousCard" class="result-card">
+            <h3 class="card-title">5. WHY IS THIS DANGEROUS?</h3>
+            <div id="explanationCard">
+              <div id="detectedSummary" style="font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; font-size: 1rem;"></div>
+              <div id="whyItMatters" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;"></div>
+            </div>
+
+            <div id="adaptiveIntelCard" style="margin-top: 1rem;">
+              <div class="intel-grid">
+                <div class="intel-item" id="aiScamTypeBox">
+                  <div class="intel-icon" style="color:var(--color-critical); background:var(--color-critical-bg);">🎭</div>
+                  <div class="intel-content">
+                    <div class="intel-label">Scam Type</div>
+                    <div class="intel-value" id="aiScamType"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="intel-item" id="aiRiskBox">
-                <div class="intel-icon" style="color:var(--color-high); background:var(--color-high-bg);">⚠️</div>
-                <div class="intel-content">
-                  <div class="intel-label">User Risk</div>
-                  <div class="intel-value" id="aiUserRisk"></div>
+                <div class="intel-item" id="aiCurrentStageBox">
+                  <div class="intel-icon" style="color:var(--accent-electric); background:rgba(0,102,255,0.1);">⏱️</div>
+                  <div class="intel-content">
+                    <div class="intel-label">Current Stage</div>
+                    <div class="intel-value" id="aiStage"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="intel-item" id="aiNextStepBox">
-                <div class="intel-icon" style="color:var(--color-ai); background:var(--color-ai-bg);">🔮</div>
-                <div class="intel-content">
-                  <div class="intel-label">Next Likely Step</div>
-                  <div class="intel-value" id="aiNextStep"></div>
+                <div class="intel-item" id="aiObjectiveBox">
+                  <div class="intel-icon" style="color:var(--text-dark); background:var(--surface-border);">🎯</div>
+                  <div class="intel-content">
+                    <div class="intel-label">Attacker Objective</div>
+                    <div class="intel-value" id="aiObjective"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="intel-item" id="aiRecommendedBox">
-                <div class="intel-icon" style="color:var(--color-low); background:var(--color-low-bg);">🛡️</div>
-                <div class="intel-content">
-                  <div class="intel-label">Recommended Action</div>
-                  <div class="intel-value" id="aiRecommendedAction"></div>
+                <div class="intel-item" id="aiUserRiskBox">
+                  <div class="intel-icon" style="color:var(--color-high); background:var(--color-high-bg);">⚠️</div>
+                  <div class="intel-content">
+                    <div class="intel-label">User Risk</div>
+                    <div class="intel-value" id="aiUserRisk"></div>
+                  </div>
+                </div>
+                <div class="intel-item" id="aiNextStepBox">
+                  <div class="intel-icon" style="color:var(--color-ai); background:var(--color-ai-bg);">🔮</div>
+                  <div class="intel-content">
+                    <div class="intel-label">Next Likely Step</div>
+                    <div class="intel-value" id="aiNextStep"></div>
+                  </div>
+                </div>
+                <div class="intel-item" id="aiRecommendedActionBox">
+                  <div class="intel-icon" style="color:var(--color-low); background:var(--color-low-bg);">🛡️</div>
+                  <div class="intel-content">
+                    <div class="intel-label">Recommended Action</div>
+                    <div class="intel-value" id="aiRecommendedAction"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Protect & Recover (Incident Response) -->
-          <div id="incidentCard" class="result-card" style="display: none;">
-            <h3 class="card-title">🛡️ PROTECT YOURSELF NOW</h3>
-            <div id="incidentLoading" style="display:none; text-align:center; padding:2rem; color:var(--text-muted); font-weight:600;">Preparing safety guidance...</div>
-            <div id="incidentError" style="display:none; text-align:center; padding:2rem; color:var(--color-critical); font-weight:600;">Failed to load guidance. <a href="#" id="retryIncidentBtn" class="tappable-link">Retry</a></div>
+          <!-- Step 6: WHAT SHOULD I DO NOW? -->
+          <div id="step6ActionCard" class="result-card">
+            <h3 class="card-title">6. WHAT SHOULD I DO NOW?</h3>
+            <div id="heroImmediateAction" class="immediate-action" style="display: none; margin-bottom: 1rem;"></div>
             
-            <div id="incidentSafe" style="display:none;">
-              <div class="action-list">
-                <div class="action-item safe">
-                  <div class="action-number">✓</div>
-                  <div class="action-text">This message appears legitimate. No scam patterns detected. Stay alert, stay safe!</div>
+            <div id="incidentCard">
+              <div id="incidentLoading" style="display:none; text-align:center; padding:2rem; color:var(--text-muted); font-weight:600;">Preparing safety guidance...</div>
+              <div id="incidentError" style="display:none; text-align:center; padding:2rem; color:var(--color-critical); font-weight:600;">Failed to load guidance. <a href="#" id="retryIncidentBtn" class="tappable-link">Retry</a></div>
+
+              <div id="incidentSafe" style="display:none;">
+                <div class="action-list">
+                  <div class="action-item safe">
+                    <div class="action-number">✓</div>
+                    <div class="action-text">This message appears legitimate. No scam patterns detected. Stay alert, stay safe!</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div id="incidentContent" style="display:none;">
-              <div class="action-list">
-                <div class="action-item critical">
-                  <div class="action-number">01</div>
-                  <div class="action-text" id="incImmediateAction"></div>
-                </div>
-                <div class="action-item">
-                  <div class="action-number">02</div>
-                  <div class="action-text" id="incPaymentAction"></div>
-                </div>
-                <div class="action-item">
-                  <div class="action-number">03</div>
-                  <div class="action-text" id="incEvidenceAction"></div>
-                </div>
-                <div class="action-item">
-                  <div class="action-number">04</div>
-                  <div class="action-text">Report: <span id="incReportingDest"></span></div>
+              <div id="incidentContent" style="display:none;">
+                <div class="action-list">
+                  <div class="action-item critical">
+                    <div class="action-number">01</div>
+                    <div class="action-text" id="incImmediateAction"></div>
+                  </div>
+                  <div class="action-item">
+                    <div class="action-number">02</div>
+                    <div class="action-text" id="incPaymentAction"></div>
+                  </div>
+                  <div class="action-item">
+                    <div class="action-number">03</div>
+                    <div class="action-text" id="incEvidenceAction"></div>
+                  </div>
+                  <div class="action-item">
+                    <div class="action-number">04</div>
+                    <div class="action-text">Report: <span id="incReportingDest"></span></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Evidence Pack -->
+          <!-- Evidence Pack Details -->
           <details class="evidence-details" id="evidenceCard" style="display: none; margin-bottom: 2rem;">
-            <summary>View Technical Evidence</summary>
+            <summary>View Technical Evidence Pack</summary>
             <div class="evidence-content" id="evidenceContainer"></div>
           </details>
           
