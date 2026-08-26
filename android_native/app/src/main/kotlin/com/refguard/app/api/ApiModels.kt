@@ -60,6 +60,9 @@ data class PaymentIntentMismatchDto(
 data class ScamChainNodeDto(
     val node_id: String,
     val node_type: String,
+    val state: String,
+    val confidence: Double,
+    val provenance: String,
     val entity_reference: String?,
     val evidence_references: List<String>?
 )
@@ -84,7 +87,9 @@ data class ScamChainDto(
 data class EvidenceItemDto(
     val evidence_id: String,
     val evidence_type: String,
-    val data: String
+    val data: String,
+    val explanation: String,
+    val source_category: String
 )
 
 /** contracts/schemas/evidence-pack.json */
