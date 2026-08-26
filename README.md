@@ -1,103 +1,104 @@
-# RefGuard — Universal UPI & Referral Scam Protection Platform
+﻿# RefGuard
 
-**RefGuard** is an ambient, AI-driven digital-payment and referral scam protection platform designed to stop financial fraud before the user authorizes payment or shares sensitive information.
+**Stop the scam before you pay.**
 
-Given a suspicious referral, payment interaction, SMS message, URL, UPI VPA, QR code, or screenshot, RefGuard automatically:
-1. Ingests and normalizes the content across Android & Web ingress channels.
-2. Extracts payment vectors, URLs, referral codes, and psychological manipulation triggers.
-3. Performs real-time threat intelligence and local community scam matching.
-4. Identifies **Payment-Intent Mismatches** (e.g. user believes they are receiving a prize/refund, but the underlying action triggers an outbound UPI debit).
-5. Reconstructs the multi-step **Scam Chain** directed graph (Message → Referral → Shortlink → Landing Page → UPI Collect → Debit).
-6. Compiles a traceable **Evidence Pack** with unique verifiable evidence IDs.
-7. Computes explainable risk scores and delivers clear, unambiguous **Protective Action Guidance**.
+[![Build and Publish Release APK](https://github.com/Barathwaj2006/RefGuard/actions/workflows/release.yml/badge.svg)](https://github.com/Barathwaj2006/RefGuard/actions/workflows/release.yml)
+[![RefGuard Full-System CI](https://github.com/Barathwaj2006/RefGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/Barathwaj2006/RefGuard/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Barathwaj2006/RefGuard?label=Release)](https://github.com/Barathwaj2006/RefGuard/releases/latest)
+[![Platform](https://img.shields.io/badge/Platform-Android-green.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
----
+## The Problem
+Social engineering payment fraud, particularly via UPI and SMS, is accelerating. Scammers manipulate victims into authorizing payments under the guise of refunds, lottery wins, or urgent disconnections. Traditional bank security kicks in *after* the payment intent is formed.
 
-## ⚡ The Golden Loop
+## The Solution
+RefGuard is an intent-level pre-execution protection system. It acts as a shield before you enter your UPI PIN. By analyzing the contextual promise (e.g., "You won ₹5000") against the actual technical protocol (e.g., "UPI Collect Request for ₹5000"), RefGuard catches the deception at the psychological and protocol level.
 
-```
-[ USER CONTENT INGRESS ] 
-(Share Sheet / QR / Screenshot / Clipboard / Manual Input)
-          ↓
-[ EXTRACTION & NORMALIZATION ] 
-(UPI Pay URI, VPAs, URLs, Referral Codes, Amounts, Urgency Triggers)
-          ↓
-[ THREAT INTELLIGENCE & MISMATCH ANALYSIS ]
-(Domain Reputation, Phishing Patterns, Stated Intent vs Actual Debit Action)
-          ↓
-[ GRAPH RECONSTRUCTION & EVIDENCE PACKING ]
-(Scam Chain DAG, Traceable Evidence Item Registry)
-          ↓
-[ RISK ASSESSMENT & PROTECTIVE ACTION ]
-(0-100 Score, Severity Level, Plain-Language Advisory, Direct User Instructions)
-```
+## Why RefGuard Is Different
+- **Payment-Intent Mismatch Analysis:** The core innovation. It detects when a user is promised money but the underlying technical link requests a debit.
+- **Evidence-Backed Verdicts:** We don't just say "Scam." We highlight the exact reasons, showing the extracted features and matching threat intelligence.
+- **ScamChain:** Reconstructs the multi-step directed graph of the attack (Message → Referral → Shortlink → UPI Collect).
+- **Offline Edge Analysis:** Uses a lightweight LocalEdgeClassifier on the device. It detects threats even without an internet connection.
+- **Human-Readable Explanations:** Explains the threat in simple terms, e.g., "Entering a UPI PIN NEVER receives money."
+- **Incident Response (1930):** Direct integration with the national cybercrime reporting helpline (1930) for post-incident action.
+- **Threat Lab & Threat Radar:** Internal tools to inspect payloads, view the logistic feature ensemble weights, and understand *why* the model flagged a threat.
 
----
+## How It Works
+INPUT (QR, UPI URI, SMS) → EXTRACTION (VPA, Amount, Note) → ANALYSIS (NLP & Protocol Check) → INTENT CHECK (Promise vs. Action) → EVIDENCE (Extracted Tokens) → VERDICT (Score 0-100) → ACTION (Block / Warn / Allow)
 
-## 🚀 Quick Start & Running the Demo
+## Product Experience
+- **Home:** Dashboard showing recent scans, threat radar, and quick scan actions.
+- **Scan (QR Scanner):** CameraX and ML Kit integration for real-time QR code threat detection.
+- **Analyze:** Manual input for suspicious links, SMS, or UPI VPAs.
+- **Result:** The verdict screen. Red for critical threat, yellow for warning, green for safe.
+- **Investigation & ScamChain:** Deep dive into the evidence, showing the timeline of the attack and extracted risk factors.
+- **Threat Lab:** A developer/analyst interface to test the adversarial classifier and view logistic token weights.
+- **Threat Radar:** Geographic/Categorical breakdown of ongoing threats.
+- **Settings:** Adjust the shield sensitivity and offline fallback mechanisms.
+- **Incident Response:** Immediate guidance on what to do if you've already been scammed (calling 1930).
 
-### Prerequisites
-- **Node.js**: v18+ (tested on v24)
-- **Java / Android SDK** (optional for Android platform tests): JDK 17+
+## Judge Demo
+1. **Open RefGuard** and go to the **Analyze** tab.
+2. **Enter a suspicious scenario:** A UPI collect request claiming a refund (upi://pay?pa=scammer@ybl&pn=Refund&am=5000&cu=INR).
+3. **Analyze it:** Click analyze.
+4. **Show Verdict:** The screen immediately blocks the action with a Critical Threat warning.
+5. **Open Investigation:** Click on "Investigation" to view the ScamChain and evidence.
+6. **Demonstrate Threat Lab:** Navigate to Threat Lab to see the underlying logistic model weights for terms like "refund" and "cashback".
+7. **Demonstrate Safe Merchant:** Scan a legitimate merchant QR (e.g., Swiggy/Zomato). It passes with a low score.
+8. **Demonstrate Offline Capability:** Disable internet and run a scan. The LocalEdgeClassifier still catches known scam keywords and intent mismatches.
+9. **Show 1930 Response:** Navigate to the Incident Response screen.
 
-### 1. Run the Full Integration & Contract Test Suite
-```bash
-npm test
-```
+## Architecture
+`
+┌─────────────────┐     ┌──────────────────────┐     ┌────────────────────────┐
+│  1. INGRESS     │────▶│ 2. PROTOCOL & NLP    │────▶│ 3. EDGE LOGISTIC       │
+│ • Intent URI    │     │    DECODER           │     │    FEATURE ENSEMBLE    │
+│ • QR Bitmaps    │     │ • UPI Scheme Parser  │     │ • 40+ Token Weights    │
+│ • SMS Payload   │     │ • Target VPA / Debit │     │ • Prior Log-Odds Model │
+└─────────────────┘     └──────────────────────┘     └───────────┬────────────┘
+                                                                 │
+                                                                 ▼
+┌─────────────────┐     ┌──────────────────────┐     ┌────────────────────────┐
+│  6. PROTECTIVE  │◀────│ 5. RISK SCORING &    │◀────│ 4. INTENT INVERSION    │
+│     INTERVENTION│     │    CONFIDENCE HEDGE  │     │    MISMATCH REASONER   │
+│ • Block / Warn  │     │ • Sigmoid (0-100 pts)│     │ • Promised: ₹5,000 Win │
+│ • ScamChain UI  │     │ • Confidence % Margin│     │ • Reality: Debit ₹5,000│
+└─────────────────┘     └──────────────────────┘     └────────────────────────┘
+`
 
-### 2. Launch the Interactive Demo Web UI & API Server
-```bash
-npm run demo
-# or
-npm start
-```
-Navigate to **`http://localhost:3000`** in your browser to interactively test all core flows (Fake Referrals, QR Scams, Payment Mismatch Traps, High-Risk VPAs, Screenshot OCR, and Clean Merchant Payments).
+## Technology Stack
+- **Android App:** Kotlin, Jetpack Compose (Material 3), CameraX, ML Kit, Coroutines.
+- **Backend API:** Node.js, Express (used for cloud intelligence/demo integration).
+- **Edge AI:** Custom LocalEdgeClassifier (Kotlin) implementing a calibrated logistic feature ensemble.
+- **CI/CD:** GitHub Actions (Automated release pipeline and integration tests).
 
-### 3. Run Android Platform Module Tests
-```bash
-cd android
-./gradlew test
-```
+## Security & Privacy
+See our comprehensive [SECURITY.md](SECURITY.md) for details.
+- No credential collection.
+- Local edge processing for sensitive payloads.
+- Explicit user-initiated scans.
 
----
+## Installation
+The final hackathon APK is available in the [Releases](https://github.com/Barathwaj2006/RefGuard/releases/tag/hackathon-build).
+Download pp-release.apk and install it on any Android device (Android 8.0+).
 
-## 🛡️ Core MVP Flows Verified
+## Development
+`ash
+# Clone the repository
+git clone https://github.com/Barathwaj2006/RefGuard.git
+cd RefGuard/android_native
 
-| Flow | Input Type | Detection Mechanism | Protection Decision |
-| :--- | :--- | :--- | :--- |
-| **A. Fake Viral Referral** | URL / Text | Malicious TLD heuristic + Viral referral pattern | `REQUIRE_CONFIRMATION` / `DISCOURAGE_PROCEED` |
-| **B. Tampered QR Code** | QR (`upi://pay`) | Known fraudulent VPA + Collect request analysis | `DISCOURAGE_PROCEED` (CRITICAL) |
-| **C. Screenshot / Image OCR** | IMAGE (Base64) | OCR entity parsing + Advance-fee task scam detection | `REQUIRE_CONFIRMATION` (HIGH) |
-| **D. High-Risk UPI VPA** | UPI_VPA | Community registry & deceptive keyword heuristic | `DISCOURAGE_PROCEED` (CRITICAL) |
-| **E. Payment-Intent Mismatch** | Text / UPI | Semantic contrast: Stated Credit vs Actual Outbound Debit | `DISCOURAGE_PROCEED` ("DO NOT enter UPI PIN") |
-| **F. Legitimate Merchant** | QR / VPA | Curated whitelist + Standard payment protocol | `ALLOW` (LOW Risk, Score < 30) |
-| **G. Malformed / Invalid Input**| Any | Strict JSON Schema validation | `400 Bad Request` with structured error |
-| **H. Safe Offline State** | Ingress | Local caching & community registry ingestion | Queued as `SuccessOffline` |
+# Build Debug APK
+./gradlew :app:assembleDebug
 
----
+# Run Tests
+./gradlew testDebugUnitTest
+`
 
-## 🔒 Privacy & Security First
-- **Zero Credential Collection**: RefGuard never requests, stores, or logs UPI PINs, passwords, OTPs, CVVs, or bank credentials.
-- **Explicit User Initiation**: Platform ingestion only operates upon explicit user action (Share Sheet click, Clipboard paste button, Camera QR scan, or Image import). No background monitoring or accessibility service abuse.
+## Current Status
+- **Implemented:** Full native Android UI (Compose), Offline Edge Classifier, QR Scanner, ScamChain Investigation, Threat Lab, UPI Intent Parsing, Node.js Backend API integration, GitHub Release Pipeline.
+- **Experimental:** Live Threat Radar syncing with remote API.
+- **Planned:** iOS App, Browser Extension.
 
----
-
-## 📂 Repository Architecture
-
-```
-RefGuard/
-├── contracts/               # Authoritative Contract Layer (FROZEN API v1.0)
-│   ├── api.yaml             # OpenAPI 3.0.3 specification
-│   ├── schemas/             # 11 JSON Schema definitions (ScanRequest, ScanResponse, etc.)
-│   └── examples/            # 9 Golden contract fixture examples
-├── android/                 # Android Platform Ingestion Module
-│   ├── platform/            # Library module (Ingress channels, permissions, offline queueing)
-│   └── build.gradle.kts     # Root Android Gradle configuration
-├── backend/                 # Core Detection Engine & API Service
-│   ├── src/                 # Express app, Analyzer, Extractor pipelines, Threat Store
-│   └── tests/               # Backend Jest test suites
-├── integration/             # Web Demo & Integration UI
-│   ├── demo/public/         # Frontend web application (Scanner, Evidence, Incident Recovery, Intel)
-│   └── tests/               # Integration tests
-└── package.json             # Root runner scripts
-```
+## License
+MIT License.

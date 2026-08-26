@@ -14,4 +14,33 @@ node_modules/
 # Editors
 .vscode/
 .idea/
-```
+```# Android & Gradle
+build/
+app/build/
+platform/build/
+android_native/build/
+.gradle/
+.kotlin/
+local.properties
+*.apk
+*.aab
+*.keystore
+
+# Node & JS
+node_modules/
+backend/node_modules/
+package-lock.json
+
+# Build artifacts
+backend/dist/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+# Environment
+.env
+.env.local
+.env.*
+# Editors
+.vscode/
+.idea/
