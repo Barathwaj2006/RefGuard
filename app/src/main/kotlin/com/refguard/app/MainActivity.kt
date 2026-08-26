@@ -34,17 +34,33 @@ import com.refguard.platform.models.ScanRequest
 import java.io.FileNotFoundException
 import java.time.Instant
 
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.refguard.app.ui.theme.*
+
 /**
  * Navigation destinations for RefGuard product hierarchy:
- * HOME → ANALYZE → RESULT → INVESTIGATION → ACTION
+ * OPENING → HOME ↔ ANALYZE ↔ SANDBOX ↔ RADAR ↔ SETTINGS
+ * Flow: ANALYZE → RESULT → INVESTIGATION → ACTION
  */
 enum class AppScreen {
+    OPENING,
     HOME,
     ANALYZE,
     RESULT,
     INVESTIGATION,
     ACTION,
-    QR_SCANNER
+    QR_SCANNER,
+    SANDBOX,
+    RADAR,
+    SETTINGS
 }
 
 /**
@@ -58,7 +74,7 @@ enum class AppScreen {
  *  2. Direct Launch:
  *     - QR Camera scanner (Torch toggle, Live viewfinder)
  *     - Explicit Clipboard Scan
- *     - Manual input & Threat Lab scenarios
+ *     - Threat Simulator Lab & NPCI Threat Radar
  */
 class MainActivity : ComponentActivity() {
 
@@ -66,7 +82,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var offlineQueue: OfflineScanQueue
     private lateinit var historyManager: InvestigationHistoryManager
 
-    private val _currentScreen = mutableStateOf(AppScreen.HOME)
+    private val _currentScreen = mutableStateOf(AppScreen.OPENING)
     private var _previousScreenBeforeScanner = AppScreen.HOME
     private var _activeResult = mutableStateOf<ScanResult?>(null)
 
@@ -128,8 +144,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // ── BACK NAVIGATION CONTROLLER ───────────────
-                // Enforces: ACTION → INVESTIGATION → RESULT → ANALYZE → HOME
-                BackHandler(enabled = currentScreen != AppScreen.HOME) {
+                // Enforces smooth back-stack handling across all 10 screens
+                BackHandler(enabled = currentScreen != AppScreen.HOME && currentScreen != AppScreen.OPENING) {
                     when (currentScreen) {
                         AppScreen.ACTION -> _currentScreen.value = AppScreen.INVESTIGATION
                         AppScreen.INVESTIGATION -> _currentScreen.value = AppScreen.RESULT
@@ -141,128 +157,262 @@ class MainActivity : ComponentActivity() {
                             viewModel.resetScanState()
                             _currentScreen.value = AppScreen.HOME
                         }
+                        AppScreen.SANDBOX -> _currentScreen.value = AppScreen.HOME
+                        AppScreen.RADAR -> _currentScreen.value = AppScreen.HOME
+                        AppScreen.SETTINGS -> _currentScreen.value = AppScreen.HOME
                         AppScreen.QR_SCANNER -> _currentScreen.value = _previousScreenBeforeScanner
-                        AppScreen.HOME -> finish()
+                        AppScreen.OPENING, AppScreen.HOME -> finish()
                     }
                 }
 
-                // Smooth transitions between product screens
-                AnimatedContent(
-                    targetState = Triple(currentScreen, scanState, offlineQueueSize),
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    label = "ScreenTransition"
-                ) { (screen, state, queueSize) ->
+                val showBottomBar = currentScreen in listOf(
+                    AppScreen.HOME,
+                    AppScreen.ANALYZE,
+                    AppScreen.SANDBOX,
+                    AppScreen.RADAR,
+                    AppScreen.SETTINGS
+                ) && (scanState !is ScanUiState.Loading && scanState !is ScanUiState.Success)
 
-                    when {
-                        screen == AppScreen.QR_SCANNER -> {
-                            QRScannerScreen(
-                                onQRScanned = { ingressResult ->
-                                    _currentScreen.value = AppScreen.ANALYZE
-                                    viewModel.handleIngressResult(ingressResult)
-                                },
-                                onBack = { _currentScreen.value = _previousScreenBeforeScanner }
-                            )
+                Scaffold(
+                    bottomBar = {
+                        if (showBottomBar) {
+                            NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                tonalElevation = 6.dp
+                            ) {
+                                NavigationBarItem(
+                                    selected = currentScreen == AppScreen.HOME,
+                                    onClick = {
+                                        viewModel.resetScanState()
+                                        _currentScreen.value = AppScreen.HOME
+                                    },
+                                    icon = { Icon(Icons.Default.Shield, contentDescription = "Home") },
+                                    label = { Text("Shield", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.HOME) FontWeight.Bold else FontWeight.Normal) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = ColorBrand,
+                                        selectedTextColor = ColorBrand,
+                                        indicatorColor = ColorBrandSurface
+                                    )
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == AppScreen.ANALYZE,
+                                    onClick = {
+                                        viewModel.resetScanState()
+                                        _currentScreen.value = AppScreen.ANALYZE
+                                    },
+                                    icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan") },
+                                    label = { Text("Scanner", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.ANALYZE) FontWeight.Bold else FontWeight.Normal) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = ColorBrand,
+                                        selectedTextColor = ColorBrand,
+                                        indicatorColor = ColorBrandSurface
+                                    )
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == AppScreen.SANDBOX,
+                                    onClick = {
+                                        viewModel.resetScanState()
+                                        _currentScreen.value = AppScreen.SANDBOX
+                                    },
+                                    icon = { Icon(Icons.Default.Science, contentDescription = "Sandbox") },
+                                    label = { Text("Threat Lab", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.SANDBOX) FontWeight.Bold else FontWeight.Normal) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = ColorBrand,
+                                        selectedTextColor = ColorBrand,
+                                        indicatorColor = ColorBrandSurface
+                                    )
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == AppScreen.RADAR,
+                                    onClick = {
+                                        viewModel.resetScanState()
+                                        _currentScreen.value = AppScreen.RADAR
+                                    },
+                                    icon = { Icon(Icons.Default.CrisisAlert, contentDescription = "Radar") },
+                                    label = { Text("Radar", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.RADAR) FontWeight.Bold else FontWeight.Normal) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = ColorBrand,
+                                        selectedTextColor = ColorBrand,
+                                        indicatorColor = ColorBrandSurface
+                                    )
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == AppScreen.SETTINGS,
+                                    onClick = {
+                                        viewModel.resetScanState()
+                                        _currentScreen.value = AppScreen.SETTINGS
+                                    },
+                                    icon = { Icon(Icons.Default.Tune, contentDescription = "Settings") },
+                                    label = { Text("Config", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.SETTINGS) FontWeight.Bold else FontWeight.Normal) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = ColorBrand,
+                                        selectedTextColor = ColorBrand,
+                                        indicatorColor = ColorBrandSurface
+                                    )
+                                )
+                            }
                         }
+                    }
+                ) { scaffoldPadding ->
+                    Box(modifier = Modifier.padding(scaffoldPadding)) {
+                        // Smooth transitions between product screens
+                        AnimatedContent(
+                            targetState = Triple(currentScreen, scanState, offlineQueueSize),
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "ScreenTransition"
+                        ) { (screen, state, queueSize) ->
 
-                        screen == AppScreen.ACTION && activeResult != null -> {
-                            ActionScreen(
-                                result = activeResult!!,
-                                viewModel = viewModel,
-                                onNavigateBack = { _currentScreen.value = AppScreen.INVESTIGATION },
-                                onReturnHome = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.HOME
+                            when {
+                                screen == AppScreen.OPENING -> {
+                                    OpeningScreen(
+                                        onGetStarted = { _currentScreen.value = AppScreen.HOME },
+                                        onOpenSandbox = { _currentScreen.value = AppScreen.SANDBOX }
+                                    )
                                 }
-                            )
-                        }
 
-                        screen == AppScreen.INVESTIGATION && activeResult != null -> {
-                            InvestigationScreen(
-                                result = activeResult!!,
-                                onNavigateBack = { _currentScreen.value = AppScreen.RESULT },
-                                onNavigateToAction = { _currentScreen.value = AppScreen.ACTION }
-                            )
-                        }
-
-                        screen == AppScreen.RESULT && activeResult != null -> {
-                            ResultScreen(
-                                result = activeResult!!,
-                                viewModel = viewModel,
-                                onNavigateBack = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.ANALYZE
-                                },
-                                onNavigateToInvestigation = { _currentScreen.value = AppScreen.INVESTIGATION },
-                                onNavigateToAction = { _currentScreen.value = AppScreen.ACTION },
-                                onCheckAnother = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.ANALYZE
+                                screen == AppScreen.QR_SCANNER -> {
+                                    QRScannerScreen(
+                                        onQRScanned = { ingressResult ->
+                                            _currentScreen.value = AppScreen.ANALYZE
+                                            viewModel.handleIngressResult(ingressResult)
+                                        },
+                                        onBack = { _currentScreen.value = _previousScreenBeforeScanner }
+                                    )
                                 }
-                            )
-                        }
 
-                        state is ScanUiState.Queued -> {
-                            QueuedScreen(
-                                queueSize = queueSize,
-                                onGoHome = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.HOME
+                                screen == AppScreen.SANDBOX -> {
+                                    ScamSandboxScreen(
+                                        viewModel = viewModel,
+                                        onNavigateBack = { _currentScreen.value = AppScreen.HOME },
+                                        onLaunchScenario = {
+                                            _currentScreen.value = AppScreen.ANALYZE
+                                        }
+                                    )
                                 }
-                            )
-                        }
 
-                        state is ScanUiState.Error -> {
-                            ErrorScreen(
-                                error = state,
-                                onRetry = { pending ->
-                                    if (pending != null) viewModel.retry(pending)
-                                    else viewModel.resetScanState()
-                                },
-                                onGoHome = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.HOME
+                                screen == AppScreen.RADAR -> {
+                                    ThreatRadarScreen(
+                                        onNavigateBack = { _currentScreen.value = AppScreen.HOME }
+                                    )
                                 }
-                            )
-                        }
 
-                        screen == AppScreen.ANALYZE -> {
-                            AnalyzeScreen(
-                                viewModel = viewModel,
-                                isAnalyzing = state is ScanUiState.Loading,
-                                onNavigateBack = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.HOME
-                                },
-                                onNavigateToScan = {
-                                    _previousScreenBeforeScanner = AppScreen.ANALYZE
-                                    _currentScreen.value = AppScreen.QR_SCANNER
-                                },
-                                onNavigateToImagePicker = { imagePickerLauncher.launch("image/*") }
-                            )
-                        }
-
-                        else -> {
-                            HomeScreen(
-                                viewModel = viewModel,
-                                offlineQueueSize = queueSize,
-                                onNavigateToAnalyze = {
-                                    viewModel.resetScanState()
-                                    _currentScreen.value = AppScreen.ANALYZE
-                                },
-                                onNavigateToScan = {
-                                    _previousScreenBeforeScanner = AppScreen.HOME
-                                    _currentScreen.value = AppScreen.QR_SCANNER
-                                },
-                                onNavigateToImagePicker = { imagePickerLauncher.launch("image/*") },
-                                onOpenInvestigation = { scanId ->
-                                    viewModel.openHistoryInvestigation(scanId)
-                                    val histResult = historyManager.getResult(scanId)
-                                    if (histResult != null) {
-                                        _activeResult.value = histResult
-                                        _currentScreen.value = AppScreen.INVESTIGATION
-                                    }
+                                screen == AppScreen.SETTINGS -> {
+                                    ShieldSettingsScreen(
+                                        viewModel = viewModel,
+                                        onNavigateBack = { _currentScreen.value = AppScreen.HOME }
+                                    )
                                 }
-                            )
+
+                                screen == AppScreen.ACTION && activeResult != null -> {
+                                    ActionScreen(
+                                        result = activeResult!!,
+                                        viewModel = viewModel,
+                                        onNavigateBack = { _currentScreen.value = AppScreen.INVESTIGATION },
+                                        onReturnHome = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.HOME
+                                        }
+                                    )
+                                }
+
+                                screen == AppScreen.INVESTIGATION && activeResult != null -> {
+                                    InvestigationScreen(
+                                        result = activeResult!!,
+                                        onNavigateBack = { _currentScreen.value = AppScreen.RESULT },
+                                        onNavigateToAction = { _currentScreen.value = AppScreen.ACTION }
+                                    )
+                                }
+
+                                screen == AppScreen.RESULT && activeResult != null -> {
+                                    ResultScreen(
+                                        result = activeResult!!,
+                                        viewModel = viewModel,
+                                        onNavigateBack = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.ANALYZE
+                                        },
+                                        onNavigateToInvestigation = { _currentScreen.value = AppScreen.INVESTIGATION },
+                                        onNavigateToAction = { _currentScreen.value = AppScreen.ACTION },
+                                        onCheckAnother = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.ANALYZE
+                                        }
+                                    )
+                                }
+
+                                state is ScanUiState.Queued -> {
+                                    QueuedScreen(
+                                        queueSize = queueSize,
+                                        onGoHome = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.HOME
+                                        }
+                                    )
+                                }
+
+                                state is ScanUiState.Error -> {
+                                    ErrorScreen(
+                                        error = state,
+                                        onRetry = { pending ->
+                                            if (pending != null) viewModel.retry(pending)
+                                            else viewModel.resetScanState()
+                                        },
+                                        onGoHome = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.HOME
+                                        }
+                                    )
+                                }
+
+                                screen == AppScreen.ANALYZE -> {
+                                    AnalyzeScreen(
+                                        viewModel = viewModel,
+                                        isAnalyzing = state is ScanUiState.Loading,
+                                        onNavigateBack = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.HOME
+                                        },
+                                        onNavigateToScan = {
+                                            _previousScreenBeforeScanner = AppScreen.ANALYZE
+                                            _currentScreen.value = AppScreen.QR_SCANNER
+                                        },
+                                        onNavigateToImagePicker = { imagePickerLauncher.launch("image/*") }
+                                    )
+                                }
+
+                                else -> {
+                                    HomeScreen(
+                                        viewModel = viewModel,
+                                        offlineQueueSize = queueSize,
+                                        onNavigateToAnalyze = {
+                                            viewModel.resetScanState()
+                                            _currentScreen.value = AppScreen.ANALYZE
+                                        },
+                                        onNavigateToScan = {
+                                            _previousScreenBeforeScanner = AppScreen.HOME
+                                            _currentScreen.value = AppScreen.QR_SCANNER
+                                        },
+                                        onNavigateToImagePicker = { imagePickerLauncher.launch("image/*") },
+                                        onNavigateToSandbox = {
+                                            _currentScreen.value = AppScreen.SANDBOX
+                                        },
+                                        onNavigateToRadar = {
+                                            _currentScreen.value = AppScreen.RADAR
+                                        },
+                                        onNavigateToSettings = {
+                                            _currentScreen.value = AppScreen.SETTINGS
+                                        },
+                                        onOpenInvestigation = { scanId ->
+                                            viewModel.openHistoryInvestigation(scanId)
+                                            val histResult = historyManager.getResult(scanId)
+                                            if (histResult != null) {
+                                                _activeResult.value = histResult
+                                                _currentScreen.value = AppScreen.INVESTIGATION
+                                            }
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }

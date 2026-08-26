@@ -12,20 +12,24 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 
 // ── Palette ─────────────────────────────────────
-// Brand: deep navy + electric indigo
-val ColorBrand         = Color(0xFF1A237E)    // deep navy
-val ColorBrandLight    = Color(0xFF3949AB)    // medium indigo
-val ColorBrandSurface  = Color(0xFFF5F5FF)   // near-white tint
+// Brand: deep navy + electric cyber indigo + vibrant accents
+val ColorBrand         = Color(0xFF0D1B48)    // deep cyber navy
+val ColorBrandLight    = Color(0xFF2541B2)    // vibrant royal indigo
+val ColorBrandAccent   = Color(0xFF00E5FF)    // electric cyber cyan accent
+val ColorBrandSurface  = Color(0xFFF3F5FF)    // modern cool surface tint
+val ColorBrandDark     = Color(0xFF070D24)    // dark defense hero bg
 
-// Severity
-val ColorSafe          = Color(0xFF2E7D32)    // forest green
-val ColorSafeContainer = Color(0xFFE8F5E9)
-val ColorWarning       = Color(0xFFF57F17)    // amber
-val ColorWarningContainer = Color(0xFFFFF8E1)
-val ColorHigh          = Color(0xFFD84315)    // deep orange
-val ColorHighContainer = Color(0xFFFBE9E7)
-val ColorCritical      = Color(0xFFB71C1C)    // dark red
-val ColorCriticalContainer = Color(0xFFFFEBEE)
+// Severity & Verification Tokens
+val ColorSafe          = Color(0xFF00875A)    // emerald green
+val ColorSafeContainer = Color(0xFFE3FCEF)
+val ColorWarning       = Color(0xFFFF8B00)    // bright amber
+val ColorWarningContainer = Color(0xFFFFF0B3)
+val ColorHigh          = Color(0xFFDE350B)    // alert orange
+val ColorHighContainer = Color(0xFFFFEBE6)
+val ColorCritical      = Color(0xFFBF2600)    // critical crimson
+val ColorCriticalContainer = Color(0xFFFFECE6)
+val ColorNeutralCard   = Color(0xFFFFFFFF)
+val ColorNeutralBorder = Color(0xFFE2E8F0)
 
 val AppTypography = Typography(
     displayLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 57.sp),
@@ -71,3 +75,4 @@ fun RefGuardTheme(content: @Composable () -> Unit) {
         content = content
     )
 }
+

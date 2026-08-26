@@ -196,7 +196,7 @@ fun AnalyzeScreen(
 
             // ── SAMPLE PRESETS (FOR RAPID TESTING & DEMOS) ───
             Text(
-                "Quick Test Scenarios",
+                "Select Test Attack Vector",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -209,18 +209,45 @@ fun AnalyzeScreen(
                 FilterChip(
                     selected = false,
                     onClick = {
-                        inputText = "Congratulations! You won ₹5000 cashback. Click here to claim your reward: upi://pay?pa=fake-cashback-reward@paytm&am=500&pn=RewardsHub&tn=ClaimReward"
+                        inputText = "Dear Customer, Your Electricity power will be disconnected tonight at 9:30 PM because your previous month bill was not updated. Please immediately update and pay via upi://pay?pa=powerbill.discom@axisbank&pn=ElectricityDiscom&am=1450&cu=INR or call officer on 9876543210."
+                        isStrictUpi = false
                     },
-                    label = { Text("Cashback Inversion Trap", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("⚡ Power Bill Cutoff", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f)
                 )
 
                 FilterChip(
                     selected = false,
                     onClick = {
-                        inputText = "Dear user, your electricity power will be disconnected today. Send verification OTP immediately or pay bill to upi://pay?pa=powerbill.alert@xyz&am=1200&pn=ElectricityOffice"
+                        inputText = "Congratulations! You won ₹5000 cashback. Click here to claim your reward in bank: upi://pay?pa=rewards.claim.hub@paytm&am=5000&pn=RewardsHub&tn=ClaimReward5000"
+                        isStrictUpi = false
                     },
-                    label = { Text("Utility Phishing + OTP", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("🎁 ₹5,000 Reward QR", style = MaterialTheme.typography.labelSmall) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = false,
+                    onClick = {
+                        inputText = "Earn ₹5,000 daily from home! Like YouTube videos. Join Telegram: https://t.me/earn_rewards and deposit ₹500 security to upi://pay?pa=taskverify@okaxis&am=500"
+                        isStrictUpi = false
+                    },
+                    label = { Text("💼 Telegram Job Trap", style = MaterialTheme.typography.labelSmall) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                FilterChip(
+                    selected = false,
+                    onClick = {
+                        inputText = "India Post Alert: Your parcel #IN88923 cannot be delivered due to address error. Update address & pay ₹5 fee: upi://pay?pa=postcharge@ibl&am=5"
+                        isStrictUpi = false
+                    },
+                    label = { Text("📦 Postal KYC Phishing", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -233,18 +260,19 @@ fun AnalyzeScreen(
                     selected = false,
                     onClick = {
                         inputText = "upi://pay?pa=swiggy@icici&pn=Swiggy&am=340&cu=INR&tn=FoodOrder"
+                        isStrictUpi = false
                     },
-                    label = { Text("Safe Merchant UPI", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("✅ Safe Merchant UPI", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f)
                 )
 
                 FilterChip(
                     selected = false,
                     onClick = {
-                        inputText = "scammer@upi"
+                        inputText = "fraudulent-collect@ybl"
                         isStrictUpi = true
                     },
-                    label = { Text("Malicious VPA Handle", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("⚠️ Malicious VPA Handle", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f)
                 )
             }
