@@ -1,4 +1,4 @@
-﻿package com.refguard.app.ui.screens
+package com.refguard.app.ui.screens
 
 import android.content.Intent
 import androidx.compose.animation.*
@@ -205,12 +205,15 @@ fun ResultScreen(
             Spacer(Modifier.height(16.dp))
         }
 
-        // ── BEFORE YOU PAY CARD (Flagship Pre-Payment Component) ──
+        // ── PAYMENT DETAILS CARD ──
         if (hasPaymentData) {
+            val isMismatch = result.mismatchStatus == MismatchStatus.DETECTED
+            val cardColor = if (isMismatch) ColorCriticalContainer else palette.container
+            val textColor = if (isMismatch) ColorCritical else palette.primary
+            val titleText = if (isMismatch) "PAYMENT-INTENT MISMATCH" else "Payment Request Detected"
+
             Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = if (result.mismatchStatus == MismatchStatus.DETECTED) ColorCriticalContainer else palette.container
-                ),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -221,22 +224,24 @@ fun ResultScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "BEFORE YOU PAY",
+                            titleText,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (result.mismatchStatus == MismatchStatus.DETECTED) ColorCritical else palette.primary
+                            color = textColor
                         )
-                        Surface(
-                            color = if (result.mismatchStatus == MismatchStatus.DETECTED) ColorCritical else palette.primary,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                "YOU SEND MONEY",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                        if (isMismatch) {
+                            Surface(
+                                color = ColorCritical,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    "YOU SEND MONEY",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
 
@@ -245,8 +250,10 @@ fun ResultScreen(
                     result.recipientVpa?.let { vpa ->
                         Text("Recipient VPA: $vpa", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     }
-                    result.mismatchAmount?.let { amt ->
-                        Text("Amount: ₹$amt", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    if (result.mismatchAmount != null) {
+                        Text("Amount: ₹${result.mismatchAmount}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Amount: Unavailable", style = MaterialTheme.typography.bodyMedium, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                     }
 
                     Spacer(Modifier.height(8.dp))
@@ -256,16 +263,17 @@ fun ResultScreen(
                     result.statedIntent?.let { intent ->
                         Text("You were told: $intent", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    val actionStr = result.actualPaymentAction ?: "Outbound Debit (Money will leave your bank account)"
-                    val dirStr = result.paymentDirection?.let { " ($it)" } ?: ""
-                    Text(
-                        "Payment actually does: $actionStr$dirStr",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (result.mismatchStatus == MismatchStatus.DETECTED) ColorCritical else MaterialTheme.colorScheme.onSurface
-                    )
+                    
+                    if (isMismatch) {
+                        val actionStr = result.actualPaymentAction ?: "Outbound Debit"
+                        val dirStr = result.paymentDirection?.let { " ($it)" } ?: ""
+                        Text(
+                            "Payment actually does: $actionStr$dirStr",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorCritical
+                        )
 
-                    if (result.mismatchStatus == MismatchStatus.DETECTED) {
                         Spacer(Modifier.height(12.dp))
                         Surface(
                             color = ColorCritical,
@@ -286,6 +294,12 @@ fun ResultScreen(
                                 )
                             }
                         }
+                    } else {
+                        Text(
+                            "Standard Payment Action: Outbound Debit",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -785,3 +799,4 @@ fun riskPalette(level: RiskLevel): RiskPalette = when (level) {
     RiskLevel.CRITICAL -> RiskPalette("CRITICAL — SCAM", ColorCritical, ColorCriticalContainer, Icons.Default.Dangerous)
     RiskLevel.UNKNOWN -> RiskPalette("Unknown", Color.Gray, Color.LightGray, Icons.AutoMirrored.Filled.HelpOutline)
 }
+

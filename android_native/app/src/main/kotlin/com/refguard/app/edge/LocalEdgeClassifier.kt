@@ -64,9 +64,9 @@ object LocalEdgeClassifier {
                 signals.add("verified_merchant_whitelist")
             }
             upiPayload != null -> {
-                riskLevel = RiskLevel.WARNING
-                riskScore = 40
-                signals.add("unverified_payment_request")
+                riskLevel = RiskLevel.SAFE
+                riskScore = 15
+                signals.add("standard_payment_request")
             }
             else -> {
                 riskLevel = RiskLevel.SAFE
@@ -85,14 +85,14 @@ object LocalEdgeClassifier {
             RiskLevel.CRITICAL -> if (isMismatch) "Critical Payment-Intent Mismatch Detected" else "Known Fraud Signature Identified"
             RiskLevel.HIGH -> "High Risk Phishing Pattern Detected"
             RiskLevel.WARNING -> "Unverified Payment / Link"
-            else -> "No Threats Detected"
+            else -> "No Fraud Indicators Detected"
         }
 
         val instruction = when (riskLevel) {
             RiskLevel.CRITICAL -> "DO NOT enter your UPI PIN. This will debit money from your account."
             RiskLevel.HIGH -> "Do not share OTPs, click suspicious links, or send funds."
             RiskLevel.WARNING -> "Verify sender identity before proceeding."
-            else -> "Proceed with normal caution."
+            else -> "Standard payment request. Verify the recipient before paying."
         }
 
         val whyItMatters = when (riskLevel) {
@@ -128,6 +128,7 @@ object LocalEdgeClassifier {
             )
         }
         if (isDebit) {
+            val amountStr = if (amount != null) "₹$amount" else "Amount unavailable"
             nodes.add(
                 ScamChainNodeDto(
                     node_id = "node_debit",
@@ -135,7 +136,7 @@ object LocalEdgeClassifier {
                     state = "INFERRED",
                     confidence = 0.95,
                     provenance = "UPI_INTENT_DECODER",
-                    entity_reference = "Outgoing Debit ₹$amount",
+                    entity_reference = "Outgoing Debit ($amountStr)",
                     evidence_references = listOf("ev_vpa")
                 )
             )
