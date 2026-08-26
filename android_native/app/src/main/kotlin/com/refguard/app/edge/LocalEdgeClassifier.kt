@@ -1,4 +1,4 @@
-﻿package com.refguard.app.edge
+package com.refguard.app.edge
 
 import com.refguard.app.api.EvidenceItemDto
 import com.refguard.app.api.ScamChainNodeDto
@@ -103,18 +103,64 @@ object LocalEdgeClassifier {
         }
 
         val nodes = mutableListOf<ScamChainNodeDto>()
-        nodes.add(ScamChainNodeDto("node_ingress", "MESSAGE", "Ingress Content", emptyList()))
+        nodes.add(
+            ScamChainNodeDto(
+                node_id = "node_ingress",
+                node_type = "MESSAGE",
+                state = "OBSERVED",
+                confidence = 1.0,
+                provenance = "LOCAL_EDGE_CLASSIFIER",
+                entity_reference = "Ingress Content",
+                evidence_references = listOf("ev_local_orig")
+            )
+        )
         if (payeeVpa != null) {
-            nodes.add(ScamChainNodeDto("node_upi", "UPI_REQUEST", payeeVpa, emptyList()))
+            nodes.add(
+                ScamChainNodeDto(
+                    node_id = "node_upi",
+                    node_type = "UPI_REQUEST",
+                    state = "OBSERVED",
+                    confidence = 0.95,
+                    provenance = "UPI_INTENT_DECODER",
+                    entity_reference = payeeVpa,
+                    evidence_references = listOf("ev_vpa")
+                )
+            )
         }
         if (isDebit) {
-            nodes.add(ScamChainNodeDto("node_debit", "PAYMENT_ACTION", "Outgoing Debit ₹", emptyList()))
+            nodes.add(
+                ScamChainNodeDto(
+                    node_id = "node_debit",
+                    node_type = "PAYMENT_ACTION",
+                    state = "INFERRED",
+                    confidence = 0.95,
+                    provenance = "UPI_INTENT_DECODER",
+                    entity_reference = "Outgoing Debit ₹$amount",
+                    evidence_references = listOf("ev_vpa")
+                )
+            )
         }
 
         val evidence = mutableListOf<EvidenceItemDto>()
-        evidence.add(EvidenceItemDto("ev_local_orig", "ORIGINAL_CONTENT", request.contentValue.take(120)))
+        evidence.add(
+            EvidenceItemDto(
+                evidence_id = "ev_local_orig",
+                evidence_type = "ORIGINAL_CONTENT",
+                data = request.contentValue.take(120),
+                explanation = "Local input payload for edge analysis",
+                source_category = "LOCAL_EDGE_CLASSIFIER"
+            )
+        )
         if (payeeVpa != null) {
-            evidence.add(EvidenceItemDto("ev_vpa", "UPI_IDENTIFIER", payeeVpa))
+            evidence.add(
+                EvidenceItemDto(
+                    evidence_id = "ev_vpa",
+                    evidence_type = "UPI_IDENTIFIER",
+                    data = payeeVpa,
+                    explanation = "Extracted target VPA from payment intent",
+                    source_category = "UPI_INTENT_DECODER"
+                )
+            )
         }
 
         return ScanResult(
