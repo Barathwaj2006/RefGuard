@@ -2,10 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import { AnalyzerService } from '../services/analyzer';
 import { ScanRequest, ScanResponse } from '../models/types';
 
-const analyzer = new AnalyzerService();
+// Lazy initialization to prevent timer leak if analyzer constructor throws
+let _analyzerInstance: AnalyzerService | null = null;
+const getAnalyzer = () => {
+  if (!_analyzerInstance) {
+    _analyzerInstance = new AnalyzerService();
+  }
+  return _analyzerInstance;
+};
 
 // Match explicit credential leaks (e.g. My UPI PIN is 1234, password: xyz, cvv: 123)
 const RAW_CREDENTIAL_PATTERN = /\b(?:my\s+)?(?:upi\s+|atm\s+)?pin\s*(?:is|:|=)\s*\d{4,8}\b|\b(?:my\s+)?(?:password|passwd|pwd)\s*(?:is|:|=)\s*\S+|\bcvv\s*(?:is|:|=)?\s*\d{3,4}\b/i;
+
+// Configurable timeout from environment variable with sensible default
+const ANALYSIS_TIMEOUT_MS = parseInt(process.env.ANALYSIS_TIMEOUT_MS || '15000', 10);
 
 export const scanContent = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -19,21 +29,22 @@ export const scanContent = async (req: Request, res: Response, next: NextFunctio
       });
     }
 
-    // timeout handling check with proper cleanup to prevent timer leaks
-    const timeoutMs = 15000;
-    let timer: NodeJS.Timeout;
-    const timeoutPromise = new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new Error('ANALYSIS_TIMEOUT')), timeoutMs);
+    // Timeout handling with proper cleanup to prevent timer leaks
+    let timer: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('ANALYSIS_TIMEOUT')), ANALYSIS_TIMEOUT_MS);
     });
 
     let response: ScanResponse;
     try {
       response = (await Promise.race([
-        analyzer.analyze(scanReq),
+        getAnalyzer().analyze(scanReq),
         timeoutPromise
       ])) as ScanResponse;
     } finally {
-      clearTimeout(timer!);
+      if (timer) {
+        clearTimeout(timer);
+      }
     }
 
     // Add Gemini header if present in evidence pack or somewhere

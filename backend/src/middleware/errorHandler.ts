@@ -1,13 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { ErrorResponse } from '../models/types';
+import { logger } from '../utils/logger';
 
 export const errorHandler = (
   err: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) => {
+  // Log error details for monitoring
+  logger.error('Request failed', err instanceof Error ? err : undefined, {
+    method: req.method,
+    path: req.path,
+    statusCode: res.statusCode,
+  });
+
   if (err instanceof SyntaxError && typeof err === 'object' && err !== null && 'body' in err) {
     const errorResponse: ErrorResponse = {
       error_code: 'MALFORMED_REQUEST',
@@ -31,8 +39,6 @@ export const errorHandler = (
       });
     }
   }
-
-  console.error('Unhandled Error:', err);
 
   const errorResponse: ErrorResponse = {
     error_code: 'INTERNAL_SERVER_ERROR',

@@ -16,6 +16,23 @@ import { sanitizeText } from './extractors/piiSanitizer';
 import { shouldEscalateToGemini, analyzeWithGemini, GeminiVerdict } from './geminiReasoningService';
 import { EvidenceAggregator } from './evidenceAggregator';
 
+// Risk score constants for consistent scoring thresholds
+const RISK_SCORE = {
+  BASE: 10,
+  COMMUNITY_BLACKLIST: 95,
+  PAYMENT_INTENT_MISMATCH: 90,
+  OTP_SOLICITATION: 85,
+  SUSPICIOUS_TLD: 80,
+  URGENCY_KEYWORDS: 55,
+  LEGITIMATE_MERCHANT: 5,
+  HIGH_RISK_THRESHOLD: 85,
+  MEDIUM_RISK_THRESHOLD: 65,
+  LOW_RISK_THRESHOLD: 40,
+  GEMINI_ESCALATION_MIN: 40,
+  GEMINI_ESCALATION_MAX: 80,
+  MAX_ADJUSTMENT: 20
+} as const;
+
 interface ParsedEntities {
   vpa?: string;
   url?: string;
@@ -25,6 +42,8 @@ interface ParsedEntities {
   isCollectRequest: boolean;
   hasOtpSolicitation: boolean;
 }
+
+type RiskScoreValue = number;
 
 export class AnalyzerService {
   private extractEntities(request: ScanRequest): ParsedEntities {
@@ -145,34 +164,34 @@ export class AnalyzerService {
       evidenceAggregator.addEvidence('RISK_SIGNAL', 'SOCIAL_ENG', `Social Engineering Signals: ${upiSignals.matchedKeywords.join(', ')}`);
     }
 
-    let riskScore = 10;
+    let riskScore: RiskScoreValue = RISK_SCORE.BASE;
     let riskSeverity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
     const signals: string[] = [];
 
     // --- Scoring: Existing deterministic rules ---
     const isLegitimateDepository = /\b(cdsl|nsdl)\b/i.test(text) && !tradingSignals.depositPaymentRequest && !tradingSignals.cryptoWalletAddress && !tradingSignals.guaranteedReturnClaim && !entities.isCollectRequest && !entities.hasOtpSolicitation;
     if (isCommunityReported) {
-      riskScore = 95;
+      riskScore = RISK_SCORE.COMMUNITY_BLACKLIST as RiskScoreValue;
       riskSeverity = 'CRITICAL';
       signals.push('community_blacklist_match');
     } else if (isMismatch) {
-      riskScore = 90;
+      riskScore = RISK_SCORE.PAYMENT_INTENT_MISMATCH as RiskScoreValue;
       riskSeverity = 'CRITICAL';
       signals.push('payment_intent_mismatch', 'deceptive_reward_trigger');
     } else if (entities.hasOtpSolicitation) {
-      riskScore = 85;
+      riskScore = RISK_SCORE.OTP_SOLICITATION as RiskScoreValue;
       riskSeverity = 'HIGH';
       signals.push('credential_otp_solicitation');
     } else if (hasSuspiciousTLD) {
-      riskScore = 80;
+      riskScore = RISK_SCORE.SUSPICIOUS_TLD as RiskScoreValue;
       riskSeverity = 'HIGH';
       signals.push('suspicious_tld_domain');
     } else if (entities.urgencyWords.length > 0) {
-      riskScore = 55;
+      riskScore = RISK_SCORE.URGENCY_KEYWORDS as RiskScoreValue;
       riskSeverity = 'MEDIUM';
       signals.push('urgency_manipulation');
     } else if (isLegitimateMerchant || isLegitimateDepository) {
-      riskScore = 5;
+      riskScore = RISK_SCORE.LEGITIMATE_MERCHANT as RiskScoreValue;
       riskSeverity = 'LOW';
       signals.push(isLegitimateDepository ? 'verified_depository_alert' : 'verified_merchant_whitelist');
     }
@@ -283,9 +302,9 @@ export class AnalyzerService {
     }
 
     // --- Re-classify severity after all adjustments ---
-    if (riskScore >= 85) riskSeverity = 'CRITICAL';
-    else if (riskScore >= 65) riskSeverity = 'HIGH';
-    else if (riskScore >= 40) riskSeverity = 'MEDIUM';
+    if (riskScore >= RISK_SCORE.HIGH_RISK_THRESHOLD) riskSeverity = 'CRITICAL';
+    else if (riskScore >= RISK_SCORE.MEDIUM_RISK_THRESHOLD) riskSeverity = 'HIGH';
+    else if (riskScore >= RISK_SCORE.LOW_RISK_THRESHOLD) riskSeverity = 'MEDIUM';
     else riskSeverity = 'LOW';
 
     // --- Confidence Calculation ---
