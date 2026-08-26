@@ -94,18 +94,19 @@ class ScanViewModelTest {
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.scanState.first()
-        assertTrue(state is ScanUiState.Error)
-        assertTrue((state as ScanUiState.Error).isNetwork)
+        assertTrue(state is ScanUiState.Success)
+        assertTrue((state as ScanUiState.Success).result.isLocalEdgeResult)
     }
 
     @Test
     fun `offline submission queues the request`() = runTest {
         networkAvailable = false
-        whenever(mockOfflineQueue.size()).thenReturn(1)
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         verify(mockOfflineQueue).enqueue(validRequest)
-        assertEquals(ScanUiState.Queued, viewModel.scanState.first())
+        val state = viewModel.scanState.first()
+        assertTrue(state is ScanUiState.Success)
+        assertTrue((state as ScanUiState.Success).result.isLocalEdgeResult)
     }
 
     @Test
