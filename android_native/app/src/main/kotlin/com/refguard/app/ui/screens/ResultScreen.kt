@@ -84,7 +84,7 @@ fun ResultScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        "⚡ Local Edge Result",
+                        "⚡ Offline Analysis",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = ColorBrand,
