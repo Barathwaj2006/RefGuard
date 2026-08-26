@@ -1,7 +1,7 @@
 ﻿const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const SchemaValidator = require('../src/validator');
+const SchemaValidator = require('./validator');
 
 describe('Contracts Schema Conformance Test Suite', () => {
   const schemasDir = path.resolve(__dirname, '../../contracts/schemas');

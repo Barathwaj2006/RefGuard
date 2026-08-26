@@ -2,18 +2,19 @@
   "name": "refguard",
   "version": "1.0.0",
   "description": "RefGuard - The UPI Referral & Payment Scam Protection Platform",
-  "main": "integration/index.js",
+  "main": "backend/src/index.ts",
   "scripts": {
-    "start": "node integration/src/server.js",
-    "demo": "node integration/src/server.js",
-    "test": "node integration/tests/runner.js",
+    "start": "cd backend && npm start",
+    "demo": "cd backend && npm run dev",
+    "test": "node integration/tests/runner.js && cd backend && npm test",
     "test:contracts": "node integration/tests/runner.js",
     "test:backend": "cd backend && npm test",
-    "test:android": "cd android && ./gradlew test",
-    "test:all": "node integration/tests/runner.js && cd backend && npm test && cd ../android && ./gradlew test",
+    "test:android": "cd android_native && ./gradlew test",
+    "test:all": "node integration/tests/runner.js && cd backend && npm test && cd ../android_native && ./gradlew test",
     "build:backend": "cd backend && npm run build",
     "lint:backend": "cd backend && npm run lint",
-    "dev:backend": "cd backend && npm run dev"
+    "dev:backend": "cd backend && npm run dev",
+    "test:integration": "node integration/tests/runner.js"
   },
   "keywords": [
     "upi",
@@ -41,6 +42,11 @@
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.0",
-    "@capacitor/core": "^8.5.0"
+    "@capacitor/core": "^8.5.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
   }
 }
