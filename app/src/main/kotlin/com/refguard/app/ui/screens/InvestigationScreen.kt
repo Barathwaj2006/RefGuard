@@ -47,7 +47,7 @@ fun InvestigationScreen(
                     Column {
                         Text("Investigation Report", fontWeight = FontWeight.Bold, color = ColorBrand)
                         Text(
-                            "ID: ${result.scanId.take(16)}",
+                            if (result.isLocalEdgeResult) "Offline Analysis" else "Cloud Threat Intel",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -71,36 +71,36 @@ fun InvestigationScreen(
                 .padding(innerPadding)
                 .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // ── 1. WHAT DID I PROVIDE? ───────────────────────
-            InvestigationCard(title = "1. WHAT WAS ANALYZED", icon = Icons.Default.Source) {
+            // ── 1. WHAT WAS ANALYZED ─────────────────────────
+            InvestigationCard(title = "1. What Was Analyzed", icon = Icons.Default.Source) {
+                if (result.recipientVpa != null) {
+                    Text(
+                        "Target UPI ID: ${result.recipientVpa}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorBrand
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
                 Text(
-                    "Input Source: ${if (result.isLocalEdgeResult) "Direct Ingress / Manual Input" else "Protected Android Pipeline"}",
+                    "Analysis Pipeline: ${if (result.isLocalEdgeResult) "RefGuard On-Device Edge Engine" else "RefGuard Cloud Intelligence"}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(2.dp))
                 Text(
                     "Timestamp: ${result.timestamp}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (result.recipientVpa != null) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        "Target VPA: ${result.recipientVpa}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorBrand
-                    )
-                }
             }
 
-            // ── 2. WHAT DID REFGUARD FIND? ───────────────────
-            InvestigationCard(title = "2. SECURITY FINDINGS & SIGNALS", icon = Icons.Default.Troubleshoot) {
+            // ── 2. WHY THIS WAS FLAGGED ──────────────────────
+            InvestigationCard(title = "2. Why This Was Flagged", icon = Icons.Default.Troubleshoot) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -129,7 +129,7 @@ fun InvestigationScreen(
 
                 if (result.signals.isEmpty()) {
                     Text(
-                        "No suspicious threat signals observed in this payload.",
+                        "No malicious threat signatures were detected in this payment payload.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -162,9 +162,9 @@ fun InvestigationScreen(
                 }
             }
 
-            // ── 3. WHAT IS THE PAYMENT ACTUALLY DOING? ────────
+            // ── 3. INTENT VS PAYMENT REALITY ─────────────────
             if (result.mismatchStatus == MismatchStatus.DETECTED || result.statedIntent != null || result.recipientVpa != null) {
-                InvestigationCard(title = "3. INTENT VS PAYMENT REALITY", icon = Icons.Default.CompareArrows) {
+                InvestigationCard(title = "3. Intent vs Payment Reality", icon = Icons.Default.CompareArrows) {
                     // Stated Intent
                     Surface(
                         color = ColorSafeContainer,
@@ -206,9 +206,9 @@ fun InvestigationScreen(
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 if (result.mismatchAmount != null && result.mismatchAmount > 0) {
-                                    "Outbound Debit of ₹${result.mismatchAmount} to ${result.recipientVpa ?: "unverified VPA"}"
+                                    "Outbound Debit of ₹${result.mismatchAmount.toInt()} to ${result.recipientVpa ?: "unverified UPI handle"}"
                                 } else {
-                                    "Outgoing Debit authorization from your bank account"
+                                    "Outbound Debit authorization from your bank account"
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
@@ -219,15 +219,16 @@ fun InvestigationScreen(
                 }
             }
 
-            // ── 4. WHY IS THIS DANGEROUS? ────────────────────
-            InvestigationCard(title = "4. WHY THIS IS DANGEROUS", icon = Icons.Default.SecurityUpdateWarning) {
+            // ── 4. WHY THIS IS DANGEROUS ─────────────────────
+            InvestigationCard(title = "4. Why This Is Dangerous", icon = Icons.Default.SecurityUpdateWarning) {
                 Text(
                     text = result.whyItMatters.ifBlank { result.humanExplanation },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 20.sp
                 )
                 if (result.userInstruction.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(8.dp),
@@ -250,40 +251,54 @@ fun InvestigationScreen(
                 }
             }
 
-            // ── 5. WHAT EVIDENCE SUPPORTS THIS? ──────────────
+            // ── 5. EVIDENCE ──────────────────────────────────
             if (result.evidenceItems.isNotEmpty()) {
-                InvestigationCard(title = "5. VERIFIED EVIDENCE ARTIFACTS", icon = Icons.Default.FactCheck) {
+                InvestigationCard(title = "5. Evidence", icon = Icons.Default.FactCheck) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         result.evidenceItems.forEach { item ->
                             val evidenceDisplay = HumanMappers.mapEvidenceItem(item)
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            evidenceDisplay.title,
-                                            style = MaterialTheme.typography.labelMedium,
+                                            "WHAT WE FOUND",
+                                            style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = ColorBrand
                                         )
-                                        Text(
-                                            evidenceDisplay.source,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.outline
-                                        )
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.surface,
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Text(
+                                                evidenceDisplay.source,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                        }
                                     }
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        "Value: ${evidenceDisplay.content}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
+                                        evidenceDisplay.whatWeFound,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        "WHY IT MATTERS",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = ColorCritical
                                     )
                                     Spacer(Modifier.height(2.dp))
                                     Text(
@@ -298,67 +313,123 @@ fun InvestigationScreen(
                 }
             }
 
-            // ── 6. HOW THIS SCAM WORKS (SCAMCHAIN) ───────────
+            // ── 6. HOW THIS SCAM WORKS (VISUAL TIMELINE) ─────
             if (result.scamChainNodes.isNotEmpty()) {
-                InvestigationCard(title = "6. SCAM EXECUTION CHAIN", icon = Icons.Default.AccountTree) {
+                InvestigationCard(title = "6. How This Scam Works", icon = Icons.Default.AccountTree) {
                     Text(
-                        "Observed step-by-step progression of the threat:",
+                        "Reconstructed visual progression of the attack vector:",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(14.dp))
 
-                    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
                         result.scamChainNodes.forEachIndexed { index, node ->
                             val step = HumanMappers.mapScamChainNode(node, index, isCritical)
                             val isLast = index == result.scamChainNodes.size - 1
 
+                            val stageIcon = when (node.node_type.uppercase().trim()) {
+                                "MESSAGE" -> Icons.Default.ChatBubble
+                                "URL", "LINK" -> Icons.Default.Link
+                                "UPI_REQUEST" -> Icons.Default.QrCode
+                                "PAYMENT_ACTION" -> Icons.Default.AccountBalance
+                                else -> Icons.Default.Security
+                            }
+
+                            val stageBadgeColor = if (step.isCritical) ColorCritical else ColorBrand
+                            val stageContainerColor = if (step.isCritical) ColorCriticalContainer else MaterialTheme.colorScheme.surfaceVariant
+
+                            // Timeline Row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.Top
                             ) {
+                                // Node Column (Circle + Connector Line)
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.width(32.dp)
+                                    modifier = Modifier.width(36.dp)
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(24.dp)
+                                            .size(32.dp)
                                             .clip(CircleShape)
-                                            .background(if (step.isCritical) ColorCritical else ColorBrand),
+                                            .background(stageBadgeColor),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(
-                                            "${step.stepNumber}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                        Icon(
+                                            stageIcon,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
+
                                     if (!isLast) {
-                                        Box(
-                                            modifier = Modifier
-                                                .width(2.dp)
-                                                .height(36.dp)
-                                                .background(if (step.isCritical) ColorCritical.copy(alpha = 0.4f) else ColorBrand.copy(alpha = 0.2f))
-                                        )
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(2.dp)
+                                                    .height(28.dp)
+                                                    .background(stageBadgeColor.copy(alpha = 0.4f))
+                                            )
+                                            Icon(
+                                                Icons.Default.ArrowDownward,
+                                                contentDescription = null,
+                                                tint = stageBadgeColor.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
                                     }
                                 }
 
-                                Spacer(Modifier.width(8.dp))
+                                Spacer(Modifier.width(10.dp))
 
-                                Column(modifier = Modifier.padding(bottom = if (isLast) 0.dp else 12.dp)) {
-                                    Text(
-                                        step.stageName,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (step.isCritical) ColorCritical else MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        step.detail,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                // Node Content Card
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = stageContainerColor),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(bottom = if (isLast) 0.dp else 12.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                step.stageName,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Black,
+                                                color = stageBadgeColor
+                                            )
+                                            Text(
+                                                "Step ${step.stepNumber}",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                        }
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(
+                                            step.primaryText,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            step.subText,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -385,7 +456,7 @@ fun InvestigationScreen(
                             Icon(Icons.Default.Code, null, tint = ColorBrand, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Technical Details & Provenance",
+                                "Technical Details",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorBrand

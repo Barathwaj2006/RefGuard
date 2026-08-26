@@ -21,15 +21,35 @@ object UpiIntentDecoder {
 
     private val REWARD_KEYWORDS = listOf(
         "reward", "cashback", "prize", "won", "winner", "lottery",
-        "refund", "bonus", "claim", "gift", "electricity", "bill"
+        "refund", "bonus", "claim", "gift", "credited", "receive"
     )
+
+    private val UTILITY_KEYWORDS = listOf(
+        "electricity", "power", "disconnection", "disconnected", "cutoff",
+        "bill", "discom", "utility", "urgent", "update"
+    )
+
+    private val UPI_URI_REGEX = Regex("upi://pay\\?[^\\s\"'<>]+", RegexOption.IGNORE_CASE)
+    private val VPA_REGEX = Regex("[a-zA-Z0-9.\\-_]{2,256}@[a-zA-Z]{2,64}")
 
     fun decode(content: String): DecodedUpiPayload? {
         val trimmed = content.trim()
-        val isUpiUri = trimmed.startsWith("upi://pay", ignoreCase = true)
-        val isVpa = trimmed.matches(Regex("^[a-zA-Z0-9.\\-_]{2,256}@[a-zA-Z]{2,64}$"))
 
-        if (!isUpiUri && !isVpa) {
+        // 1. Direct UPI URI
+        val directUpi = trimmed.startsWith("upi://pay", ignoreCase = true)
+        // 2. Embedded UPI URI inside text
+        val embeddedUpiMatch = UPI_URI_REGEX.find(trimmed)
+        // 3. Direct or embedded VPA
+        val isDirectVpa = trimmed.matches(Regex("^[a-zA-Z0-9.\\-_]{2,256}@[a-zA-Z]{2,64}$"))
+        val embeddedVpaMatch = VPA_REGEX.find(trimmed)
+
+        val uriToParse = when {
+            directUpi -> trimmed
+            embeddedUpiMatch != null -> embeddedUpiMatch.value
+            else -> null
+        }
+
+        if (uriToParse == null && !isDirectVpa && embeddedVpaMatch == null) {
             return null
         }
 
@@ -41,9 +61,9 @@ object UpiIntentDecoder {
         var mc: String? = null
         var tr: String? = null
 
-        if (isUpiUri) {
+        if (uriToParse != null) {
             try {
-                val query = trimmed.substringAfter("?", "")
+                val query = uriToParse.substringAfter("?", "")
                 val params = query.split("&")
                 for (param in params) {
                     val parts = param.split("=", limit = 2)
@@ -66,25 +86,34 @@ object UpiIntentDecoder {
                     }
                 }
             } catch (e: Exception) {
-                // Fallback graceful parsing
+                // Graceful fallback
             }
-        } else {
+        } else if (isDirectVpa) {
             payeeVpa = trimmed
+        } else if (embeddedVpaMatch != null) {
+            payeeVpa = embeddedVpaMatch.value
         }
 
         val textToInspect = ((note ?: "") + " " + (payeeName ?: "") + " " + trimmed).lowercase()
         val hasRewardClaim = REWARD_KEYWORDS.any { textToInspect.contains(it) }
-        val isCollectOrDebit = isUpiUri || isVpa
-        val hasIntentInversion = hasRewardClaim && isCollectOrDebit
+        val hasUtilityUrgency = UTILITY_KEYWORDS.any { textToInspect.contains(it) }
+        val isCollectOrDebit = (payeeVpa != null)
 
-        val statedIntent = if (hasRewardClaim) {
-            "Claim prize/reward or receive refund"
-        } else {
-            "Standard payment to merchant/contact"
+        // Inversion: user promised reward/refund OR panicked into paying unverified utility
+        val hasIntentInversion = (hasRewardClaim || hasUtilityUrgency) && isCollectOrDebit &&
+                !(payeeVpa?.contains("swiggy", true) == true || payeeVpa?.contains("zomato", true) == true)
+
+        val statedIntent = when {
+            hasRewardClaim -> "Claim ₹${amount?.toInt() ?: "cash"} reward / cashback"
+            hasUtilityUrgency -> "Resolve electricity bill / prevent power disconnection"
+            textToInspect.contains("task") || textToInspect.contains("job") -> "Activate daily part-time task earnings"
+            textToInspect.contains("parcel") || textToInspect.contains("delivery") -> "Pay ₹5 parcel redelivery fee"
+            textToInspect.contains("support") || textToInspect.contains("refund") -> "Receive ₹${amount?.toInt() ?: ""} failed transaction refund"
+            else -> "Standard payment to merchant/recipient"
         }
 
         return DecodedUpiPayload(
-            rawUri = trimmed,
+            rawUri = uriToParse ?: trimmed,
             payeeVpa = payeeVpa,
             payeeName = payeeName,
             amount = amount,

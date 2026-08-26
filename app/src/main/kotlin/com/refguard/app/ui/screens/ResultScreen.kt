@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.refguard.app.domain.MismatchStatus
 import com.refguard.app.domain.RiskLevel
 import com.refguard.app.domain.ScanResult
@@ -41,10 +42,11 @@ fun ResultScreen(
     val isCritical = result.riskLevel == RiskLevel.CRITICAL || result.riskScore >= 80
     val isWarning = result.riskLevel == RiskLevel.HIGH || result.riskLevel == RiskLevel.WARNING || result.riskScore in 30..79
     val isSafe = !isCritical && !isWarning
+    val isMismatch = result.mismatchStatus == MismatchStatus.DETECTED || result.signals.contains("payment_intent_inversion")
 
     val riskTheme = when {
         isCritical -> RiskThemeColors(ColorCritical, ColorCriticalContainer, "CRITICAL RISK", Icons.Default.GppBad)
-        isWarning -> RiskThemeColors(ColorWarning, ColorWarningContainer, "SUSPICIOUS / CAUTION", Icons.Default.Warning)
+        isWarning -> RiskThemeColors(ColorWarning, ColorWarningContainer, "HIGH RISK / CAUTION", Icons.Default.Warning)
         else -> RiskThemeColors(ColorSafe, ColorSafeContainer, "SAFE TRANSACTION", Icons.Default.VerifiedUser)
     }
 
@@ -58,20 +60,18 @@ fun ResultScreen(
                     }
                 },
                 actions = {
-                    if (result.isLocalEdgeResult) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.padding(end = 12.dp)
-                        ) {
-                            Text(
-                                "Offline Engine",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.padding(end = 12.dp)
+                    ) {
+                        Text(
+                            if (result.isLocalEdgeResult) "Offline Analysis" else "Cloud Analysis",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -91,75 +91,167 @@ fun ResultScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // ── TOP VERDICT BANNER (3-SECOND COMPREHENSION) ──
-            Card(
-                colors = CardDefaults.cardColors(containerColor = riskTheme.containerColor),
-                shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            // ── TOP VERDICT HERO (CRITICAL MISMATCH OR STANDARD VERDICT) ──
+            if (isMismatch && isCritical) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = ColorCritical),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(riskTheme.color.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            riskTheme.icon,
-                            contentDescription = null,
-                            tint = riskTheme.color,
-                            modifier = Modifier.size(32.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    "PAYMENT-INTENT MISMATCH",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                            }
+                            Text(
+                                "CRITICAL (${result.riskScore}/100)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // What they told you vs What payment does
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    "THEY TOLD YOU:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF555555)
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    result.statedIntent ?: "Receive cashback / reward in your bank account",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1E293B)
+                                )
+
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFE2E8F0))
+
+                                Text(
+                                    "BUT THE PAYMENT DOES:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorCritical
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    if (result.mismatchAmount != null && result.mismatchAmount > 0) {
+                                        "OUTBOUND DEBIT OF ₹${result.mismatchAmount.toInt()} FROM YOUR ACCOUNT"
+                                    } else {
+                                        "OUTBOUND DEBIT FROM YOUR BANK ACCOUNT"
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = ColorCritical
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(14.dp))
+
+                        Text(
+                            "Entering your UPI PIN authorizes money to leave your account. You NEVER need to enter a PIN to receive money.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.9f),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 16.sp
                         )
                     }
+                }
+            } else {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = riskTheme.containerColor),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(riskTheme.color.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                riskTheme.icon,
+                                contentDescription = null,
+                                tint = riskTheme.color,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
 
-                    Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(10.dp))
 
-                    Text(
-                        riskTheme.badgeTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black,
-                        color = riskTheme.color,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        "Threat Risk Score: ${result.riskScore}/100",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = riskTheme.color
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // ONE SIMPLE PLAIN-LANGUAGE EXPLANATION
-                    Text(
-                        text = result.detectedSummary.ifBlank { result.humanExplanation },
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-
-                    if (result.userInstruction.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = result.userInstruction,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            riskTheme.badgeTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            color = riskTheme.color,
                             textAlign = TextAlign.Center
                         )
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Text(
+                            "Threat Score: ${result.riskScore}/100",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = riskTheme.color
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        Text(
+                            text = result.detectedSummary.ifBlank { result.humanExplanation },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+
+                        if (result.userInstruction.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = result.userInstruction,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
 
-            // ── PAYMENT DETAILS SECTION (WHEN OBSERVED) ──────
-            if (result.recipientVpa != null || result.mismatchAmount != null || result.mismatchStatus == MismatchStatus.DETECTED) {
+            // ── PAYMENT DETAILS SECTION ──────────────────────
+            if (result.recipientVpa != null || result.mismatchAmount != null) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(16.dp),
@@ -168,35 +260,25 @@ fun ResultScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            "Transaction Particulars",
+                            "Payment Details",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = ColorBrand
                         )
                         Spacer(Modifier.height(12.dp))
 
-                        // Beneficiary
-                        DetailRow(
-                            label = "Beneficiary Name",
-                            value = "Beneficiary name unavailable"
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
-
-                        // VPA / UPI ID
                         DetailRow(
                             label = "Target UPI ID",
                             value = result.recipientVpa ?: "Not specified"
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
 
-                        // Amount
                         DetailRow(
                             label = "Transaction Amount",
-                            value = if (result.mismatchAmount != null && result.mismatchAmount > 0) "₹${result.mismatchAmount}" else "Amount not specified in request"
+                            value = if (result.mismatchAmount != null && result.mismatchAmount > 0) "₹${result.mismatchAmount.toInt()}" else "Amount not specified in request"
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
 
-                        // Payment Direction
                         DetailRow(
                             label = "Payment Direction",
                             value = if (result.paymentDirection?.contains("DEBIT", true) == true || result.actualPaymentAction?.contains("DEBIT", true) == true) {
@@ -204,13 +286,13 @@ fun ResultScreen(
                             } else {
                                 "Standard Transaction"
                             },
-                            highlightColor = if (result.paymentDirection?.contains("DEBIT", true) == true) ColorCritical else null
+                            highlightColor = if (result.paymentDirection?.contains("DEBIT", true) == true || isMismatch) ColorCritical else null
                         )
                     }
                 }
             }
 
-            // ── CALL TO ACTIONS ──────────────────────────────
+            // ── PRIMARY ACTION BUTTONS ───────────────────────
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -283,7 +365,7 @@ fun ResultScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Was this analysis accurate?",
+                        "Was this accurate?",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -311,7 +393,7 @@ fun ResultScreen(
                         }
                     } else {
                         Text(
-                            "Thank you for feedback",
+                            "Thank you for your feedback",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = ColorBrand
