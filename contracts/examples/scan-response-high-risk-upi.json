@@ -1,12 +1,17 @@
-﻿{
+{
   "scan_id": "scan-882",
   "timestamp": "2026-08-14T10:06:00Z",
   "risk_assessment": {
     "risk_score": 95,
     "risk_severity": "CRITICAL",
     "confidence": 0.99,
-    "signals": ["KNOWN_SCAM_VPA", "HIGH_VALUE_REQUEST"],
-    "evidence_references": ["evid-1"],
+    "signals": [
+      "KNOWN_SCAM_VPA",
+      "HIGH_VALUE_REQUEST"
+    ],
+    "evidence_references": [
+      "evid-1"
+    ],
     "human_explanation": "This UPI ID is known for fraudulent activities.",
     "recommended_action": "DO NOT PAY"
   },
@@ -23,7 +28,9 @@
       {
         "evidence_id": "evid-1",
         "evidence_type": "UPI_IDENTIFIER",
-        "data": "scammer@bank"
+        "data": "scammer@bank",
+        "explanation": "Extracted evidence item for threat analysis.",
+        "source_category": "TEST_DATA"
       }
     ]
   }

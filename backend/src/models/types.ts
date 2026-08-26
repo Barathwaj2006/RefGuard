@@ -61,6 +61,8 @@ export interface EvidencePack {
     evidence_id: string;
     evidence_type: 'ORIGINAL_CONTENT' | 'EXTRACTED_ENTITY' | 'URL' | 'UPI_IDENTIFIER' | 'RISK_SIGNAL';
     data: string;
+    explanation?: string;
+    source_category?: string;
   }>;
 }
 

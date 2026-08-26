@@ -1,12 +1,17 @@
-﻿{
+{
   "scan_id": "scan-885",
   "timestamp": "2026-08-14T10:09:00Z",
   "risk_assessment": {
     "risk_score": 85,
     "risk_severity": "HIGH",
     "confidence": 0.9,
-    "signals": ["KNOWN_PHISHING_DOMAIN", "FAKE_BRAND_IMPERSONATION"],
-    "evidence_references": ["evid-10"],
+    "signals": [
+      "KNOWN_PHISHING_DOMAIN",
+      "FAKE_BRAND_IMPERSONATION"
+    ],
+    "evidence_references": [
+      "evid-10"
+    ],
     "human_explanation": "This referral link impersonates a known brand but redirects to a phishing site.",
     "recommended_action": "DO NOT OPEN"
   },
@@ -23,7 +28,9 @@
       {
         "evidence_id": "evid-10",
         "evidence_type": "URL",
-        "data": "http://fake-brand-login.com"
+        "data": "http://fake-brand-login.com",
+        "explanation": "Extracted evidence item for threat analysis.",
+        "source_category": "TEST_DATA"
       }
     ]
   }

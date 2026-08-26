@@ -1,12 +1,18 @@
-﻿{
+{
   "scan_id": "scan-884",
   "timestamp": "2026-08-14T10:08:00Z",
   "risk_assessment": {
     "risk_score": 90,
     "risk_severity": "HIGH",
     "confidence": 0.95,
-    "signals": ["PAYMENT_INTENT_MISMATCH", "DECEPTIVE_MESSAGE"],
-    "evidence_references": ["evid-5", "evid-6"],
+    "signals": [
+      "PAYMENT_INTENT_MISMATCH",
+      "DECEPTIVE_MESSAGE"
+    ],
+    "evidence_references": [
+      "evid-5",
+      "evid-6"
+    ],
     "human_explanation": "The message claims you will receive money, but the QR code actually requests a payment from you.",
     "recommended_action": "DO NOT PAY"
   },
@@ -24,7 +30,10 @@
     "amount": 500,
     "confidence": 0.95,
     "provenance": "CROSS_MODAL_ANALYSIS",
-    "evidence": ["evid-5", "evid-6"]
+    "evidence": [
+      "evid-5",
+      "evid-6"
+    ]
   },
   "evidence_pack": {
     "incident_id": "inc-884",
@@ -33,12 +42,16 @@
       {
         "evidence_id": "evid-5",
         "evidence_type": "ORIGINAL_CONTENT",
-        "data": "hash:a8f9c"
+        "data": "hash:a8f9c",
+        "explanation": "Extracted evidence item for threat analysis.",
+        "source_category": "TEST_DATA"
       },
       {
         "evidence_id": "evid-6",
         "evidence_type": "EXTRACTED_ENTITY",
-        "data": "amount: 500 INR"
+        "data": "amount: 500 INR",
+        "explanation": "Extracted evidence item for threat analysis.",
+        "source_category": "TEST_DATA"
       }
     ]
   }

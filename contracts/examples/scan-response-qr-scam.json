@@ -1,12 +1,17 @@
-﻿{
+{
   "scan_id": "scan-886",
   "timestamp": "2026-08-14T10:10:00Z",
   "risk_assessment": {
     "risk_score": 99,
     "risk_severity": "CRITICAL",
     "confidence": 0.99,
-    "signals": ["TAMPERED_QR_CODE", "KNOWN_SCAM_VPA"],
-    "evidence_references": ["evid-qr-4"],
+    "signals": [
+      "TAMPERED_QR_CODE",
+      "KNOWN_SCAM_VPA"
+    ],
+    "evidence_references": [
+      "evid-qr-4"
+    ],
     "human_explanation": "This QR code contains a hidden payment request to a known scammer account.",
     "recommended_action": "DO NOT SCAN"
   },
@@ -23,7 +28,9 @@
       {
         "evidence_id": "evid-qr-4",
         "evidence_type": "ORIGINAL_CONTENT",
-        "data": "hash:qrcode123"
+        "data": "hash:qrcode123",
+        "explanation": "Extracted evidence item for threat analysis.",
+        "source_category": "TEST_DATA"
       }
     ]
   }

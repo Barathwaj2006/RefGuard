@@ -374,6 +374,50 @@
       "moderation_status": "PENDING",
       "confidence": 0.9,
       "provenance": "test2"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-26T04:43:57.167Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-26T04:43:57.190Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-001",
+      "reported_indicator": "new-fraud-seller@okaxis",
+      "report_category": "UPI_FRAUD",
+      "submission_timestamp": "2026-08-26T04:48:09.173Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.8,
+      "provenance": "USER_SUBMISSION"
+    },
+    {
+      "report_id": "rep-pii-001",
+      "reported_indicator": "scammer@upi",
+      "report_category": "UPI_FRAUD",
+      "description": "The scammer called me from XXXXXX3210 and asked for my Aadhaar [AADHAAR_REDACTED].",
+      "evidence_references": [
+        "Here is the email: v***@gmail.com"
+      ],
+      "submission_timestamp": "2026-08-26T04:48:09.186Z",
+      "moderation_status": "PENDING",
+      "confidence": 0.9,
+      "provenance": "USER_SUBMISSION"
     }
   ]
 }
