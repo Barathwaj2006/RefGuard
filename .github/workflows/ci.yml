@@ -20,7 +20,7 @@ jobs:
           node-version: '20'
 
       - name: Run Full-System Integration & Contract Conformance Tests
-        run: node integration/tests/runner.js
+        run: npm install && npx cap sync android && node integration/tests/runner.js
 
   android-platform-build:
     name: Android Platform Module Tests
@@ -43,4 +43,4 @@ jobs:
 
       - name: Run Android Unit Tests
         working-directory: ./android
-        run: ./gradlew test
+        run: cd .. && npm install && npx cap sync android && cd android && chmod +x gradlew && ./gradlew test
