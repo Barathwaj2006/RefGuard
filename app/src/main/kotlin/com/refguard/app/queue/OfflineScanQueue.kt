@@ -7,11 +7,21 @@ import com.refguard.platform.models.ScanRequest
 import com.refguard.platform.models.ContentType
 
 /**
+ * Interface representing the offline queue.
+ */
+interface OfflineQueue {
+    fun enqueue(request: ScanRequest)
+    fun dequeueAll(): List<ScanRequest>
+    fun size(): Int
+    fun clear()
+}
+
+/**
  * Offline queue backed by SharedPreferences.
  * Stores ScanRequests that could not be submitted due to no network.
  * No sensitive credential data is ever stored here.
  */
-class OfflineScanQueue(context: Context) {
+class OfflineScanQueue(context: Context) : OfflineQueue {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(
         "refguard_offline_queue", Context.MODE_PRIVATE
@@ -26,7 +36,7 @@ class OfflineScanQueue(context: Context) {
         val queuedAt: Long = System.currentTimeMillis()
     )
 
-    fun enqueue(request: ScanRequest) {
+    override fun enqueue(request: ScanRequest) {
         val entry = QueueEntry(
             contentType = request.contentType.name,
             contentValue = request.contentValue,
@@ -37,7 +47,7 @@ class OfflineScanQueue(context: Context) {
         prefs.edit().putString(key, gson.toJson(entry)).apply()
     }
 
-    fun dequeueAll(): List<ScanRequest> {
+    override fun dequeueAll(): List<ScanRequest> {
         val all = mutableListOf<ScanRequest>()
         val allEntries = prefs.all
         for ((key, value) in allEntries) {
@@ -60,9 +70,9 @@ class OfflineScanQueue(context: Context) {
         return all
     }
 
-    fun size(): Int = prefs.all.size
+    override fun size(): Int = prefs.all.size
 
-    fun clear() {
+    override fun clear() {
         prefs.edit().clear().apply()
     }
 }
