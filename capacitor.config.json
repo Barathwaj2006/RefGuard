@@ -1,8 +1,0 @@
-{
-  "appId": "com.refguard.app",
-  "appName": "RefGuard",
-  "webDir": "integration/demo/public",
-  "server": {
-    "androidScheme": "https"
-  }
-}
