@@ -1,7 +1,9 @@
 R_DEF: Internal format may change without notice
 local
 color ic_launcher_background
+color splash_background
 drawable ic_launcher_foreground
+drawable ic_splash_logo
 mipmap ic_launcher
 mipmap ic_launcher_round
 string app_name
@@ -16,5 +18,6 @@ string scan_button
 string scan_qr
 string stop_transaction
 string tile_label
+style Theme.App.Starting
 style Theme.RefGuard
 xml network_security_config

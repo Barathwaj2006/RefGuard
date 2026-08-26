@@ -40,24 +40,24 @@
 26-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:15:22-73
 27
 28    <permission
-28-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
+28-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
 29        android:name="com.aistudio.refguard.upiprot.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-29-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
+29-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
 30        android:protectionLevel="signature" />
-30-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
+30-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
 31
 32    <uses-permission android:name="com.aistudio.refguard.upiprot.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-32-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
-32-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
+32-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
+32-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
 33
 34    <application
-34-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:17:5-71:19
+34-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:17:5-72:19
 35        android:name="com.refguard.app.RefGuardApplication"
 35-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:18:9-44
 36        android:allowBackup="false"
 36-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:25:9-36
 37        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-37-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\ab6947c5694ac6cef19725ba90d21f9a\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
+37-->[androidx.core:core:1.15.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\8f6b65d110b4f801225d399136361223\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 38        android:debuggable="true"
 39        android:extractNativeLibs="false"
 40        android:icon="@mipmap/ic_launcher"
@@ -77,266 +77,268 @@
 47
 48        <!-- Main Entry Activity & Sharesheet Target -->
 49        <activity
-49-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:29:9-59:20
+49-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:29:9-60:20
 50            android:name="com.refguard.app.MainActivity"
 50-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:30:13-41
 51            android:exported="true"
-51-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:31:13-36
+51-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:32:13-36
 52            android:launchMode="singleTask"
-52-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:32:13-44
-53            android:windowSoftInputMode="adjustResize" >
-53-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:33:13-55
-54            <intent-filter>
-54-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:34:13-37:29
-55                <action android:name="android.intent.action.MAIN" />
-55-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:35:17-69
-55-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:35:25-66
-56
-57                <category android:name="android.intent.category.LAUNCHER" />
-57-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:36:17-77
-57-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:36:27-74
-58            </intent-filter>
-59
-60            <!-- Share Sheet: Text & Links -->
-61            <intent-filter>
-61-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:40:13-44:29
-62                <action android:name="android.intent.action.SEND" />
-62-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:41:17-69
-62-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:41:25-66
-63
-64                <category android:name="android.intent.category.DEFAULT" />
-64-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:17-76
-64-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:27-73
-65
-66                <data android:mimeType="text/plain" />
-66-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-55
-66-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:23-52
-67            </intent-filter>
-68
-69            <!-- Share Sheet: Single Screenshot / Image -->
-70            <intent-filter>
-70-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:47:13-51:29
-71                <action android:name="android.intent.action.SEND" />
-71-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:41:17-69
-71-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:41:25-66
-72
-73                <category android:name="android.intent.category.DEFAULT" />
-73-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:17-76
-73-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:27-73
-74
-75                <data android:mimeType="image/*" />
-75-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-55
-75-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:23-52
-76            </intent-filter>
-77
-78            <!-- Share Sheet: Multiple Screenshots / Images -->
-79            <intent-filter>
-79-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:54:13-58:29
-80                <action android:name="android.intent.action.SEND_MULTIPLE" />
-80-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:55:17-78
-80-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:55:25-75
-81
-82                <category android:name="android.intent.category.DEFAULT" />
-82-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:17-76
-82-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:27-73
-83
-84                <data android:mimeType="image/*" />
-84-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-55
-84-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:23-52
-85            </intent-filter>
-86        </activity>
-87        <!-- Quick Settings Tile for 1-tap scam defense during calls & chats -->
-88        <service
-88-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:61:9-70:19
-89            android:name="com.refguard.app.service.RefGuardTileService"
-89-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:62:13-56
-90            android:exported="true"
-90-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:66:13-36
-91            android:icon="@mipmap/ic_launcher"
-91-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:64:13-47
-92            android:label="@string/tile_label"
-92-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:63:13-47
-93            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
-93-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:65:13-77
-94            <intent-filter>
-94-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:67:13-69:29
-95                <action android:name="android.service.quicksettings.action.QS_TILE" />
-95-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:68:17-87
-95-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:68:25-84
-96            </intent-filter>
-97        </service>
-98        <service
-98-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:24:9-33:19
-99            android:name="androidx.camera.core.impl.MetadataHolderService"
-99-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:25:13-75
-100            android:enabled="false"
-100-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:26:13-36
-101            android:exported="false" >
-101-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:27:13-37
-102            <meta-data
-102-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:30:13-32:89
-103                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
-103-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:31:17-103
-104                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
-104-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\7e9092aab9a4b7c33c28b55d51aeabbc\transformed\camera-camera2-1.4.1\AndroidManifest.xml:32:17-86
-105        </service>
-106        <service
-106-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:9:9-15:19
-107            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
-107-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:10:13-91
-108            android:directBootAware="true"
-108-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:17:13-43
-109            android:exported="false" >
-109-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:11:13-37
-110            <meta-data
-110-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:12:13-14:85
-111                android:name="com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar"
-111-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:13:17-120
-112                android:value="com.google.firebase.components.ComponentRegistrar" />
-112-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\737f89828d7e0c4a873afa5cf20657a2\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:14:17-82
-113            <meta-data
-113-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\df7c5767a3b200169d8a2b44f0ee54a4\transformed\vision-common-17.3.0\AndroidManifest.xml:12:13-14:85
-114                android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar"
-114-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\df7c5767a3b200169d8a2b44f0ee54a4\transformed\vision-common-17.3.0\AndroidManifest.xml:13:17-124
-115                android:value="com.google.firebase.components.ComponentRegistrar" />
-115-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\df7c5767a3b200169d8a2b44f0ee54a4\transformed\vision-common-17.3.0\AndroidManifest.xml:14:17-82
-116            <meta-data
-116-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:20:13-22:85
-117                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
-117-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:21:17-120
-118                android:value="com.google.firebase.components.ComponentRegistrar" />
-118-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:22:17-82
-119        </service>
-120
-121        <provider
-121-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:9:9-13:38
-122            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
-122-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:10:13-78
-123            android:authorities="com.aistudio.refguard.upiprot.debug.mlkitinitprovider"
-123-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:11:13-69
-124            android:exported="false"
-124-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:12:13-37
-125            android:initOrder="99" />
-125-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\05a753da50bac47447373881872ee0b4\transformed\common-18.11.0\AndroidManifest.xml:13:13-35
-126
-127        <activity
-127-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\2e21a5e7261aa9ab269b15ede5513765\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
-128            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-128-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\2e21a5e7261aa9ab269b15ede5513765\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
-129            android:exported="false"
-129-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\2e21a5e7261aa9ab269b15ede5513765\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
-130            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-130-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\2e21a5e7261aa9ab269b15ede5513765\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
-131
-132        <meta-data
-132-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\cb9b2b13e44782660f1ef76d80eb70ec\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
-133            android:name="com.google.android.gms.version"
-133-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\cb9b2b13e44782660f1ef76d80eb70ec\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
-134            android:value="@integer/google_play_services_version" />
-134-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\cb9b2b13e44782660f1ef76d80eb70ec\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
-135
-136        <activity
-136-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\ddebbf60a1f4b869fdf28e6895ad4db0\transformed\ui-tooling-release\AndroidManifest.xml:23:9-25:39
-137            android:name="androidx.compose.ui.tooling.PreviewActivity"
-137-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\ddebbf60a1f4b869fdf28e6895ad4db0\transformed\ui-tooling-release\AndroidManifest.xml:24:13-71
-138            android:exported="true" />
-138-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\ddebbf60a1f4b869fdf28e6895ad4db0\transformed\ui-tooling-release\AndroidManifest.xml:25:13-36
-139
-140        <provider
-140-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
-141            android:name="androidx.startup.InitializationProvider"
-141-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
-142            android:authorities="com.aistudio.refguard.upiprot.debug.androidx-startup"
-142-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
-143            android:exported="false" >
-143-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
-144            <meta-data
-144-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
-145                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-145-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
-146                android:value="androidx.startup" />
-146-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\4cabae9fd36a3fb74fe5a79fca903e68\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
-147            <meta-data
-147-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\5ae091c2606b05b64eec8692f139b078\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:29:13-31:52
-148                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-148-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\5ae091c2606b05b64eec8692f139b078\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:30:17-78
-149                android:value="androidx.startup" />
-149-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\5ae091c2606b05b64eec8692f139b078\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:31:17-49
-150            <meta-data
-150-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
-151                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-151-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
-152                android:value="androidx.startup" />
-152-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
-153        </provider>
-154
-155        <receiver
-155-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
-156            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-156-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
-157            android:directBootAware="false"
-157-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
-158            android:enabled="true"
-158-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
-159            android:exported="true"
-159-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
-160            android:permission="android.permission.DUMP" >
-160-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
-161            <intent-filter>
-161-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
-162                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-162-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
-162-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
-163            </intent-filter>
-164            <intent-filter>
-164-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
-165                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-165-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
-165-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
-166            </intent-filter>
-167            <intent-filter>
-167-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
-168                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-168-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
-168-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
-169            </intent-filter>
-170            <intent-filter>
-170-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
-171                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-171-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
-171-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\6498701ff6cfb4a7d84d731de8b64d55\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
-172            </intent-filter>
-173        </receiver>
-174
-175        <service
-175-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:29:9-35:19
-176            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
-176-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:30:13-103
-177            android:exported="false" >
-177-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:31:13-37
-178            <meta-data
-178-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:32:13-34:39
-179                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
-179-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:33:17-94
-180                android:value="cct" />
-180-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\e846d27ac86074942710921403b1b509\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:34:17-36
-181        </service>
-182        <service
-182-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:26:9-30:19
-183            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
-183-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:27:13-117
-184            android:exported="false"
-184-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:28:13-37
-185            android:permission="android.permission.BIND_JOB_SERVICE" >
-185-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:29:13-69
-186        </service>
-187
-188        <receiver
-188-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:32:9-34:40
-189            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
-189-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:33:13-132
-190            android:exported="false" />
-190-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\1db06517908cd202a6bb2e337c4714ae\transformed\transport-runtime-2.2.6\AndroidManifest.xml:34:13-37
-191    </application>
-192
-193</manifest>
+52-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:33:13-44
+53            android:theme="@style/Theme.App.Starting"
+53-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:31:13-54
+54            android:windowSoftInputMode="adjustResize" >
+54-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:34:13-55
+55            <intent-filter>
+55-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:35:13-38:29
+56                <action android:name="android.intent.action.MAIN" />
+56-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:36:17-69
+56-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:36:25-66
+57
+58                <category android:name="android.intent.category.LAUNCHER" />
+58-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:37:17-77
+58-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:37:27-74
+59            </intent-filter>
+60
+61            <!-- Share Sheet: Text & Links -->
+62            <intent-filter>
+62-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:41:13-45:29
+63                <action android:name="android.intent.action.SEND" />
+63-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:17-69
+63-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:25-66
+64
+65                <category android:name="android.intent.category.DEFAULT" />
+65-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-76
+65-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:27-73
+66
+67                <data android:mimeType="text/plain" />
+67-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:17-55
+67-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:23-52
+68            </intent-filter>
+69
+70            <!-- Share Sheet: Single Screenshot / Image -->
+71            <intent-filter>
+71-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:48:13-52:29
+72                <action android:name="android.intent.action.SEND" />
+72-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:17-69
+72-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:42:25-66
+73
+74                <category android:name="android.intent.category.DEFAULT" />
+74-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-76
+74-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:27-73
+75
+76                <data android:mimeType="image/*" />
+76-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:17-55
+76-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:23-52
+77            </intent-filter>
+78
+79            <!-- Share Sheet: Multiple Screenshots / Images -->
+80            <intent-filter>
+80-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:55:13-59:29
+81                <action android:name="android.intent.action.SEND_MULTIPLE" />
+81-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:56:17-78
+81-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:56:25-75
+82
+83                <category android:name="android.intent.category.DEFAULT" />
+83-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:17-76
+83-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:43:27-73
+84
+85                <data android:mimeType="image/*" />
+85-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:17-55
+85-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:44:23-52
+86            </intent-filter>
+87        </activity>
+88        <!-- Quick Settings Tile for 1-tap scam defense during calls & chats -->
+89        <service
+89-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:62:9-71:19
+90            android:name="com.refguard.app.service.RefGuardTileService"
+90-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:63:13-56
+91            android:exported="true"
+91-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:67:13-36
+92            android:icon="@mipmap/ic_launcher"
+92-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:65:13-47
+93            android:label="@string/tile_label"
+93-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:64:13-47
+94            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
+94-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:66:13-77
+95            <intent-filter>
+95-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:68:13-70:29
+96                <action android:name="android.service.quicksettings.action.QS_TILE" />
+96-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:69:17-87
+96-->C:\Users\barat\OneDrive\Desktop\RefGuard\app\src\main\AndroidManifest.xml:69:25-84
+97            </intent-filter>
+98        </service>
+99        <service
+99-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:24:9-33:19
+100            android:name="androidx.camera.core.impl.MetadataHolderService"
+100-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:25:13-75
+101            android:enabled="false"
+101-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:26:13-36
+102            android:exported="false" >
+102-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:27:13-37
+103            <meta-data
+103-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:30:13-32:89
+104                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+104-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:31:17-103
+105                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+105-->[androidx.camera:camera-camera2:1.4.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\29eae1d95569402c0bd27691a0253764\transformed\camera-camera2-1.4.1\AndroidManifest.xml:32:17-86
+106        </service>
+107        <service
+107-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:9:9-15:19
+108            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
+108-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:10:13-91
+109            android:directBootAware="true"
+109-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:17:13-43
+110            android:exported="false" >
+110-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:11:13-37
+111            <meta-data
+111-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:12:13-14:85
+112                android:name="com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar"
+112-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:13:17-120
+113                android:value="com.google.firebase.components.ComponentRegistrar" />
+113-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] C:\Users\barat\.gradle\caches\8.11.1\transforms\809ff3c2843eaabb452ae136dbe4d407\transformed\play-services-mlkit-barcode-scanning-18.3.1\AndroidManifest.xml:14:17-82
+114            <meta-data
+114-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a4c74f7ce5c5acd72087b1fd9e78e117\transformed\vision-common-17.3.0\AndroidManifest.xml:12:13-14:85
+115                android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar"
+115-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a4c74f7ce5c5acd72087b1fd9e78e117\transformed\vision-common-17.3.0\AndroidManifest.xml:13:17-124
+116                android:value="com.google.firebase.components.ComponentRegistrar" />
+116-->[com.google.mlkit:vision-common:17.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a4c74f7ce5c5acd72087b1fd9e78e117\transformed\vision-common-17.3.0\AndroidManifest.xml:14:17-82
+117            <meta-data
+117-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:20:13-22:85
+118                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
+118-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:21:17-120
+119                android:value="com.google.firebase.components.ComponentRegistrar" />
+119-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:22:17-82
+120        </service>
+121
+122        <provider
+122-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:9:9-13:38
+123            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+123-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:10:13-78
+124            android:authorities="com.aistudio.refguard.upiprot.debug.mlkitinitprovider"
+124-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:11:13-69
+125            android:exported="false"
+125-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:12:13-37
+126            android:initOrder="99" />
+126-->[com.google.mlkit:common:18.11.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\a5640fc88b9d7119a7bb47db212c0e44\transformed\common-18.11.0\AndroidManifest.xml:13:13-35
+127
+128        <activity
+128-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\1080d23cc78d4dac5d4bddafbcb715e1\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+129            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+129-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\1080d23cc78d4dac5d4bddafbcb715e1\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+130            android:exported="false"
+130-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\1080d23cc78d4dac5d4bddafbcb715e1\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+131            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+131-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\1080d23cc78d4dac5d4bddafbcb715e1\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+132
+133        <meta-data
+133-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\adba99d097645b34c9ece5d4a7e70dcc\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+134            android:name="com.google.android.gms.version"
+134-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\adba99d097645b34c9ece5d4a7e70dcc\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+135            android:value="@integer/google_play_services_version" />
+135-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\adba99d097645b34c9ece5d4a7e70dcc\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+136
+137        <activity
+137-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\2b0e1da53efc76e23775a8078ea2cb18\transformed\ui-tooling-release\AndroidManifest.xml:23:9-25:39
+138            android:name="androidx.compose.ui.tooling.PreviewActivity"
+138-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\2b0e1da53efc76e23775a8078ea2cb18\transformed\ui-tooling-release\AndroidManifest.xml:24:13-71
+139            android:exported="true" />
+139-->[androidx.compose.ui:ui-tooling-android:1.7.8] C:\Users\barat\.gradle\caches\8.11.1\transforms\2b0e1da53efc76e23775a8078ea2cb18\transformed\ui-tooling-release\AndroidManifest.xml:25:13-36
+140
+141        <provider
+141-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+142            android:name="androidx.startup.InitializationProvider"
+142-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+143            android:authorities="com.aistudio.refguard.upiprot.debug.androidx-startup"
+143-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+144            android:exported="false" >
+144-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+145            <meta-data
+145-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+146                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+146-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+147                android:value="androidx.startup" />
+147-->[androidx.emoji2:emoji2:1.3.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\dfcc79319ade0085a994f6cb6b1275ae\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+148            <meta-data
+148-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\f25faa8bd1697b8bf1402776dd382431\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:29:13-31:52
+149                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+149-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\f25faa8bd1697b8bf1402776dd382431\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:30:17-78
+150                android:value="androidx.startup" />
+150-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\barat\.gradle\caches\8.11.1\transforms\f25faa8bd1697b8bf1402776dd382431\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:31:17-49
+151            <meta-data
+151-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+152                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+152-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+153                android:value="androidx.startup" />
+153-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+154        </provider>
+155
+156        <receiver
+156-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+157            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+157-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+158            android:directBootAware="false"
+158-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+159            android:enabled="true"
+159-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+160            android:exported="true"
+160-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+161            android:permission="android.permission.DUMP" >
+161-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+162            <intent-filter>
+162-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+163                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+163-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+163-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+164            </intent-filter>
+165            <intent-filter>
+165-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+166                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+166-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+166-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+167            </intent-filter>
+168            <intent-filter>
+168-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+169                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+169-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+169-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+170            </intent-filter>
+171            <intent-filter>
+171-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+172                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+172-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+172-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\barat\.gradle\caches\8.11.1\transforms\230ab79a87a0f556bfba3fb480f53923\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+173            </intent-filter>
+174        </receiver>
+175
+176        <service
+176-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:29:9-35:19
+177            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+177-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:30:13-103
+178            android:exported="false" >
+178-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:31:13-37
+179            <meta-data
+179-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:32:13-34:39
+180                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+180-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:33:17-94
+181                android:value="cct" />
+181-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\barat\.gradle\caches\8.11.1\transforms\2de0b1dbc846d3e6c5323cc612372d28\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:34:17-36
+182        </service>
+183        <service
+183-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:26:9-30:19
+184            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+184-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:27:13-117
+185            android:exported="false"
+185-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:28:13-37
+186            android:permission="android.permission.BIND_JOB_SERVICE" >
+186-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:29:13-69
+187        </service>
+188
+189        <receiver
+189-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:32:9-34:40
+190            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+190-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:33:13-132
+191            android:exported="false" />
+191-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\barat\.gradle\caches\8.11.1\transforms\f9737b8ef78028a4dde103d6763e22a9\transformed\transport-runtime-2.2.6\AndroidManifest.xml:34:13-37
+192    </application>
+193
+194</manifest>

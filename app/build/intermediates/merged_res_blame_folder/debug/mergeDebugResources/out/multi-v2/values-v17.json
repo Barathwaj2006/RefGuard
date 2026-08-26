@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.refguard.app-mergeDebugResources-65:/values-v17/values-v17.xml",
+            "outputFile": "com.refguard.app-mergeDebugResources-66:/values-v17/values-v17.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\barat\\.gradle\\caches\\8.11.1\\transforms\\3d294f65742a58219517a1f6b662c460\\transformed\\appcompat-1.6.1\\res\\values-v17\\values-v17.xml",
+                    "source": "C:\\Users\\barat\\.gradle\\caches\\8.11.1\\transforms\\6c7c8fdc7ad531a5eb8bc5861d50d27b\\transformed\\appcompat-1.6.1\\res\\values-v17\\values-v17.xml",
                     "from": {
                         "startLines": "2,5,9,12,15,18,22,25,29,33,37,40,43,46,50,53,57",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",

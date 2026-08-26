@@ -1,0 +1,13 @@
+4==================================================
+4RefGuard Edge Classifier Held-Out Benchmark Report
+4==================================================
+Evaluated Samples: 36
+True Positives:    22
+True Negatives:    14
+False Positives:   0
+False Negatives:   0
+Precision:         100.00%
+Recall:            100.00%
+F1-Score:          100.00%
+Accuracy:          100.00%
+4==================================================
