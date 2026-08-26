@@ -26,7 +26,7 @@ jobs:
         run: node integration/tests/runner.js
 
   android-platform-build:
-    name: Android Platform Module Tests
+    name: Android Platform Module Tests & APK Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -47,3 +47,14 @@ jobs:
       - name: Run Android Unit Tests
         working-directory: ./android_native
         run: ./gradlew test
+
+      - name: Build Android Debug APK
+        working-directory: ./android_native
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RefGuard-Debug-APK
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14

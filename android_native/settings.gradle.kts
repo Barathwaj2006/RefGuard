@@ -20,5 +20,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "RefGuard"
-include(":platform")
 include(":app")
+project(":app").projectDir = file("../app")
+include(":platform")
+project(":platform").projectDir = file("../platform")
