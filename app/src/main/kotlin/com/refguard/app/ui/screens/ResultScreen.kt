@@ -119,12 +119,18 @@ fun ResultScreen(
                                     color = Color.White
                                 )
                             }
-                            Text(
-                                "CRITICAL (${result.riskScore}/100)",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
+                            Surface(
+                                color = Color.White.copy(alpha = 0.25f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    "CRITICAL (${result.riskScore}/100 · ${(result.riskConfidence * 100).toInt()}% Conf)",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                            }
                         }
 
                         Spacer(Modifier.height(16.dp))
@@ -221,7 +227,7 @@ fun ResultScreen(
                         Spacer(Modifier.height(4.dp))
 
                         Text(
-                            "Threat Score: ${result.riskScore}/100",
+                            "Threat Score: ${result.riskScore}/100 · ${(result.riskConfidence * 100).toInt()}% Confidence",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = riskTheme.color
@@ -288,6 +294,141 @@ fun ResultScreen(
                             },
                             highlightColor = if (result.paymentDirection?.contains("DEBIT", true) == true || isMismatch) ColorCritical else null
                         )
+                    }
+                }
+            }
+
+            // ── SCORE BREAKDOWN & CONFIDENCE HEDGE ───────────
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = CardDefaults.outlinedCardBorder(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Analytics, contentDescription = null, tint = ColorBrand, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Threat Score Breakdown",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = ColorBrand
+                            )
+                        }
+                        Surface(
+                            color = if (isCritical) ColorCriticalContainer else if (isWarning) ColorWarningContainer else ColorSafeContainer,
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                "${(result.riskConfidence * 100).toInt()}% Conf",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isCritical) ColorCritical else if (isWarning) ColorWarning else ColorSafe
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Factor 1: Protocol Mismatch
+                    ScoreFactorRow(
+                        factor = "Payment Direction Inversion",
+                        weight = if (isMismatch) "+40 pts" else "0 pts",
+                        isTriggered = isMismatch,
+                        detail = if (isMismatch) "Stated reward contradicts outgoing debit protocol" else "No direction conflict"
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+
+                    // Factor 2: NLP Threat Signatures
+                    val hasNlpTokens = result.signals.any { it.contains("lure") || it.contains("panic") || it.contains("threat") || it.contains("phishing") || it.contains("trap") }
+                    ScoreFactorRow(
+                        factor = "NLP Threat Signatures",
+                        weight = if (hasNlpTokens) "+35 pts" else "0 pts",
+                        isTriggered = hasNlpTokens,
+                        detail = if (hasNlpTokens) "Urgency, task deposit, or deceptive reward keywords detected" else "Standard conversational or commercial text"
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+
+                    // Factor 3: Threat Intelligence / Domain
+                    val hasThreatIntel = result.signals.contains("local_threat_blacklist_match") || result.signals.contains("suspicious_tld_domain")
+                    ScoreFactorRow(
+                        factor = "Threat Intel & Destination",
+                        weight = if (hasThreatIntel) "+25 pts" else "0 pts",
+                        isTriggered = hasThreatIntel,
+                        detail = if (hasThreatIntel) "Suspicious domain TLD or known malicious handle pattern" else "Standard payment handle"
+                    )
+                }
+            }
+
+            // ── SCAM CHAIN TIMELINE PREVIEW ──────────────────
+            if (result.scamChainNodes.isNotEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp),
+                    border = CardDefaults.outlinedCardBorder(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.AccountTree, contentDescription = null, tint = ColorBrand, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Scam Chain Progression",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorBrand
+                                )
+                            }
+                            Text(
+                                "${result.scamChainNodes.size} Steps",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        result.scamChainNodes.take(3).forEachIndexed { idx, node ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isCritical) ColorCritical else ColorBrand),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "${idx + 1}",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    node.entity_reference ?: "Payment request node",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -430,6 +571,41 @@ private fun DetailRow(
             fontWeight = FontWeight.Bold,
             color = highlightColor ?: MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End
+        )
+    }
+}
+
+@Composable
+private fun ScoreFactorRow(
+    factor: String,
+    weight: String,
+    isTriggered: Boolean,
+    detail: String
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                factor,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isTriggered) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                weight,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isTriggered) ColorCritical else ColorSafe
+            )
+        }
+        Spacer(Modifier.height(2.dp))
+        Text(
+            detail,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }
