@@ -1,4 +1,4 @@
-﻿package com.refguard.app.history
+package com.refguard.app.history
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -28,7 +28,7 @@ class InvestigationHistoryManager(context: Context) {
         current.removeAll { it.scanId == result.scanId }
 
         val title = if (result.recipientVpa != null) {
-            "UPI: "
+            "UPI: ${result.recipientVpa}"
         } else if (result.mismatchStatus?.name == "DETECTED") {
             "Payment Intent Mismatch"
         } else {

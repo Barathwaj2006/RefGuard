@@ -1,4 +1,4 @@
-﻿package com.refguard.app.ui.screens
+package com.refguard.app.ui.screens
 
 import android.content.ClipboardManager
 import android.content.Context
@@ -105,7 +105,7 @@ fun HomeScreen(
                         Icon(Icons.Default.CloudQueue, null, tint = ColorWarning, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            " scans queued offline",
+                            "$offlineQueueSize scans queued offline",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = ColorWarning
@@ -172,7 +172,7 @@ fun HomeScreen(
                 ) {
                     Icon(Icons.Default.Search, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Analyze Threat Risk")
+                    Text("Check for Scam")
                 }
             }
         }
@@ -181,7 +181,7 @@ fun HomeScreen(
 
         // ── Quick Actions ────────────────────────────────
         Text(
-            "Instant Ingress Channels",
+            "Quick Actions",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

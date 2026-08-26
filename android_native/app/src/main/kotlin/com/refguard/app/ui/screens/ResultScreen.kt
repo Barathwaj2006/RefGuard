@@ -44,22 +44,6 @@ fun ResultScreen(
     var isSimpleMode by remember { mutableStateOf(false) }
     var evidenceExpanded by remember { mutableStateOf(false) }
     var feedbackRecorded by remember { mutableStateOf(false) }
-    var ttsInstance: android.speech.tts.TextToSpeech? by remember { mutableStateOf(null) }
-    var isTtsActive by remember { mutableStateOf(false) }
-
-    DisposableEffect(context) {
-        val tts = android.speech.tts.TextToSpeech(context) { status ->
-            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                // Initialized successfully
-            }
-        }
-        ttsInstance = tts
-        onDispose {
-            tts.stop()
-            tts.shutdown()
-        }
-    }
-
     val hasPaymentData = result.recipientVpa != null || result.mismatchAmount != null || result.mismatchStatus == MismatchStatus.DETECTED
 
     Column(
@@ -84,7 +68,7 @@ fun ResultScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        "⚡ Offline Analysis",
+                        "Offline Analysis",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = ColorBrand,
@@ -97,7 +81,7 @@ fun ResultScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        "☁️ Deep Cloud Verified",
+                        "Cloud Analysis",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = ColorSafe,
@@ -129,37 +113,45 @@ fun ResultScreen(
         Spacer(Modifier.height(16.dp))
 
         // ── Risk Level Badge ─────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        var riskVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(result.scanId) { riskVisible = true }
+
+        AnimatedVisibility(
+            visible = riskVisible,
+            enter = fadeIn() + slideInVertically { it / 2 }
         ) {
-            Column {
-                Text(
-                    palette.label,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = palette.primary
-                )
-                Text(
-                    "Threat Score: ${result.riskScore}/100",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = palette.primary.copy(alpha = 0.8f)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(palette.container),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    palette.icon,
-                    contentDescription = null,
-                    tint = palette.primary,
-                    modifier = Modifier.size(32.dp)
-                )
+                Column {
+                    Text(
+                        palette.label,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.primary
+                    )
+                    Text(
+                        "Threat Score: ${result.riskScore}/100",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = palette.primary.copy(alpha = 0.8f)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(palette.container),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        palette.icon,
+                        contentDescription = null,
+                        tint = palette.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
 
@@ -338,7 +330,7 @@ fun ResultScreen(
         Spacer(Modifier.height(16.dp))
 
         // ── Detection Analysis ───────────────────────────
-        SectionCard(title = "Security Intelligence Analysis") {
+        SectionCard(title = "Why This Was Flagged") {
             Text(
                 result.humanExplanation,
                 style = MaterialTheme.typography.bodyMedium,
@@ -354,7 +346,7 @@ fun ResultScreen(
                 result.signals.forEach { signal ->
                     Row(verticalAlignment = Alignment.Top) {
                         Text("• ", color = palette.primary, fontWeight = FontWeight.Bold)
-                        Text(signal, style = MaterialTheme.typography.bodySmall)
+                        Text(signal.toDisplayName(), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -363,27 +355,44 @@ fun ResultScreen(
         // ── Scam Chain Stages ────────────────────────────
         if (result.scamChainNodes.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            SectionCard(title = "Reconstructed Threat Stages (${result.scamChainNodes.size} steps)", tint = ColorHigh) {
-                result.scamChainNodes.forEachIndexed { index, node ->
-                    Row(
-                        modifier = Modifier.padding(vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            color = ColorHighContainer,
-                            shape = CircleShape,
-                            modifier = Modifier.size(22.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text("${index + 1}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ColorHigh)
+            SectionCard(title = "Attack Timeline (${result.scamChainNodes.size} steps)", tint = ColorHigh) {
+                Column(modifier = Modifier.padding(start = 8.dp)) {
+                    result.scamChainNodes.forEachIndexed { index, node ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                color = ColorHigh,
+                                shape = CircleShape,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("${index + 1}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                val nodeLabel = node.entity_reference ?: node.node_id
+                                Text(
+                                    node.node_type.toDisplayName().uppercase(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColorHigh
+                                )
+                                Text(
+                                    nodeLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
-                        Spacer(Modifier.width(8.dp))
-                        val nodeLabel = node.entity_reference ?: node.node_id
-                        Text(
-                            "${node.node_type}: $nodeLabel",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        if (index < result.scamChainNodes.size - 1) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 11.dp, top = 4.dp, bottom = 4.dp)
+                                    .width(2.dp)
+                                    .height(20.dp)
+                                    .background(ColorHigh.copy(alpha = 0.3f))
+                            )
+                        }
                     }
                 }
             }
@@ -403,7 +412,7 @@ fun ResultScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Evidence Pack (${result.evidenceItems.size} items)",
+                            "Technical Evidence (${result.evidenceItems.size} items)",
                             style = MaterialTheme.typography.labelLarge,
                             color = ColorBrand,
                             fontWeight = FontWeight.SemiBold
@@ -420,16 +429,28 @@ fun ResultScreen(
                         result.evidenceItems.forEach { item ->
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 Text(
-                                    "ID: ${item.evidence_id} (${item.evidence_type})",
+                                    item.evidence_type.toDisplayName(),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = ColorBrand
                                 )
                                 Text(
-                                    item.data,
+                                    item.explanation,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(Modifier.height(4.dp))
+                                Surface(
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        "Data: ${item.data}",
+                                        modifier = Modifier.padding(8.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
@@ -450,12 +471,13 @@ fun ResultScreen(
         if (result.riskLevel == RiskLevel.CRITICAL || result.riskLevel == RiskLevel.HIGH) {
             Button(
                 onClick = { showStoppedDialog = true },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ColorCritical)
             ) {
-                Icon(Icons.Default.StopCircle, null)
+                Icon(Icons.Default.StopCircle, null, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("DO NOT PROCEED — STOP TRANSACTION")
+                Text("DO NOT PROCEED — STOP TRANSACTION", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             Spacer(Modifier.height(8.dp))
@@ -473,15 +495,16 @@ fun ResultScreen(
         }
 
         // ── VERDICT CALIBRATION FEEDBACK ────────────────
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(16.dp)
-        ) {
+        if (result.riskLevel != RiskLevel.SAFE) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 if (!feedbackRecorded) {
                     Text(
-                        "Help Calibrate Protection",
+                        "Was this accurate?",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -504,7 +527,7 @@ fun ResultScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("🛡️ Saved Me", style = MaterialTheme.typography.labelMedium)
+                            Text("Yes, this was a scam", style = MaterialTheme.typography.labelMedium)
                         }
                         OutlinedButton(
                             onClick = {
@@ -514,7 +537,7 @@ fun ResultScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("⚠️ False Alarm", style = MaterialTheme.typography.labelMedium)
+                            Text("No, false alarm", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 } else {
@@ -533,6 +556,7 @@ fun ResultScreen(
                 }
             }
         }
+    }
 
         Spacer(Modifier.height(16.dp))
 
@@ -798,5 +822,11 @@ fun riskPalette(level: RiskLevel): RiskPalette = when (level) {
     RiskLevel.HIGH -> RiskPalette("High Risk", ColorHigh, ColorHighContainer, Icons.Default.Error)
     RiskLevel.CRITICAL -> RiskPalette("CRITICAL — SCAM", ColorCritical, ColorCriticalContainer, Icons.Default.Dangerous)
     RiskLevel.UNKNOWN -> RiskPalette("Unknown", Color.Gray, Color.LightGray, Icons.AutoMirrored.Filled.HelpOutline)
+}
+
+fun String.toDisplayName(): String {
+    return this.lowercase().replace("_", " ").split(" ").joinToString(" ") {
+        it.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase() else it }
+    }
 }
 
