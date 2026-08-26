@@ -1,4 +1,4 @@
-﻿package com.refguard.app.viewmodel
+package com.refguard.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -127,7 +127,8 @@ class ScanViewModel(
                 if (!isNetworkAvailable()) {
                     offlineQueue.enqueue(request)
                     _offlineQueueSize.value = offlineQueue.size()
-                    _scanState.value = ScanUiState.Queued
+                    val localResult = scanLocally(request)
+                    _scanState.value = ScanUiState.Success(localResult)
                     return@launch
                 }
 
@@ -147,23 +148,16 @@ class ScanViewModel(
                         )
                     }
                     else -> {
-                        _scanState.value = ScanUiState.Error(
-                            message = "Scan service returned an error ().",
-                            pendingRequest = request
-                        )
+                        val localResult = scanLocally(request)
+                        _scanState.value = ScanUiState.Success(localResult)
                     }
                 }
             } catch (e: IOException) {
-                _scanState.value = ScanUiState.Error(
-                    message = "Network error. Check connection and try again.",
-                    isNetwork = true,
-                    pendingRequest = request
-                )
+                val localResult = scanLocally(request)
+                _scanState.value = ScanUiState.Success(localResult)
             } catch (e: Exception) {
-                _scanState.value = ScanUiState.Error(
-                    message = "Unexpected error: ",
-                    pendingRequest = request
-                )
+                val localResult = scanLocally(request)
+                _scanState.value = ScanUiState.Success(localResult)
             }
         }
     }
