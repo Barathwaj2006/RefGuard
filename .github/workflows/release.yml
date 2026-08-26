@@ -1,0 +1,50 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    name: Build and Publish Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make Gradlew Executable
+        run: chmod +x android_native/gradlew
+
+      - name: Build Android Debug APK
+        working-directory: ./android_native
+        run: ./gradlew :app:assembleDebug
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: app/build/outputs/apk/debug/app-debug.apk
+          name: RefGuard Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RefGuard-Latest-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
