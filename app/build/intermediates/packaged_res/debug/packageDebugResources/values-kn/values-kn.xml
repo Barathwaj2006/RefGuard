@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RefGuard</string>
+    <string name="helpline_guide">ರಾಷ್ಟ್ರೀಯ ಸೈಬರ್ ಕ್ರೈಮ್ ಸಹಾಯವಾಣಿ: 1930</string>
+    <string name="import_image">ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಆರಿಸಿ</string>
+    <string name="paste_from_clipboard">ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ನಿಂದ ಅಂಟಿಸಿ</string>
+    <string name="pin_warning">UPI ಪಿನ್ ನಮೂದಿಸುವುದರಿಂದ ಹಣ ಕಳುಹಿಸಲಾಗುತ್ತದೆ, ಸ್ವೀಕರಿಸಲಾಗುವುದಿಲ್ಲ.</string>
+    <string name="report_scam">ವರದಿ ಮಾಡಿ</string>
+    <string name="retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+    <string name="scan_another">ಮತ್ತೊಂದನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ</string>
+    <string name="scan_button">ವಂಚನೆ ಪರಿಶೀಲಿಸಿ</string>
+    <string name="scan_qr">QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ</string>
+    <string name="stop_transaction">ಮುಂದುವರಿಯಬೇಡಿ — ವಹಿವಾಟು ನಿಲ್ಲಿಸಿ</string>
+</resources>

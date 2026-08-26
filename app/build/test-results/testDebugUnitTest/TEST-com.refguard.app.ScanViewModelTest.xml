@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.refguard.app.ScanViewModelTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-08-26T10:32:28" hostname="BARATHWAJ" time="0.711">
+  <properties/>
+  <testcase name="initial state is Idle" classname="com.refguard.app.ScanViewModelTest" time="0.507"/>
+  <testcase name="handleIngressResult with PermissionDenied failure shows error" classname="com.refguard.app.ScanViewModelTest" time="0.009"/>
+  <testcase name="handleIngressResult with EmptyContent failure shows error" classname="com.refguard.app.ScanViewModelTest" time="0.013"/>
+  <testcase name="resetScanState returns to Idle" classname="com.refguard.app.ScanViewModelTest" time="0.118"/>
+  <testcase name="offline queue size is exposed via StateFlow" classname="com.refguard.app.ScanViewModelTest" time="0.015"/>
+  <testcase name="IOException transitions to local edge classifier Success state" classname="com.refguard.app.ScanViewModelTest" time="0.003"/>
+  <testcase name="CRITICAL severity result is preserved in state" classname="com.refguard.app.ScanViewModelTest" time="0.011"/>
+  <testcase name="handleIngressResult with SuccessOffline queues and transitions" classname="com.refguard.app.ScanViewModelTest" time="0.004"/>
+  <testcase name="handleIngressResult with Success dispatches submitScan" classname="com.refguard.app.ScanViewModelTest" time="0.002"/>
+  <testcase name="successful scan transitions to Success state" classname="com.refguard.app.ScanViewModelTest" time="0.006"/>
+  <testcase name="400 error transitions to malformed Error state" classname="com.refguard.app.ScanViewModelTest" time="0.009"/>
+  <testcase name="retry resubmits the pending request" classname="com.refguard.app.ScanViewModelTest" time="0.006"/>
+  <testcase name="offline submission queues the request" classname="com.refguard.app.ScanViewModelTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
