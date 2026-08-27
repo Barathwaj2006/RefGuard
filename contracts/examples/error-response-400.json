@@ -1,5 +1,0 @@
-﻿{
-  "error_code": "INVALID_CONTENT_TYPE",
-  "error_message": "The provided content_type is not supported.",
-  "details": "Expected one of TEXT, URL, UPI_VPA, IMAGE, QR, SHARE_INTENT, CLIPBOARD, MANUAL."
-}

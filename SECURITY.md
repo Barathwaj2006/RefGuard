@@ -1,55 +1,70 @@
-﻿# SECURITY.md — Privacy & Security Boundaries (RefGuard)
+# SECURITY.md — Privacy & Security Architecture (RefGuard)
 
-## Security Philosophy
-RefGuard operates on an **advisory-only** model. It evaluates threats and provides actionable intelligence to the user before they execute a payment. RefGuard does not have the capability to execute, block, or reverse transactions at the banking layer. Our goal is to break the psychological manipulation chain through timely intervention.
+## Security Philosophy & Boundary of Operation
+RefGuard operates strictly on a **pre-execution advisory model**:
+- RefGuard evaluates transaction payloads, URIs, QR codes, and psychological lures **before** the user authorizes a transaction or opens a UPI payment application.
+- **Banking Layer Isolation:** RefGuard does not execute, intercept, modify, or reverse transactions at the NPCI/banking layer. It operates at the user awareness and presentation level to break social engineering manipulation before user authorization.
 
-## Threat Model
-RefGuard is designed to detect:
-- **Payment-Intent Mismatches:** Attackers tricking users into authorizing a UPI debit under the guise of receiving money.
-- **Deceptive Referrals & Tasks:** Ponzi schemes, advance-fee frauds, and fake job offers propagating via SMS/WhatsApp.
-- **Malicious QR Codes:** Tampered or deceptive QR codes designed to initiate unauthorized upi://pay intents.
-- **Impersonation:** Lures attempting to impersonate legitimate entities (e.g., customer support, delivery services).
+---
+
+## Threat Model & Scope
+RefGuard is engineered to identify:
+1. **Payment-Intent Inversions**: Adversaries enticing users with incoming reward/subsidy/refund claims while presenting an outbound `upi://pay` debit payload or collect request.
+2. **Deceptive Referrals & Tasks**: Phishing links, fake task invitations, and advance-fee schemes embedded in SMS or instant messaging texts.
+3. **Malicious / Tampered QR Codes**: QR codes embedding manipulated parameters, unexpected target VPAs, or concealed URL redirects.
+4. **Credential & PIN Harvesting Lures**: Requests urging users to enter a UPI PIN, OTP, or CVV to "verify" or "receive" payments.
+
+---
 
 ## What RefGuard Does NOT Guarantee
-- **RefGuard does NOT prevent all scams.** It is an additional layer of defense, not a silver bullet.
-- **RefGuard does NOT intercept bank transactions.** It analyzes the intent *before* the UPI app is launched.
-- **RefGuard cannot recover lost funds.** If a transaction is completed, users must contact their bank and report to 1930.
+- **Not a Banking Interceptor:** RefGuard does not replace bank-side transaction monitoring or hardware token security.
+- **No Transaction Cancellation:** Once a transaction is authorized by the user in their UPI app with their secret UPI PIN, funds transfer is irrevocable through RefGuard; the user must immediately contact their bank and dial the National Cybercrime Helpline at **1930**.
 
-## Privacy Model
-- **Zero Credential Collection:** RefGuard never requests, stores, or logs UPI PINs, passwords, OTPs, CVVs, or bank credentials.
-- **Explicit Ingress:** RefGuard only scans content explicitly provided by the user (via the camera, clipboard paste, or share sheet). It does not employ background accessibility monitoring.
-- **Local Edge Priority:** The primary classifier (LocalEdgeClassifier) runs entirely on-device, meaning sensitive SMS or URLs are analyzed without ever leaving the phone.
-- **Evidence Sanitization:** When evidence is displayed in the Investigation screen or Threat Lab, known sensitive patterns (like partial PANs or phone numbers) are masked or stripped from the risk analysis logs.
+---
 
-## Offline Security
-RefGuard features a robust offline fallback. The LocalEdgeClassifier contains an embedded, calibrated logistic feature ensemble and a pre-loaded threat domain list. If the device has no internet connection, it can still detect high-risk structural and lexical anomalies, ensuring users are protected in low-connectivity scenarios.
+## Privacy & Data Protection Architecture
 
-## Input Validation
-All incoming intents and API requests are subject to strict JSON schema and structural validation.
-- The UpiIntentDecoder strictly parses upi://pay schemas, ignoring extraneous or malformed parameters.
-- Backend API endpoints enforce strict length, type, and character set limits on incoming analysis requests to prevent injection attacks.
+### 1. Zero Credential Collection
+RefGuard never asks for, captures, logs, or transmits:
+- UPI PINs
+- Netbanking passwords
+- Debit/Credit card CVVs / Expiry dates
+- SMS One-Time Passwords (OTPs)
 
-## API Security
-- **CORS:** The backend API restricts cross-origin requests to trusted integration domains.
-- **Rate Limiting:** IP-based rate limiting is applied to the public /scan and /threats endpoints to prevent abuse and scraping.
-- **Timeouts:** Strict timeouts prevent resource exhaustion from malformed or maliciously slow client requests.
+### 2. Explicit User-Initiated Ingress
+RefGuard analyzes data only upon explicit user action:
+- Direct input into the **Analyze** text interface
+- Active camera viewfinder targeting during **QR Scanning**
+- User-directed tap of the **Android Share Sheet** target (`ACTION_SEND` / `ACTION_SEND_MULTIPLE`)
+- 1-tap **Clipboard Ingestion** initiated by the user
 
-## Logging
-- **Structured Logging:** The application logs structural anomalies (e.g., parsing failures) and threat metrics without logging the raw sensitive payload.
-- No PII (Personally Identifiable Information) is persisted in server-side logs. 
+RefGuard does not utilize continuous background accessibility scraping, keeping battery and privacy impact minimal.
 
-## Secrets
-- RefGuard relies on environment variables for all internal secrets (e.g., API keys, release keystore passwords).
-- The CI/CD pipeline injects secrets securely at build time. There are no hardcoded keys in the repository.
+### 3. Local Edge Processing & Data Retention
+- The primary classifier (`LocalEdgeClassifier`) executes completely on-device without network dependency.
+- Stored history (`InvestigationHistoryManager`) and offline queues (`OfflineScanQueue`) reside entirely in on-device private app storage (`Context.MODE_PRIVATE`) and are never sent to third-party tracking services.
 
-## Dependency Security
-- Dependencies are managed via Gradle (Android) and npm (Backend).
-- We utilize automated dependency scanning (via GitHub Dependabot) to monitor and patch known vulnerabilities in third-party libraries.
+---
 
-## Reporting a Vulnerability
-If you discover a security vulnerability in RefGuard, please do NOT file a public issue.
-Instead, responsibly disclose it by emailing the project maintainers directly or submitting a draft security advisory via GitHub. We will acknowledge receipt within 48 hours.
+## Offline Security Architecture
+When internet connectivity is absent:
+- `LocalEdgeClassifier` leverages an embedded 40+ token logistic weight matrix, heuristic syntax parsers, and threat pattern detectors.
+- Requests failing network transmission are safely queued locally in `OfflineScanQueue` without credentials or sensitive identifiers.
 
-## Known Limitations
-- The edge model relies on a static vocabulary of threat tokens. While it generalizes well, sophisticated adversaries may evade it by using entirely novel vocabulary until the model is updated.
-- Optical Character Recognition (OCR) for screenshots is dependent on the device's ML Kit capabilities and image quality, which may occasionally result in false negatives.
+---
+
+## Input Validation & Robustness
+- **UPI Scheme Decoder (`UpiIntentDecoder`)**: Strictly validates `upi://pay` URI specifications, stripping unexpected control characters and discarding malformed query components.
+- **Network Request Validation**: API data transfer objects use strict schemas, immutable Kotlin data classes, and type-safe enums (`ContentType`, `RiskSeverity`).
+- **Network Security Configuration**: Android Network Security Config (`res/xml/network_security_config.xml`) disables cleartext HTTP traffic in production release builds.
+
+---
+
+## Secrets & Dependency Management
+- Keystores and private signing credentials are parameterized through environment variables (`KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`) and not hardcoded into Git.
+- Third-party dependencies are pinned in Gradle Version Catalog (`gradle/libs.versions.toml`).
+
+---
+
+## Responsible Vulnerability Disclosure
+If you discover a security vulnerability in RefGuard, please report it responsibly by contacting the maintainers directly or opening a private GitHub Security Advisory. We acknowledge all reports within 48 hours.

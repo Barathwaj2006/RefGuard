@@ -26,19 +26,26 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Make Gradlew Executable
-        run: chmod +x android_native/gradlew
+        run: chmod +x gradlew
+
+      - name: Run Tests
+        run: ./gradlew test
 
       - name: Build Android Release APK
-        working-directory: ./android_native
         run: ./gradlew :app:assembleRelease
+
+      - name: Verify and Hash APK
+        run: |
+          ls -lh app/build/outputs/apk/release/*.apk
+          sha256sum app/build/outputs/apk/release/*.apk
 
       - name: Create or Update Hackathon Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: hackathon-build
           name: "REFGUARD HACKATHON BUILD"
-          body: "Canonical RefGuard Hackathon Release. Automatically updated from main."
-          files: app/build/outputs/apk/release/app-release.apk
+          body: "Canonical RefGuard Hackathon Release APK. Built directly from main branch."
+          files: app/build/outputs/apk/release/*.apk
           draft: false
           prerelease: false
           make_latest: true
@@ -47,5 +54,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RefGuard-Release-APK
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/*.apk
           retention-days: 30

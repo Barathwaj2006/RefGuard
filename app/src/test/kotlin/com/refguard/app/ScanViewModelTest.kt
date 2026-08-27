@@ -2,7 +2,7 @@ package com.refguard.app
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.refguard.app.api.*
-import com.refguard.app.queue.OfflineQueue
+import com.refguard.app.queue.OfflineScanQueue
 import com.refguard.app.viewmodel.ScanUiState
 import com.refguard.app.viewmodel.ScanViewModel
 import com.refguard.platform.models.ContentType
@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.*
 import org.junit.*
 import org.junit.Assert.*
-import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.IOException
 
@@ -27,17 +26,38 @@ class ScanViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeApiService: FakeRefGuardApiService
-    private lateinit var fakeOfflineQueue: FakeOfflineQueue
+    private lateinit var offlineQueue: OfflineScanQueue
     private lateinit var viewModel: ScanViewModel
 
     private var networkAvailable = true
+
+    class FakeRefGuardApiService : RefGuardApiService {
+        var scanHandler: (suspend (ScanRequestDto) -> Response<ScanResponseDto>)? = null
+        var scanCallCount = 0
+        var lastScanRequest: ScanRequestDto? = null
+
+        override suspend fun scan(request: ScanRequestDto): Response<ScanResponseDto> {
+            scanCallCount++
+            lastScanRequest = request
+            val handler = scanHandler ?: throw IllegalStateException("No scanHandler configured")
+            return handler(request)
+        }
+
+        override suspend fun report(report: ScamReportDto): Response<ReportResponseDto> {
+            return Response.success(ReportResponseDto("rep_123", "RECEIVED"))
+        }
+
+        override suspend fun submitFeedback(feedback: FeedbackRequestDto): Response<FeedbackResponseDto> {
+            return Response.success(FeedbackResponseDto("RECEIVED", "s_001", "CONFIRMED_FRAUD", "Thanks"))
+        }
+    }
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeApiService = FakeRefGuardApiService()
-        fakeOfflineQueue = FakeOfflineQueue()
-        viewModel = ScanViewModel(fakeApiService, fakeOfflineQueue) { networkAvailable }
+        offlineQueue = OfflineScanQueue(null)
+        viewModel = ScanViewModel(fakeApiService, offlineQueue) { networkAvailable }
     }
 
     @After
@@ -71,7 +91,7 @@ class ScanViewModelTest {
 
     @Test
     fun `successful scan transitions to Success state`() = runTest {
-        fakeApiService.scanResponse = Response.success(makeScanResponse())
+        fakeApiService.scanHandler = { Response.success(makeScanResponse()) }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.scanState.first()
@@ -80,7 +100,7 @@ class ScanViewModelTest {
 
     @Test
     fun `CRITICAL severity result is preserved in state`() = runTest {
-        fakeApiService.scanResponse = Response.success(makeScanResponse("CRITICAL"))
+        fakeApiService.scanHandler = { Response.success(makeScanResponse("CRITICAL")) }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.scanState.first() as ScanUiState.Success
@@ -88,8 +108,8 @@ class ScanViewModelTest {
     }
 
     @Test
-    fun `IOException transitions to local edge classifier Success state`() = runTest {
-        fakeApiService.shouldThrowIoException = true
+    fun `IOException transitions to network Error state`() = runTest {
+        fakeApiService.scanHandler = { throw IOException("no network") }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.scanState.first()
@@ -102,7 +122,7 @@ class ScanViewModelTest {
         networkAvailable = false
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals(1, fakeOfflineQueue.size())
+        assertEquals(1, offlineQueue.size())
         val state = viewModel.scanState.first()
         assertTrue(state is ScanUiState.Success)
         assertTrue((state as ScanUiState.Success).result.isLocalEdgeResult)
@@ -110,7 +130,7 @@ class ScanViewModelTest {
 
     @Test
     fun `handleIngressResult with Success dispatches submitScan`() = runTest {
-        fakeApiService.scanResponse = Response.success(makeScanResponse())
+        fakeApiService.scanHandler = { Response.success(makeScanResponse()) }
         viewModel.handleIngressResult(IngressResult.Success(validRequest))
         testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(viewModel.scanState.first() is ScanUiState.Success)
@@ -118,9 +138,9 @@ class ScanViewModelTest {
 
     @Test
     fun `handleIngressResult with SuccessOffline queues and transitions`() = runTest {
-        fakeOfflineQueue.enqueue(validRequest)
         viewModel.handleIngressResult(IngressResult.SuccessOffline(validRequest))
         testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(1, offlineQueue.size())
         assertEquals(ScanUiState.Queued, viewModel.scanState.first())
     }
 
@@ -143,7 +163,9 @@ class ScanViewModelTest {
 
     @Test
     fun `400 error transitions to malformed Error state`() = runTest {
-        fakeApiService.scanResponse = Response.error(400, "bad request".toResponseBody(null))
+        fakeApiService.scanHandler = {
+            Response.error(400, okhttp3.ResponseBody.create(null, "bad request"))
+        }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.scanState.first() as ScanUiState.Error
@@ -152,7 +174,7 @@ class ScanViewModelTest {
 
     @Test
     fun `resetScanState returns to Idle`() = runTest {
-        fakeApiService.scanResponse = Response.success(makeScanResponse())
+        fakeApiService.scanHandler = { Response.success(makeScanResponse()) }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(viewModel.scanState.first() is ScanUiState.Success)
@@ -162,7 +184,7 @@ class ScanViewModelTest {
 
     @Test
     fun `retry resubmits the pending request`() = runTest {
-        fakeApiService.scanResponse = Response.success(makeScanResponse())
+        fakeApiService.scanHandler = { Response.success(makeScanResponse()) }
         viewModel.retry(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, fakeApiService.scanCallCount)
@@ -172,54 +194,8 @@ class ScanViewModelTest {
     @Test
     fun `offline queue size is exposed via StateFlow`() = runTest {
         networkAvailable = false
-        fakeOfflineQueue.enqueue(validRequest)
-        fakeOfflineQueue.enqueue(validRequest)
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals(3, viewModel.offlineQueueSize.first())
-    }
-}
-
-// ── Test Doubles ─────────────────────────────────
-
-class FakeOfflineQueue : OfflineQueue {
-    private val queue = mutableListOf<ScanRequest>()
-
-    override fun enqueue(request: ScanRequest) {
-        queue.add(request)
-    }
-
-    override fun dequeueAll(): List<ScanRequest> {
-        val copy = ArrayList(queue)
-        queue.clear()
-        return copy
-    }
-
-    override fun size(): Int = queue.size
-
-    override fun clear() {
-        queue.clear()
-    }
-}
-
-class FakeRefGuardApiService : RefGuardApiService {
-    var scanResponse: Response<ScanResponseDto>? = null
-    var shouldThrowIoException = false
-    var scanCallCount = 0
-
-    override suspend fun scan(request: ScanRequestDto): Response<ScanResponseDto> {
-        scanCallCount++
-        if (shouldThrowIoException) {
-            throw IOException("Simulated network failure")
-        }
-        return scanResponse ?: throw IllegalStateException("scanResponse not set")
-    }
-
-    override suspend fun report(report: ScamReportDto): Response<ReportResponseDto> {
-        return Response.success(ReportResponseDto("rep_123", "PENDING"))
-    }
-
-    override suspend fun submitFeedback(feedback: FeedbackRequestDto): Response<FeedbackResponseDto> {
-        return Response.success(FeedbackResponseDto("SUCCESS", feedback.scan_id, feedback.verdict, "Recorded"))
+        assertEquals(1, viewModel.offlineQueueSize.first())
     }
 }

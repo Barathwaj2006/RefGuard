@@ -1,24 +1,7 @@
-```
-# Build artifacts
-backend/dist/
-# Dependencies
-node_modules/
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-# Environment
-.env
-.env.local
-.env.*
-# Editors
-.vscode/
-.idea/
-```# Android & Gradle
+# Android & Gradle
 build/
 app/build/
 platform/build/
-android_native/build/
 .gradle/
 .kotlin/
 local.properties
@@ -26,21 +9,20 @@ local.properties
 *.aab
 *.keystore
 
-# Node & JS
+# Node & JS (if any tooling)
 node_modules/
-backend/node_modules/
 package-lock.json
 
-# Build artifacts
-backend/dist/
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-# Environment
+# Environment & Secrets
 .env
 .env.local
 .env.*
-# Editors
-.vscode/
+
+# IDE & OS
 .idea/
+.vscode/
+*.iml
+.DS_Store
+*.log
+*.tmp
+*.swp
