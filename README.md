@@ -21,7 +21,7 @@ Directly installable on any modern Android device or emulator (Android 8.0+ / AP
 - 🛡️ **Package / Application ID:** `com.aistudio.refguard.upiprot`
 - 🔢 **Version:** `1.0.0` (Version Code `1`)
 - 📏 **Size:** `24.2 MB` (Release optimized with R8)
-- 🔐 **SHA-256:** `b746887b29e3bac7725d6a7ecf84c230602fe43388ef0772509516b29e85572b`
+- 🔐 **SHA-256:** `4a72562ce7e72e33c37687392c7b6e7222693fb9b828c02d226221b72eab139e`
 
 ---
 
