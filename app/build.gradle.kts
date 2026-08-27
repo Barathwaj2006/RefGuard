@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -32,7 +34,18 @@ android {
                 keyPassword = System.getenv("KEY_PASSWORD") ?: "refguard_release_2026"
             } else {
                 val debugConfig = getByName("debug")
-                storeFile = debugConfig.storeFile
+                val rootKeystoreB64 = rootProject.file("debug.keystore.base64")
+                if (rootKeystoreB64.exists() && (debugConfig.storeFile == null || !debugConfig.storeFile!!.exists())) {
+                    val decodedKeystore = file("${project.layout.buildDirectory.get().asFile}/generated_debug.keystore")
+                    decodedKeystore.parentFile?.mkdirs()
+                    if (!decodedKeystore.exists()) {
+                        val bytes = Base64.getDecoder().decode(rootKeystoreB64.readText().trim())
+                        decodedKeystore.writeBytes(bytes)
+                    }
+                    storeFile = decodedKeystore
+                } else {
+                    storeFile = debugConfig.storeFile
+                }
                 storePassword = debugConfig.storePassword
                 keyAlias = debugConfig.keyAlias
                 keyPassword = debugConfig.keyPassword

@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.*
 import org.junit.*
 import org.junit.Assert.*
 import retrofit2.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -164,7 +165,7 @@ class ScanViewModelTest {
     @Test
     fun `400 error transitions to malformed Error state`() = runTest {
         fakeApiService.scanHandler = {
-            Response.error(400, okhttp3.ResponseBody.create(null, "bad request"))
+            Response.error(400, "bad request".toResponseBody(null))
         }
         viewModel.submitScan(validRequest)
         testDispatcher.scheduler.advanceUntilIdle()
