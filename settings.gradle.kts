@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "RefGuard"
 include(":app")
-include(":platform")
