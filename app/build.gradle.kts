@@ -44,7 +44,22 @@ android {
                     }
                     storeFile = decodedKeystore
                 } else {
-                    storeFile = debugConfig.storeFile
+                    val debugStoreFile = debugConfig.storeFile ?: file(System.getProperty("user.home") + "/.android/debug.keystore")
+                    if (!debugStoreFile.exists()) {
+                        debugStoreFile.parentFile?.mkdirs()
+                        Runtime.getRuntime().exec(arrayOf(
+                            "keytool", "-genkey", "-v", 
+                            "-keystore", debugStoreFile.absolutePath, 
+                            "-storepass", "android", 
+                            "-alias", "androiddebugkey", 
+                            "-keypass", "android", 
+                            "-keyalg", "RSA", 
+                            "-keysize", "2048", 
+                            "-validity", "10000",
+                            "-dname", "CN=Android Debug,O=Android,C=US"
+                        )).waitFor()
+                    }
+                    storeFile = debugStoreFile
                 }
                 storePassword = debugConfig.storePassword
                 keyAlias = debugConfig.keyAlias

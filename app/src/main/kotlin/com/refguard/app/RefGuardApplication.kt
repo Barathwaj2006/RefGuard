@@ -32,7 +32,7 @@ class RefGuardApplication : Application() {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(BuildConfig.SCAN_API_BASE_URL)
+            .baseUrl(com.refguard.app.BuildConfig.SCAN_API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
